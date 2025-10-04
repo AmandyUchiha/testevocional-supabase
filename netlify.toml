@@ -1,0 +1,9 @@
+[build]
+  # Força o Netlify a usar a raiz do repositório como diretório base
+  base = "."
+  
+  # Confirma o comando de build do Vite
+  command = "npm run build"
+  
+  # Confirma o diretório de publicação do Vite
+  publish = "dist"
