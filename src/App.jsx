@@ -231,17 +231,15 @@ function App() {
         <div className="app-container">
           <h1>Teste Vocacional</h1>
           <form onSubmit={handleRegister} className="register-form">
-            {/* CORREÇÃO: Usando <label> para melhor acessibilidade */}
-            <label htmlFor="nickname-input">Qual seu apelido?</label>
+            <p>Qual seu apelido?</p>
             <input
-              id="nickname-input" // Adicionado ID para a label
               type="text"
               value={userNickname}
               onChange={(e) => setUserNickname(e.target.value)}
               placeholder="Seu apelido aqui"
               required
             />
-            <button type="submit" className="start-button">Começar o Teste</button>
+            <button className="start-button">Começar o Teste</button>
           </form>
           {registrationError && <div className="error-message"><p>{registrationError}</p></div>}
         </div>
@@ -249,10 +247,6 @@ function App() {
 
     case 'quiz':
       const currentQuestion = questions[currentQuestionIndex];
-      // Verifica se a pergunta existe para evitar erros de renderização
-      if (!currentQuestion) {
-        return <div className="error">Questão não encontrada.</div>;
-      }
       return (
         <div className="app-container">
           <h1>Teste Vocacional</h1>
@@ -261,7 +255,7 @@ function App() {
           </p>
           <div className="question-item">
             <p className="question-enunciado">{currentQuestion.enunciado}</p>
-            <div className="options-container option-buttons-container">
+            <div className="options-container option-buttons-container"> {/* Adicionado: option-buttons-container */}
               {currentQuestion.opcoes.map(o => (
                 <button
                   key={o.id_o}
@@ -272,7 +266,7 @@ function App() {
               ))}
             </div>
           </div>
-          <div className="extra-buttons">
+          <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
             {currentQuestionIndex > 0 && (
               <button onClick={handleBack} className="back-button">Voltar</button>
             )}
@@ -284,10 +278,6 @@ function App() {
       );
 
     case 'result':
-      // Verifica se o resultado existe para evitar erros
-      if (!finalResult) {
-        return <div className="error">Resultado não calculado.</div>;
-      }
       return (
         <div className="app-container">
           <h1>Seu Resultado</h1>
@@ -305,7 +295,7 @@ function App() {
               </ul>
             </div>
           )}
-          <div className="extra-buttons">
+          <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
             <button onClick={() => setView('history')} className="history-button">
               Ver Histórico
             </button>
@@ -331,7 +321,7 @@ function App() {
                   </li>
                 ))}
               </ul>
-              <div className="extra-buttons">
+              <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
                 <button onClick={handleClearHistory} className="clear-history-button">
                   Limpar Histórico
                 </button>
@@ -343,7 +333,7 @@ function App() {
           ) : (
             <>
               <p>Nenhum resultado anterior encontrado.</p>
-              <div className="extra-buttons">
+              <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
                 <button onClick={() => setView('register')} className="back-to-test-button">
                   Voltar para Registro
                 </button>
