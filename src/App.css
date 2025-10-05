@@ -280,7 +280,7 @@ h1 {
   .app-container::before {
     width: 100px;
     height: 100px;
-    top: -8px;
+    top: -5px;
     left: -10px;
     transform: rotate(-10deg);
   }
