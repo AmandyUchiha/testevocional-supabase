@@ -36,6 +36,7 @@ body {
 }
 
 /* Fundo com GIF borrado - Apenas para telas de apelido, final e histórico */
+/* Este estilo se aplica a telas grandes, por padrão */
 body.nickname-page.gif-active::after,
 body.final-page.gif-active::after,
 body.history-page.gif-active::after {
@@ -263,6 +264,16 @@ h1 {
  * Ajusta o layout para telas de até 650px (celulares e tablets pequenos).
  */
 @media (max-width: 650px) {
+  /* **NOVA REGRA:** Remove o GIF de fundo em telas pequenas */
+  body.nickname-page.gif-active::after,
+  body.final-page.gif-active::after,
+  body.history-page.gif-active::after {
+    /* Remove a imagem de fundo, fazendo com que o 'body' use sua cor de fundo padrão
+       (definida como var(--cor-fundo-perguntas)) */
+    background-image: none; 
+    filter: none; /* Remove o blur */
+  }
+
   /* Ajusta o contêiner principal para melhor visualização em telas pequenas */
   .app-container {
     /* Mude a posição para 'relative' para que ele flua normalmente na página */
