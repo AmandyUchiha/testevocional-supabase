@@ -150,7 +150,7 @@ h1 {
 
 /* Botões de resposta */
 .option-button {
-  padding: 12px; /* Aumenta um pouco o padding para toque em mobile */
+  padding: 12px;
   background-color: var(--marrom-claro);
   border: 2px solid var(--bordo-marrom-escuro);
   border-radius: 8px;
@@ -204,9 +204,9 @@ h1 {
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
-/* --- ALTERAÇÕES PARA OS BOTÕES DE FONTE --- */
+/* --- ESTILOS PARA OS BOTÕES DE FONTE --- */
 
-/* NOVO: Container para alinhar os botões de controle de fonte */
+/* Container para alinhar os botões de controle de fonte */
 .font-controls {
   display: flex;
   justify-content: center;
@@ -215,14 +215,14 @@ h1 {
   width: 100%;
 }
 
-/* ALTERADO: Estilo para os botões A- e A+ */
+/* ALTERADO: Estilo dos botões A- e A+ para harmonizar com os outros */
 .font-toggle-button {
-  width: 60px;  /* Largura fixa para ficarem mais compactos */
+  width: 60px;
   padding: 8px 10px;
-  font-size: 1.2rem; /* Tamanho maior para o texto "A-" e "A+" */
-  background-color: var(--azul-wall-e);
-  color: var(--eve-branco);
-  border: 2px solid var(--cinza-claro);
+  font-size: 1.2rem;
+  background-color: var(--dourado-claro); /* Cor igual aos outros botões extras */
+  color: var(--cinza-escuro); /* Cor igual aos outros botões extras */
+  border: 2px solid var(--bordo-marrom); /* Borda igual aos outros botões extras */
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
@@ -231,13 +231,9 @@ h1 {
 }
 
 .font-toggle-button:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 10px var(--azul-wall-e);
-  transform: scale(1.05);
+  filter: brightness(1.1); /* Efeito igual aos outros botões extras */
+  box-shadow: 0 0 8px var(--dourado-claro); /* Efeito igual aos outros botões extras */
 }
-
-/* REMOVIDO: A classe .large-font não é mais necessária */
-
 
 /* Resultado */
 .result-text {
@@ -303,23 +299,20 @@ h1 {
   body.nickname-page.gif-active::after,
   body.final-page.gif-active::after,
   body.history-page.gif-active::after {
-    /* Remove a imagem de fundo, fazendo com que o 'body' use sua cor de fundo padrão
-       (definida como var(--cor-fundo-perguntas)) */
     background-image: none; 
-    filter: none; /* Remove o blur */
+    filter: none;
   }
 
   /* Ajusta o contêiner principal para melhor visualização em telas pequenas */
   .app-container {
-    /* Mude a posição para 'relative' para que ele flua normalmente na página */
     position: relative; 
     top: auto;
     left: auto;
     transform: none;
     margin: 20px auto;
     padding: 15px;
-    width: 95%; /* Use mais espaço da tela */
-    min-width: unset; /* Remove min-width fixo */
+    width: 95%;
+    min-width: unset;
   }
 
   /* Reduz o tamanho da imagem do Wall-E e a posiciona melhor para não cortar */
@@ -357,11 +350,11 @@ h1 {
   .clear-history-button,
   .back-to-test-button,
   .restart-button {
-      flex-basis: 48%; /* Permite dois botões por linha */
+      flex-basis: 48%;
       min-width: unset;
   }
 
-  /* ALTERADO: Ajuste dos botões de fonte para mobile */
+  /* Ajuste dos botões de fonte para mobile */
   .font-toggle-button {
     width: 70px; /* Um pouco maior para facilitar o toque */
     padding: 10px;
