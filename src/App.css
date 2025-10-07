@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E */
+/* App.css - Tema Wall-E (Completo e com Adições) */
 
 /* Cores temáticas */
 :root {
@@ -204,6 +204,32 @@ h1 {
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
+/* NOVO: Estilo para o botão de Aumentar/Diminuir Fonte */
+.font-toggle-button {
+  padding: 10px 20px;
+  background-color: var(--azul-wall-e); /* Cor azul dos olhos do Wall-E */
+  color: var(--eve-branco); /* Texto branco para ótimo contraste */
+  border: 2px solid var(--cinza-claro); /* Borda clara para definir o botão */
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif; /* Garante a mesma fonte dos outros elementos */
+  margin-top: 25px; /* Adiciona um espaço acima dele */
+  transition: all 0.3s ease; /* Transição suave para o hover */
+}
+
+.font-toggle-button:hover {
+  filter: brightness(1.2); /* Aumenta o brilho ao passar o mouse */
+  box-shadow: 0 0 10px var(--azul-wall-e); /* Adiciona um "brilho" azul */
+  transform: scale(1.05); /* Efeito sutil de crescimento */
+}
+
+/* Classe para aumentar a fonte de todo o corpo da página */
+body.large-font {
+  font-size: 1.15rem; /* Você pode ajustar este valor como preferir */
+}
+
+
 /* Resultado */
 .result-text {
   margin-bottom: 10px;
@@ -324,5 +350,12 @@ h1 {
   .restart-button {
       flex-basis: 48%; /* Permite dois botões por linha */
       min-width: unset;
+  }
+
+  /* NOVO: Ajuste do botão de fonte para mobile */
+  .font-toggle-button {
+    width: 95%; /* Faz o botão ocupar a largura, como os outros */
+    margin-top: 15px;
+    font-size: 0.95rem;
   }
 }

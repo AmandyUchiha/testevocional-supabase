@@ -11,6 +11,9 @@ function App() {
   const [finalResult, setFinalResult] = useState(null);
   const [pastResults, setPastResults] = useState([]);
   const [view, setView] = useState('register'); // 'register', 'quiz', 'result', 'history'
+  
+  // NOVO: Estado para controlar o tamanho da fonte
+  const [isFontLarge, setIsFontLarge] = useState(false);
 
   // Estados de Carga e Erro
   const [questions, setQuestions] = useState([]);
@@ -70,6 +73,16 @@ function App() {
     };
   }, [view]);
 
+  // NOVO: Efeito para aplicar a classe de fonte grande no <body>
+  useEffect(() => {
+    if (isFontLarge) {
+      document.body.classList.add('large-font');
+    } else {
+      document.body.classList.remove('large-font');
+    }
+  }, [isFontLarge]);
+
+
   // Cadastra o usuário e inicia o teste
   async function handleRegister(e) {
     e.preventDefault();
@@ -116,6 +129,8 @@ function App() {
 
   // Reiniciar teste (volta ao registro)
   function handleGoToRegister() {
+    // NOVO: Reseta o estado da fonte para o padrão
+    setIsFontLarge(false);
     setUserId(null);
     setUserNickname('');
     setUserAnswers([]);
@@ -242,6 +257,16 @@ function App() {
             <button className="start-button">Começar o Teste</button>
           </form>
           {registrationError && <div className="error-message"><p>{registrationError}</p></div>}
+          
+          {/* NOVO: Botão para alterar o tamanho da fonte */}
+          <div className="extra-buttons">
+            <button 
+              onClick={() => setIsFontLarge(!isFontLarge)} 
+              className="font-toggle-button"
+            >
+              {isFontLarge ? 'Fonte Normal' : 'Aumentar Fonte'}
+            </button>
+          </div>
         </div>
       );
 
