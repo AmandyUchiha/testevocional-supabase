@@ -204,30 +204,39 @@ h1 {
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
-/* NOVO: Estilo para o botão de Aumentar/Diminuir Fonte */
+/* --- ALTERAÇÕES PARA OS BOTÕES DE FONTE --- */
+
+/* NOVO: Container para alinhar os botões de controle de fonte */
+.font-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Espaço entre os botões */
+  margin-top: 25px;
+  width: 100%;
+}
+
+/* ALTERADO: Estilo para os botões A- e A+ */
 .font-toggle-button {
-  padding: 10px 20px;
-  background-color: var(--azul-wall-e); /* Cor azul dos olhos do Wall-E */
-  color: var(--eve-branco); /* Texto branco para ótimo contraste */
-  border: 2px solid var(--cinza-claro); /* Borda clara para definir o botão */
+  width: 60px;  /* Largura fixa para ficarem mais compactos */
+  padding: 8px 10px;
+  font-size: 1.2rem; /* Tamanho maior para o texto "A-" e "A+" */
+  background-color: var(--azul-wall-e);
+  color: var(--eve-branco);
+  border: 2px solid var(--cinza-claro);
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  font-family: 'Orbitron', sans-serif; /* Garante a mesma fonte dos outros elementos */
-  margin-top: 25px; /* Adiciona um espaço acima dele */
-  transition: all 0.3s ease; /* Transição suave para o hover */
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s ease;
 }
 
 .font-toggle-button:hover {
-  filter: brightness(1.2); /* Aumenta o brilho ao passar o mouse */
-  box-shadow: 0 0 10px var(--azul-wall-e); /* Adiciona um "brilho" azul */
-  transform: scale(1.05); /* Efeito sutil de crescimento */
+  filter: brightness(1.2);
+  box-shadow: 0 0 10px var(--azul-wall-e);
+  transform: scale(1.05);
 }
 
-/* Classe para aumentar a fonte de todo o corpo da página */
-body.large-font {
-  font-size: 1.15rem; /* Você pode ajustar este valor como preferir */
-}
+/* REMOVIDO: A classe .large-font não é mais necessária */
 
 
 /* Resultado */
@@ -352,10 +361,9 @@ body.large-font {
       min-width: unset;
   }
 
-  /* NOVO: Ajuste do botão de fonte para mobile */
+  /* ALTERADO: Ajuste dos botões de fonte para mobile */
   .font-toggle-button {
-    width: 95%; /* Faz o botão ocupar a largura, como os outros */
-    margin-top: 15px;
-    font-size: 0.95rem;
+    width: 70px; /* Um pouco maior para facilitar o toque */
+    padding: 10px;
   }
 }

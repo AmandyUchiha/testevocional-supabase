@@ -11,9 +11,9 @@ function App() {
   const [finalResult, setFinalResult] = useState(null);
   const [pastResults, setPastResults] = useState([]);
   const [view, setView] = useState('register'); // 'register', 'quiz', 'result', 'history'
-  
-  // NOVO: Estado para controlar o tamanho da fonte
-  const [isFontLarge, setIsFontLarge] = useState(false);
+
+  // ALTERADO: Estado para controlar o ajuste numérico da fonte em pixels.
+  const [fontSizeAdjustment, setFontSizeAdjustment] = useState(0);
 
   // Estados de Carga e Erro
   const [questions, setQuestions] = useState([]);
@@ -51,7 +51,6 @@ function App() {
   // Alterna classes no <body> com base na view (para o tema do Wall-E)
   useEffect(() => {
     const bodyClassList = document.body.classList;
-    // Limpa todas as classes relacionadas
     bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page');
 
     if (view === 'quiz') {
@@ -66,21 +65,37 @@ function App() {
         bodyClassList.add('history-page');
       }
     }
-
-    // Função de limpeza para evitar efeitos colaterais ao desmontar ou mudar
+    
     return () => {
       bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page');
     };
   }, [view]);
 
-  // NOVO: Efeito para aplicar a classe de fonte grande no <body>
+  // ALTERADO: Efeito para aplicar o ajuste de fonte diretamente no estilo do body
   useEffect(() => {
-    if (isFontLarge) {
-      document.body.classList.add('large-font');
-    } else {
-      document.body.classList.remove('large-font');
-    }
-  }, [isFontLarge]);
+    // Obtém o tamanho da fonte base do CSS (ex: 16px)
+    const baseFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    
+    // Calcula o novo tamanho e aplica ao body
+    const newSize = baseFontSize + fontSizeAdjustment;
+    document.body.style.fontSize = `${newSize}px`;
+
+    // Função de limpeza para resetar ao desmontar o componente
+    return () => {
+      document.body.style.fontSize = ''; // Remove o estilo inline para voltar ao padrão do CSS
+    };
+  }, [fontSizeAdjustment]);
+
+  // NOVAS FUNÇÕES: Para aumentar e diminuir a fonte
+  function increaseFontSize() {
+    // Adiciona um limite para não aumentar indefinidamente
+    setFontSizeAdjustment(currentAdjustment => Math.min(currentAdjustment + 5, 20));
+  }
+
+  function decreaseFontSize() {
+    // Adiciona um limite para não diminuir indefinidamente
+    setFontSizeAdjustment(currentAdjustment => Math.max(currentAdjustment - 5, -5));
+  }
 
 
   // Cadastra o usuário e inicia o teste
@@ -129,8 +144,8 @@ function App() {
 
   // Reiniciar teste (volta ao registro)
   function handleGoToRegister() {
-    // NOVO: Reseta o estado da fonte para o padrão
-    setIsFontLarge(false);
+    // ALTERADO: Reseta o ajuste da fonte para 0
+    setFontSizeAdjustment(0);
     setUserId(null);
     setUserNickname('');
     setUserAnswers([]);
@@ -170,7 +185,6 @@ function App() {
       return;
     }
 
-    // Calcular resultados no frontend
     const scoreMap = {};
     answers.forEach(answer => {
       const question = questions.find(q => q.id_q === answer.id_q);
@@ -258,13 +272,21 @@ function App() {
           </form>
           {registrationError && <div className="error-message"><p>{registrationError}</p></div>}
           
-          {/* NOVO: Botão para alterar o tamanho da fonte */}
-          <div className="extra-buttons">
+          {/* ALTERADO: Agora são dois botões para controle da fonte */}
+          <div className="font-controls">
             <button 
-              onClick={() => setIsFontLarge(!isFontLarge)} 
+              onClick={decreaseFontSize} 
               className="font-toggle-button"
+              aria-label="Diminuir tamanho da fonte"
             >
-              {isFontLarge ? 'Fonte Normal' : 'Aumentar Fonte'}
+              A-
+            </button>
+            <button 
+              onClick={increaseFontSize} 
+              className="font-toggle-button"
+              aria-label="Aumentar tamanho da fonte"
+            >
+              A+
             </button>
           </div>
         </div>
@@ -280,7 +302,7 @@ function App() {
           </p>
           <div className="question-item">
             <p className="question-enunciado">{currentQuestion.enunciado}</p>
-            <div className="options-container option-buttons-container"> {/* Adicionado: option-buttons-container */}
+            <div className="options-container option-buttons-container">
               {currentQuestion.opcoes.map(o => (
                 <button
                   key={o.id_o}
@@ -291,7 +313,7 @@ function App() {
               ))}
             </div>
           </div>
-          <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
+          <div className="extra-buttons">
             {currentQuestionIndex > 0 && (
               <button onClick={handleBack} className="back-button">Voltar</button>
             )}
@@ -320,7 +342,7 @@ function App() {
               </ul>
             </div>
           )}
-          <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
+          <div className="extra-buttons">
             <button onClick={() => setView('history')} className="history-button">
               Ver Histórico
             </button>
@@ -346,7 +368,7 @@ function App() {
                   </li>
                 ))}
               </ul>
-              <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
+              <div className="extra-buttons">
                 <button onClick={handleClearHistory} className="clear-history-button">
                   Limpar Histórico
                 </button>
@@ -358,7 +380,7 @@ function App() {
           ) : (
             <>
               <p>Nenhum resultado anterior encontrado.</p>
-              <div className="extra-buttons"> {/* Adicionado: extra-buttons container */}
+              <div className="extra-buttons">
                 <button onClick={() => setView('register')} className="back-to-test-button">
                   Voltar para Registro
                 </button>
