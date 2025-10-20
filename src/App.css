@@ -18,10 +18,7 @@
   --cor-fundo-gif: #4e342e;
 }
 
-/* * CORREÇÃO #1: Fundo e Rolagem
- * Altera a altura e o overflow para permitir rolagem (necessário em mobile)
- * e define a cor de fundo padrão para todas as páginas.
- */
+/* * CORREÇÃO #1: Fundo e Rolagem */
 body {
   margin: 0;
   /* Garante que o corpo sempre cubra a tela, mas permite rolagem se o conteúdo for maior */
@@ -31,15 +28,15 @@ body {
   /* Bloqueia rolagem horizontal */
   overflow-x: hidden; 
   font-family: 'Orbitron', sans-serif;
-  /* Define a cor de fundo padrão para ser igual à página de perguntas (solicitado) */
+  /* Define a cor de fundo padrão */
   background-color: var(--cor-fundo-perguntas); 
 }
 
 /* Fundo com GIF borrado - Apenas para telas de apelido, final e histórico */
-/* Este estilo se aplica a telas grandes, por padrão */
 body.nickname-page.gif-active::after,
 body.final-page.gif-active::after,
-body.history-page.gif-active::after {
+body.history-page.gif-active::after,
+body.adminLogin.gif-active::after { /* Adicionado adminLogin */
   content: '';
   position: fixed;
   top: 0;
@@ -51,25 +48,19 @@ body.history-page.gif-active::after {
   background-repeat: no-repeat;
   /* Garante que o GIF preencha sempre, mesmo em mobile */
   background-size: cover;
-  /* Mantém 'fixed' (comportamento pode variar em mobile, mas é a configuração original) */
   background-attachment: fixed; 
   filter: blur(5px);
 }
 
 /* Fundo fixo para tela de perguntas */
 body.question-page {
-  /* Mantém a cor de fundo do tema WALL-E para questões */
   background-color: var(--cor-fundo-perguntas);
-  /* Garante que a rolagem seja possível se o conteúdo exceder a tela */
   overflow-y: auto; 
   min-height: 100vh;
 }
 
 
-/* * CORREÇÃO #2: Contêiner Principal
- * Altera para 'absolute' e adiciona margem para melhor compatibilidade em mobile,
- * especialmente com o teclado virtual.
- */
+/* * CORREÇÃO #2: Contêiner Principal */
 .app-container {
   /* Altera de 'fixed' para 'absolute' para melhor fluxo em telas menores */
   position: absolute; 
@@ -78,8 +69,7 @@ body.question-page {
   transform: translate(-50%, -50%);
   max-width: 650px;
   width: 90%; /* Ajusta para porcentagem para melhor responsividade */
-  /* Adiciona margem superior/inferior para garantir que o conteúdo não seja cortado 
-     ao rolar em telas menores */
+  /* Adiciona margem superior/inferior para garantir que o conteúdo não seja cortado */
   margin: 20px auto; 
   padding: 10px 30px;
   background-color: var(--cinza-escuro);
@@ -95,22 +85,70 @@ body.question-page {
   box-sizing: border-box;
 }
 
-/* Imagem do Wall-E no canto superior esquerdo */
+/* ** MODIFICAÇÃO PARA O CLIQUE ** */
+
+/* 1. Remove a imagem Wall-E do pseudo-elemento (agora será um elemento real) */
 .app-container::before {
-  content: '';
-  display: block;
+  content: none;
+}
+
+/* 2. NOVO: Estilo para a Imagem/Gatilho de Admin Clicável */
+.admin-trigger {
+  position: absolute;
+  top: -6px; 
+  left: -30px; 
   width: 150px;
   height: 150px;
-  background-image: url('./assets/walle.png');
+  background-image: url('./assets/walle.png'); 
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  position: absolute;
-  top: -6px;
-  left: -30px;
   transform: rotate(-15deg);
   z-index: 2;
+  /* REMOVIDO: cursor: pointer; */ 
+  /* REMOVIDO: transition: transform 0.3s ease-in-out; */
 }
+
+/* REMOVIDO: Efeito de hover */
+.admin-trigger:hover {
+  /* REMOVIDO: transform: rotate(-15deg) scale(1.05); */
+  transform: rotate(-15deg); /* Mantém a rotação original */
+}
+
+/* REMOVIDO: Estilo para o subtítulo/mensagem na área de histórico */
+/* Remova esta regra ou certifique-se de que ela não existe mais. */
+.sub-title {
+  /* ... remover esta regra ... */
+  display: none; /* Adicione display: none se o código ainda estiver lá */
+}
+/* ** FIM DA MODIFICAÇÃO CSS ** */
+
+/* ... (Mantenha todas as outras regras do App.css) ... */
+
+/* Ajuste no Media Query para manter a discrição no mobile */
+@media (max-width: 650px) {
+    /* ... (outras regras mobile) ... */
+
+    /* Ajusta o gatilho de login em mobile */
+    .admin-trigger {
+      width: 100px;
+      height: 100px;
+      top: -3px;
+      left: -10px;
+      transform: rotate(-10deg);
+      /* REMOVIDO: o hover e o cursor pointer */
+    }
+}
+
+/* Estilo para o subtítulo/mensagem na área de histórico */
+.sub-title {
+  font-size: 0.8rem;
+  color: var(--cinza-claro);
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+/* ** FIM DA MODIFICAÇÃO ** */
+
 
 /* Títulos */
 h1 {
@@ -167,6 +205,15 @@ h1 {
   background-color: var(--dourado-claro);
 }
 
+/* Estado de botão selecionado */
+.option-button.selected {
+  background-color: var(--azul-wall-e);
+  color: var(--eve-branco);
+  border-color: var(--eve-branco);
+  box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
+}
+
+
 /* Container para botões extras */
 .extra-buttons {
   display: flex;
@@ -215,14 +262,14 @@ h1 {
   width: 100%;
 }
 
-/* ALTERADO: Estilo dos botões A- e A+ para harmonizar com os outros */
+/* Estilo dos botões A- e A+ */
 .font-toggle-button {
   width: 60px;
   padding: 8px 10px;
   font-size: 1.2rem;
-  background-color: var(--dourado-claro); /* Cor igual aos outros botões extras */
-  color: var(--cinza-escuro); /* Cor igual aos outros botões extras */
-  border: 2px solid var(--bordo-marrom); /* Borda igual aos outros botões extras */
+  background-color: var(--dourado-claro); 
+  color: var(--cinza-escuro); 
+  border: 2px solid var(--bordo-marrom); 
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
@@ -231,8 +278,8 @@ h1 {
 }
 
 .font-toggle-button:hover {
-  filter: brightness(1.1); /* Efeito igual aos outros botões extras */
-  box-shadow: 0 0 8px var(--dourado-claro); /* Efeito igual aos outros botões extras */
+  filter: brightness(1.1); 
+  box-shadow: 0 0 8px var(--dourado-claro); 
 }
 
 /* Resultado */
@@ -291,14 +338,13 @@ h1 {
   margin: 10px 0;
 }
 
-/* * CORREÇÃO #3: Media Query para Dispositivos Móveis
- * Ajusta o layout para telas de até 650px (celulares e tablets pequenos).
- */
+/* * CORREÇÃO #3: Media Query para Dispositivos Móveis */
 @media (max-width: 650px) {
-  /* **NOVA REGRA:** Remove o GIF de fundo em telas pequenas */
+  /* Remove o GIF de fundo em telas pequenas */
   body.nickname-page.gif-active::after,
   body.final-page.gif-active::after,
-  body.history-page.gif-active::after {
+  body.history-page.gif-active::after,
+  body.adminLogin.gif-active::after { /* Adicionado adminLogin */
     background-image: none; 
     filter: none;
   }
@@ -316,7 +362,7 @@ h1 {
   }
 
   /* Reduz o tamanho da imagem do Wall-E e a posiciona melhor para não cortar */
-  .app-container::before {
+  .admin-trigger {
     width: 100px;
     height: 100px;
     top: -3px;
@@ -356,7 +402,7 @@ h1 {
 
   /* Ajuste dos botões de fonte para mobile */
   .font-toggle-button {
-    width: 70px; /* Um pouco maior para facilitar o toque */
+    width: 70px; 
     padding: 10px;
   }
 }

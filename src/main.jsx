@@ -5,7 +5,7 @@ import App from './App.jsx';
 import { createClient } from '@supabase/supabase-js';
 
 // URL do seu projeto Supabase
-const supabaseUrl = 'https://rvlgihlckmgerxnpdfji.supabase.co';
+const supabaseUrl = 'https://xmpjiagervxjjxjecagk.supabase.co';
 // Lê a chave de API do arquivo .env
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 

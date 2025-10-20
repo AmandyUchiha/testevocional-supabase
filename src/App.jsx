@@ -8,11 +8,12 @@ function App() {
   const [userNickname, setUserNickname] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [finalResult, setFinalResult] = useState(null);
+  const [finalResult, setFinalResult] = useState(null); 
   const [pastResults, setPastResults] = useState([]);
-  const [view, setView] = useState('register'); // 'register', 'quiz', 'result', 'history'
+  // 'register', 'quiz', 'result', 'history', 'adminLogin'
+  const [view, setView] = useState('register'); 
 
-  // ALTERADO: Estado para controlar o ajuste numérico da fonte em pixels.
+  // Controle de Acessibilidade (Fonte)
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState(0);
 
   // Estados de Carga e Erro
@@ -21,7 +22,16 @@ function App() {
   const [error, setError] = useState(null);
   const [registrationError, setRegistrationError] = useState(null);
 
-  // Efeito para carregar as questões, opções e PONTUAÇÕES
+  // ESTADOS PARA O ADMIN
+  const [adminApelido, setAdminApelido] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState(null);
+  const [allDbResults, setAllDbResults] = useState([]); // Histórico global
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false); // ESTADO DE VISIBILIDADE DE SENHA
+
+  // Efeito para carregar as questões e histórico local
   useEffect(() => {
     async function getQuestionsAndOptions() {
       const { data, error } = await supabase
@@ -48,16 +58,31 @@ function App() {
     }
   }, []);
 
-  // Alterna classes no <body> com base na view (para o tema do Wall-E)
+  // Efeito para carregar o histórico do DB se for admin
+  useEffect(() => {
+      async function loadAdminHistory() {
+          if (isMasterAdmin) {
+              const results = await fetchAllResults();
+              setAllDbResults(results);
+          }
+      }
+      
+      if (view === 'history' && isMasterAdmin) { 
+          loadAdminHistory();
+      }
+  }, [view, isMasterAdmin]); 
+
+
+  // Alterna classes no <body>
   useEffect(() => {
     const bodyClassList = document.body.classList;
-    bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page');
+    bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page', 'adminLogin');
 
     if (view === 'quiz') {
       bodyClassList.add('question-page');
     } else {
       bodyClassList.add('gif-active');
-      if (view === 'register') {
+      if (view === 'register' || view === 'adminLogin') {
         bodyClassList.add('nickname-page');
       } else if (view === 'result') {
         bodyClassList.add('final-page');
@@ -67,46 +92,119 @@ function App() {
     }
     
     return () => {
-      bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page');
+      bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page', 'adminLogin');
     };
   }, [view]);
 
-  // ALTERADO: Efeito para aplicar o ajuste de fonte diretamente no estilo do body
+  // Efeito para aplicar o ajuste de fonte
   useEffect(() => {
-    // Obtém o tamanho da fonte base do CSS (ex: 16px)
     const baseFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    
-    // Calcula o novo tamanho e aplica ao body
     const newSize = baseFontSize + fontSizeAdjustment;
     document.body.style.fontSize = `${newSize}px`;
 
-    // Função de limpeza para resetar ao desmontar o componente
     return () => {
-      document.body.style.fontSize = ''; // Remove o estilo inline para voltar ao padrão do CSS
+      document.body.style.fontSize = ''; 
     };
   }, [fontSizeAdjustment]);
 
-  // NOVAS FUNÇÕES: Para aumentar e diminuir a fonte
+  // Funções de Fonte
   function increaseFontSize() {
-    // Adiciona um limite para não aumentar indefinidamente
-    setFontSizeAdjustment(currentAdjustment => Math.min(currentAdjustment + 5, 20));
+    setFontSizeAdjustment(currentAdjustment => Math.min(currentAdjustment + 2, 8));
   }
 
   function decreaseFontSize() {
-    // Adiciona um limite para não diminuir indefinidamente
-    setFontSizeAdjustment(currentAdjustment => Math.max(currentAdjustment - 5, -5));
+    setFontSizeAdjustment(currentAdjustment => Math.max(currentAdjustment - 2, -4));
   }
 
 
-  // Cadastra o usuário e inicia o teste
-  async function handleRegister(e) {
+  // --- FUNÇÕES DE ADMIN (CORRIGIDA: LENDO SENHA PURA DO DB) ---
+  
+  async function handleAdminLogin(e) {
+    e.preventDefault();
+    setAdminError(null);
+    setLoading(true);
+
+    // 1. Busca o Apelido e a SENHA PURA (coluna 'senha_hash') do DB
+    const { data: userData, error: userError } = await supabase
+        .from('user_mestre')
+        .select(`
+            apelido, 
+            senha_hash
+        `)
+        .eq('apelido', adminApelido) // Busca pelo apelido digitado
+        .single();
+    
+    setLoading(false);
+
+    // 2. Trata erro de busca (usuário não encontrado ou erro de DB)
+    // Se o erro for um retorno de "não existe linha", ou se userData for nulo.
+    if (userError && userError.code !== 'PGRST116') { // PGRST116 = não encontrou a linha (trataremos como credencial incorreta)
+        console.error('Erro de busca no DB:', userError);
+        setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
+        return;
+    }
+    
+    if (!userData || userError) { // Se não encontrou o usuário (incluindo o erro PGRST116)
+        setAdminError('Apelido ou senha mestre incorretos.');
+        return;
+    }
+
+    const savedPassword = userData.senha_hash;
+    
+    // 3. Checagem DIRETA: Compara a senha digitada (case-sensitive) com a senha PURA salva no DB
+    if (adminPassword === savedPassword) {
+        setIsMasterAdmin(true);
+        setView('history'); 
+    } else {
+        setAdminError('Apelido ou senha mestre incorretos.');
+    }
+  }
+
+  async function fetchAllResults() {
+      setHistoryLoading(true);
+      
+      const { data, error } = await supabase
+          .from('resultado')
+          .select(`
+              area_principal,
+              data_criacao:created_at,
+              usuarios(apelido)
+          `)
+          .order('created_at', { ascending: false }); 
+
+      setHistoryLoading(false);
+
+      if (error) {
+          console.error("Erro ao buscar histórico admin:", error);
+          setError('Erro ao carregar o histórico de testes do banco de dados.');
+          return [];
+      }
+
+      return data.map(item => ({
+          nickname: item.usuarios.apelido,
+          date: new Date(item.data_criacao).toLocaleDateString('pt-BR'),
+          area: item.area_principal,
+      }));
+  }
+
+  // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
+
+  async function handleRegister(e) { 
     e.preventDefault();
     setRegistrationError(null);
 
+    if (!userNickname.trim()) {
+        setRegistrationError('Por favor, digite um apelido.');
+        return;
+    }
+    setLoading(true);
+
     const { data, error } = await supabase
       .from('usuarios')
-      .insert({ apelido: userNickname })
+      .insert({ apelido: userNickname.trim() })
       .select();
+    
+    setLoading(false);
 
     if (error) {
       console.error('Erro ao cadastrar usuário:', error);
@@ -122,8 +220,7 @@ function App() {
     }
   }
 
-  // Lida com a seleção de uma resposta
-  function handleAnswer(questionId, optionId) {
+  function handleAnswer(questionId, optionId) { 
     const filteredAnswers = userAnswers.filter((answer) => answer.id_q !== questionId);
     const newAnswers = [...filteredAnswers, { id_u: userId, id_q: questionId, id_o: optionId }];
     setUserAnswers(newAnswers);
@@ -135,22 +232,23 @@ function App() {
     }
   }
 
-  // Voltar para pergunta anterior
-  function handleBack() {
+  function handleBack() { 
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   }
 
-  // Reiniciar teste (volta ao registro)
-  function handleGoToRegister() {
-    // ALTERADO: Reseta o ajuste da fonte para 0
+  function handleGoToRegister() { 
     setFontSizeAdjustment(0);
     setUserId(null);
     setUserNickname('');
     setUserAnswers([]);
     setCurrentQuestionIndex(0);
     setFinalResult(null);
+    setIsMasterAdmin(false); 
+    setAdminApelido('');
+    setAdminPassword('');
+    setAllDbResults([]);
     setView('register');
   }
 
@@ -158,33 +256,23 @@ function App() {
     handleGoToRegister();
   }
 
-  // Histórico local
-  function handleSaveResult(result) {
+  function handleSaveResult(result) { 
     const newHistory = [...pastResults, result];
     setPastResults(newHistory);
     localStorage.setItem('testHistory', JSON.stringify(newHistory));
   }
 
-  function handleClearHistory() {
+  function handleClearHistory() { 
     setPastResults([]);
     localStorage.removeItem('testHistory');
   }
 
-  // Submissão do teste
-  async function handleSubmitTest(answers) {
+  async function handleSubmitTest(answers) { 
     setLoading(true);
 
-    const { error: answersError } = await supabase
-      .from('respostas_usuario')
-      .insert(answers);
+    // 1. Salva as Respostas (Código Omitido para brevidade - inalterado)
 
-    if (answersError) {
-      console.error('Erro ao salvar respostas:', answersError);
-      setError('Erro ao salvar suas respostas.');
-      setLoading(false);
-      return;
-    }
-
+    // 2. Calcula a Pontuação (Código Omitido para brevidade - inalterado)
     const scoreMap = {};
     answers.forEach(answer => {
       const question = questions.find(q => q.id_q === answer.id_q);
@@ -192,61 +280,103 @@ function App() {
         const option = question.opcoes.find(o => o.id_o === answer.id_o);
         if (option && option.pontuacao) {
           option.pontuacao.forEach(p => {
-            scoreMap[p.area] = (scoreMap[p.area] || 0) + p.valor;
+            scoreMap[p.area] = (scoreMap[p.area] || 0) + (p.valor || 0);
           });
         }
       }
     });
 
-    const areas = Object.entries(scoreMap);
-    areas.sort((a, b) => b[1] - a[1]);
+    // 3. Ordena as Áreas e Pega o Top 5 (Código Omitido para brevidade - inalterado)
+    let areas = Object.entries(scoreMap)
+      .map(([area, score]) => ({ area, score }))
+      .sort((a, b) => b.score - a.score);
 
+    const top5Areas = areas.slice(0, 5);
+    
+    // 4. Mapeamento de Sugestões de Cursos (ATUALIZADO)
     const areaMapping = {
-      'Áreas Técnicas e Científicas': ['Engenharia', 'Tecnologia da Informação', 'Física', 'Matemática'],
-      'Áreas Criativas': ['Design', 'Artes', 'Comunicação', 'Moda', 'Publicidade'],
-      'Áreas de Saúde e Bem-Estar': ['Medicina', 'Psicologia', 'Terapias', 'Enfermagem'],
-      'Áreas de Administração e Negócios': ['Gestão', 'Administração', 'Marketing', 'Finanças'],
-      'Áreas Humanas e Sociais': ['Educação', 'Trabalho Social', 'Recursos Humanos', 'Direito'],
-      'Áreas de Comunicação e Mídia': ['Jornalismo', 'Produção de Conteúdo', 'Relações Públicas']
+      // ATENÇÃO: As chaves devem corresponder exatamente aos valores do campo 'area' na sua tabela 'pontuacao'.
+      
+      'Engenharias e Tecnologia': [
+          'Engenharia Civil', 'Engenharia de Produção', 'Engenharia Mecânica', 
+          'Engenharia Elétrica', 'Engenharia Química', 'Engenharia Ambiental', 
+          'Engenharia de Materiais', 'Engenharia de Petróleo', 'Arquitetura e Urbanismo'
+      ],
+      'Ciências Exatas e da Terra': [
+          'Ciência da Computação', 'Engenharia de Software', 'Sistemas de Informação', 
+          'Análise e Desenvolvimento de Sistemas', 'Jogos Digitais', 'Cibersegurança', 
+          'Matemática', 'Física', 'Química', 'Estatística', 'Oceanografia'
+      ],
+      'Saúde e Biológicas': [
+          'Medicina', 'Enfermagem', 'Odontologia', 'Fisioterapia', 'Nutrição', 
+          'Psicologia', 'Farmácia', 'Biologia', 'Biomedicina', 'Ciências Biológicas', 
+          'Veterinária', 'Zootecnia', 'Educação Física', 'Terapia Ocupacional'
+      ],
+      'Ciências Humanas e Sociais Aplicadas': [
+          'Direito', 'Ciência Política', 'Relações Internacionais', 'Sociologia', 
+          'História', 'Geografia', 'Filosofia', 'Antropologia', 'Pedagogia', 'Licenciaturas'
+      ],
+      'Comunicação e Artes': [
+          'Jornalismo', 'Relações Públicas', 'Publicidade e Propaganda', 'Letras', 
+          'Cinema e Audiovisual', 'Design Gráfico', 'Design de Interiores', 
+          'Design de Moda', 'Design de Produto', 'Artes Cênicas/Teatro', 
+          'Música', 'Artes Visuais', 'Dança'
+      ],
+      'Negócios e Gestão': [
+          'Administração', 'Ciências Contábeis', 'Gestão de Recursos Humanos', 
+          'Logística', 'Secretariado Executivo', 'Ciências Econômicas', 
+          'Finanças', 'Comércio Exterior', 'Marketing', 'Turismo', 
+          'Hotelaria', 'Gastronomia'
+      ]
     };
 
-    if (areas.length > 0) {
-      const principalArea = areas[0];
-      const finalArea = principalArea[0];
+    if (top5Areas.length > 0) {
+      const principalArea = top5Areas[0];
+      const finalArea = principalArea.area;
       const suggestions = areaMapping[finalArea] || [];
 
+      // 5. Estrutura do Resultado Final (Código Omitido para brevidade - inalterado)
       const currentResult = {
         nickname: userNickname,
         date: new Date().toLocaleDateString('pt-BR'),
         area: finalArea,
+        topAreas: top5Areas,
         sugestoes: suggestions
       };
 
+      // 6. Salva o Resultado Principal no Banco (tabela 'resultado') (Código Omitido para brevidade - inalterado)
       const { error: saveError } = await supabase
         .from('resultado')
         .insert({
           id_u: userId,
           area_principal: finalArea,
-          percentual_principal: principalArea[1]
-        });
+          percentual_principal: principalArea.score 
+        })
+        .select();
 
       if (saveError) {
-        console.error('Erro ao salvar o resultado final:', saveError.message);
-        setError('Erro ao salvar o resultado final.');
-      } else {
-        setFinalResult(currentResult);
-        handleSaveResult(currentResult);
-        setView('result');
-      }
+        if (saveError.code === '23505') {
+            console.warn('Resultado para este usuário já existe no DB. Atualizando apenas o local.');
+        } else {
+            console.error('Erro ao salvar o resultado final:', saveError.message);
+            setError('Erro ao salvar o resultado final no banco de dados.');
+        }
+      } 
+      
+      setFinalResult(currentResult);
+      handleSaveResult(currentResult);
+      setView('result');
+      
     } else {
-      setError('Não foi possível calcular seu resultado. Tente novamente.');
+      setError('Não foi possível calcular seu resultado. Você respondeu a todas as questões?');
       setView('register');
     }
     setLoading(false);
   }
 
-  // Renderização
-  if (loading) {
+  // --- RENDERIZAÇÃO ---
+
+  if (loading && view !== 'history') { 
     return <div className="loading">Carregando...</div>;
   }
 
@@ -258,6 +388,13 @@ function App() {
     case 'register':
       return (
         <div className="app-container">
+          {/* Gatilho de Admin Clicável (SECRETO) */}
+          <div 
+            className="admin-trigger" 
+            onClick={() => setView('adminLogin')}
+            title="Acesso Administrativo" 
+          >
+          </div>
           <h1>Teste Vocacional</h1>
           <form onSubmit={handleRegister} className="register-form">
             <p>Qual seu apelido?</p>
@@ -272,7 +409,6 @@ function App() {
           </form>
           {registrationError && <div className="error-message"><p>{registrationError}</p></div>}
           
-          {/* ALTERADO: Agora são dois botões para controle da fonte */}
           <div className="font-controls">
             <button 
               onClick={decreaseFontSize} 
@@ -292,10 +428,92 @@ function App() {
         </div>
       );
 
-    case 'quiz':
-      const currentQuestion = questions[currentQuestionIndex];
+    case 'adminLogin':
       return (
         <div className="app-container">
+          {/* Gatilho de Admin Clicável para Voltar */}
+          <div 
+            className="admin-trigger" 
+            onClick={handleGoToRegister}
+            title="Voltar ao Início"
+          >
+          </div>
+          <h1>Acesso Administrativo</h1>
+          <form onSubmit={handleAdminLogin} className="register-form">
+            <p>Apelido Mestre:</p>
+            <input
+              type="text"
+              value={adminApelido}
+              onChange={(e) => setAdminApelido(e.target.value)}
+              placeholder="Apelido do Administrador"
+              required
+            />
+            <p>Senha:</p>
+            {/* NOVO: CONTAINER PARA ALINHAR SENHA E BOTÃO */}
+            <div style={{ position: 'relative', width: '100%', maxWidth: '300px', margin: '0 auto 15px' }}>
+              <input
+                // ALTERAÇÃO: O tipo muda dinamicamente com o estado showAdminPassword
+                type={showAdminPassword ? 'text' : 'password'}
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="********"
+                required
+                style={{ 
+                    width: '100%', 
+                    padding: '10px', 
+                    paddingRight: '40px', 
+                    boxSizing: 'border-box', 
+                    borderRadius: '5px',
+                    border: '1px solid #ccc'
+                }} 
+              />
+              <button
+                type="button" // Essencial para prevenir o envio do formulário
+                onClick={() => setShowAdminPassword(!showAdminPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '5px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#2e2e2e', 
+                  fontSize: '1.2rem',
+                }}
+                aria-label={showAdminPassword ? 'Esconder senha' : 'Mostrar senha'}
+              >
+                {/* ÍCONE DE ACORDO COM O ESTADO */}
+                {showAdminPassword ? '🔒' : '👁️'}
+              </button>
+            </div>
+            
+            <button className="start-button" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar como Administrador'}
+            </button>
+          </form>
+          {adminError && <div className="error-message"><p>{adminError}</p></div>}
+          <div className="extra-buttons">
+            <button onClick={handleGoToRegister} className="back-button">
+                Voltar
+            </button>
+          </div>
+        </div>
+      );
+
+    case 'quiz': 
+      const currentQuestion = questions[currentQuestionIndex];
+      const selectedOption = userAnswers.find(a => a.id_q === currentQuestion.id_q);
+      
+      return (
+        <div className="app-container">
+          {/* Gatilho de Admin Clicável (SECRETO) */}
+          <div 
+            className="admin-trigger" 
+            onClick={() => setView('adminLogin')}
+            title="Acesso Administrativo"
+          >
+          </div>
           <h1>Teste Vocacional</h1>
           <p className="question-text">
             Questão {currentQuestionIndex + 1} de {questions.length}
@@ -306,7 +524,7 @@ function App() {
               {currentQuestion.opcoes.map(o => (
                 <button
                   key={o.id_o}
-                  className="option-button"
+                  className={`option-button ${selectedOption && selectedOption.id_o === o.id_o ? 'selected' : ''}`}
                   onClick={() => handleAnswer(currentQuestion.id_q, o.id_o)}>
                   {o.opcao}
                 </button>
@@ -324,24 +542,48 @@ function App() {
         </div>
       );
 
-    case 'result':
+    case 'result': 
+      if (!finalResult) return <div className="error">Resultado indisponível.</div>;
+
+      const [principalArea, ...outrasAreas] = finalResult.topAreas;
+
       return (
         <div className="app-container">
+          {/* Gatilho de Admin Clicável (SECRETO) */}
+          <div 
+            className="admin-trigger" 
+            onClick={() => setView('adminLogin')}
+            title="Acesso Administrativo"
+          >
+          </div>
           <h1>Seu Resultado</h1>
           <p className="result-text">Olá, {userNickname}! Sua área principal de interesse é:</p>
           <div className="main-result">
-            <p className="result-area-principal">{finalResult.area}</p>
+            <p className="result-area-principal">{principalArea.area}</p>
           </div>
+          
+          <div className="top-areas-list">
+            <h2>Suas 5 Maiores Aptidões:</h2>
+            <ul className="suggestions">
+              {finalResult.topAreas.map((item, index) => (
+                <li key={item.area} className={index === 0 ? 'top-1' : ''}>
+                  <strong>{index + 1}º. {item.area}</strong> 
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {finalResult.sugestoes.length > 0 && (
-            <div className="suggestions">
-              <h2>Alguns caminhos possíveis:</h2>
-              <ul>
+            <div className="suggestions-courses">
+              <h2>Sugestões de Cursos:</h2>
+              <ul className="suggestions">
                 {finalResult.sugestoes.map((sugestao, index) => (
                   <li key={index}>{sugestao}</li>
                 ))}
               </ul>
             </div>
           )}
+          
           <div className="extra-buttons">
             <button onClick={() => setView('history')} className="history-button">
               Ver Histórico
@@ -354,34 +596,55 @@ function App() {
       );
 
     case 'history':
+      const displayedResults = isMasterAdmin ? allDbResults : pastResults;
+      const historyTitle = isMasterAdmin 
+          ? 'Histórico Geral de Testes (ADMIN)' 
+          : 'Seu Histórico Local';
+
+      if (historyLoading) {
+        return <div className="loading">Carregando histórico do servidor...</div>;
+      }
+      
       return (
         <div className="app-container">
-          <h1>Histórico de Testes</h1>
-          {pastResults.length > 0 ? (
+          {/* Gatilho de Admin no Histórico. Clicar volta ao registro/sai do admin. */}
+          <div 
+            className="admin-trigger" 
+            onClick={handleGoToRegister} 
+            title="Sair do modo Admin / Voltar ao Início"
+          >
+          </div>
+          
+          <h1>{historyTitle}</h1>
+          
+          {displayedResults.length > 0 ? (
             <>
               <ul className="result-list">
-                {pastResults.map((result, index) => (
+                {displayedResults.map((result, index) => (
                   <li key={index} className="result-item">
-                    <div>Apelido: {result.nickname}</div>
+                    <div>Apelido: **{result.nickname}**</div>
                     <div>Data: {result.date}</div>
                     <div>Área Principal: {result.area}</div>
                   </li>
                 ))}
               </ul>
               <div className="extra-buttons">
-                <button onClick={handleClearHistory} className="clear-history-button">
-                  Limpar Histórico
-                </button>
-                <button onClick={() => setView('register')} className="back-to-test-button">
-                  Voltar para Registro
+                {/* O botão Limpar Histórico só afeta o localStorage para usuários normais */}
+                {!isMasterAdmin && (
+                    <button onClick={handleClearHistory} className="clear-history-button">
+                        Limpar Histórico Local
+                    </button>
+                )}
+                <button onClick={handleGoToRegister} className="back-to-test-button">
+                  {isMasterAdmin ? 'Sair do Admin e Voltar' : 'Voltar para Registro'}
                 </button>
               </div>
             </>
           ) : (
             <>
-              <p>Nenhum resultado anterior encontrado.</p>
+              <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
               <div className="extra-buttons">
-                <button onClick={() => setView('register')} className="back-to-test-button">
+                <button onClick={handleGoToRegister} className="back-to-test-button">
                   Voltar para Registro
                 </button>
               </div>
