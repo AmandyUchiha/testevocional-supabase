@@ -144,7 +144,7 @@ function App() {
         }
     }
 
-    // FUNÇÃO 1: BUSCA RESUMO (Histórico Global - Ordenação corrigida)
+    // FUNÇÃO 1: BUSCA RESUMO (Histórico Global - CORRIGIDA a ordenação)
     async function fetchAllResults() {
         setHistoryLoading(true);
         
@@ -155,14 +155,17 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // Ordena pela data de criação do usuário (mais recente primeiro)
-            .order('usuarios.data_criacao', { ascending: false }); 
+            // CORREÇÃO: Usando o método .order() com foreignTable e encadeando .desc()
+            // para evitar os erros de sintaxe (42601 e PGRST000)
+            .order('data_criacao', { foreignTable: 'usuarios' }) 
+            .desc();
 
         setHistoryLoading(false);
 
         if (error) {
             console.error("Erro ao buscar histórico admin (resumo):", error);
-            setError('Erro ao carregar o histórico de testes do banco de dados.'); 
+            // Mostrar a mensagem de erro específica do banco para debugging
+            setError(`Erro ao carregar o histórico de testes do banco de dados: ${error.message || error.code}`); 
             return [];
         }
 
@@ -175,7 +178,7 @@ function App() {
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (CORRIGIDA: String de SELECT mais robusta)
+    // FUNÇÃO 2: BUSCA DETALHES (Seleção aninhada ajustada)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -186,7 +189,8 @@ function App() {
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
                 .from('respostas_usuario')
-                // CORREÇÃO: Usando string de seleção em uma linha para evitar erros de parsing
+                // CORREÇÃO: Usando string de seleção em uma linha e sem quebras de linha/espaços em excesso
+                // para evitar erros de parsing no aninhamento triplo.
                 .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
@@ -199,7 +203,6 @@ function App() {
             // 2. Calcular o score total (Top 5)
             const scoreMap = {};
             respostas.forEach(r => {
-                // Acessa a pontuação através da estrutura de objetos aninhados
                 if (r.opcoes && r.opcoes.pontuacao) {
                     r.opcoes.pontuacao.forEach(p => {
                         scoreMap[p.area] = (scoreMap[p.area] || 0) + (p.valor || 0);
@@ -225,14 +228,10 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
-                // Garante que a área principal seja a primeira da lista ou "N/A"
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
                 topAreas: top5Areas,
-                // Mapeia as respostas (Pergunta + Resposta Escolhida)
                 questions: respostas.map(r => ({
-                    // Acessa o enunciado através do relacionamento 'questoes'
                     enunciado: r.questoes.enunciado, 
-                    // Acessa a opção através do relacionamento 'opcoes'
                     resposta: r.opcoes.opcao, 
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
@@ -243,15 +242,14 @@ function App() {
 
         } catch (err) {
             console.error("Erro ao buscar detalhes do histórico:", err);
-            setAdminError('Erro ao carregar os detalhes do histórico. Verifique o console para a query ESSENCIAL.');
+            setAdminError('Erro ao carregar os detalhes do histórico. Verifique a query do Supabase para aninhamento triplo.');
         } finally {
             setLoading(false);
         }
     }
 
-    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
-    
-    async function handleRegister(e) { 
+    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE (Inalteradas, pois o foco é o histórico) ---
+    async function handleRegister(e) { /* ... */ 
         e.preventDefault();
         setRegistrationError(null);
         if (!userNickname.trim()) {
