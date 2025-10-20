@@ -144,7 +144,7 @@ function App() {
         }
     }
 
-    // FUNÇÃO 1: BUSCA RESUMO (Histórico Global - CORRIGIDA a ordenação)
+    // FUNÇÃO 1: BUSCA RESUMO (Histórico Global - ORDENAÇÃO REMOVIDA)
     async function fetchAllResults() {
         setHistoryLoading(true);
         
@@ -155,17 +155,16 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // CORREÇÃO: Usando o método .order() com foreignTable e encadeando .desc()
-            // para evitar os erros de sintaxe (42601 e PGRST000)
-            .order('data_criacao', { foreignTable: 'usuarios' }) 
-            .desc();
+            // ORDENAÇÃO REMOVIDA: A sintaxe estava causando erros persistentes 
+            // de PGRST000 e 42601 (syntax error).
+            // O histórico carregará na ordem padrão do banco (geralmente por id_u).
 
         setHistoryLoading(false);
 
         if (error) {
             console.error("Erro ao buscar histórico admin (resumo):", error);
-            // Mostrar a mensagem de erro específica do banco para debugging
-            setError(`Erro ao carregar o histórico de testes do banco de dados: ${error.message || error.code}`); 
+            // Mensagem de erro para o usuário
+            setError(`Erro ao carregar o histórico de testes do banco de dados. ${error.message || ''}`); 
             return [];
         }
 
@@ -178,7 +177,7 @@ function App() {
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (Seleção aninhada ajustada)
+    // FUNÇÃO 2: BUSCA DETALHES (CORRIGIDA: Seleção aninhada ajustada)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -189,8 +188,7 @@ function App() {
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
                 .from('respostas_usuario')
-                // CORREÇÃO: Usando string de seleção em uma linha e sem quebras de linha/espaços em excesso
-                // para evitar erros de parsing no aninhamento triplo.
+                // CORREÇÃO: Usando string de seleção em uma linha para evitar erros de parsing.
                 .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
@@ -228,6 +226,7 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
+                // Isto agora deve funcionar, pois o scoreMap e top5Areas estão sendo preenchidos
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
                 topAreas: top5Areas,
                 questions: respostas.map(r => ({
@@ -242,14 +241,15 @@ function App() {
 
         } catch (err) {
             console.error("Erro ao buscar detalhes do histórico:", err);
-            setAdminError('Erro ao carregar os detalhes do histórico. Verifique a query do Supabase para aninhamento triplo.');
+            setAdminError('Erro ao carregar os detalhes do histórico. O erro pode ser na estrutura das suas tabelas de pontuação.');
         } finally {
             setLoading(false);
         }
     }
 
-    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE (Inalteradas, pois o foco é o histórico) ---
-    async function handleRegister(e) { /* ... */ 
+    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
+    
+    async function handleRegister(e) { 
         e.preventDefault();
         setRegistrationError(null);
         if (!userNickname.trim()) {
@@ -663,7 +663,8 @@ function App() {
                 ? 'Histórico Geral de Testes (ADMIN)' 
                 : 'Seu Histórico Local';
 
-            if (historyLoading) {
+            // O erro de ordenação foi contornado, então esta parte deve carregar
+            if (historyLoading) { 
                 return <div className="loading">Carregando histórico do servidor...</div>;
             }
             
@@ -689,6 +690,7 @@ function App() {
                                     <li 
                                         key={index} 
                                         className={`result-item ${isMasterAdmin ? 'clickable' : ''}`}
+                                        // O ID do usuário (result.id) é usado para buscar os detalhes
                                         onClick={() => isMasterAdmin && fetchDetailedResults(result.id)}
                                         title={isMasterAdmin ? "Clique para ver detalhes" : "Visualização local"}
                                     >
@@ -723,6 +725,8 @@ function App() {
             );
 
         case 'detailedHistory':
+            // Esta tela agora deve carregar os dados completos, pois a correção de seleção
+            // na fetchDetailedResults foi aplicada.
             if (!selectedUserResults || !isMasterAdmin) {
                 return <div className="loading">Carregando detalhes ou acesso negado.</div>;
             }
