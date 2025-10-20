@@ -51,7 +51,7 @@ function App() {
             } else {
                 setQuestions(data);
             }
-            setLoading(false);
+            setLoading(false); // <--- O `loading` se torna FALSE aqui, garantindo que a tela seja exibida.
         }
         getQuestionsAndOptions();
 
@@ -111,7 +111,7 @@ function App() {
     async function handleAdminLogin(e) {
         e.preventDefault();
         setAdminError(null);
-        setLoading(true);
+        setLoading(true); // <-- Inicia o loading
 
         const { data: userData, error: userError } = await supabase
             .from('user_mestre')
@@ -119,10 +119,10 @@ function App() {
             .eq('apelido', adminApelido)
             .single();
         
-        setLoading(false);
+        setLoading(false); // <-- Finaliza o loading após a busca
 
         if (userError && userError.code !== 'PGRST116') {
-            console.error('Erro de busca no DB:', userError);
+            console.error('Erro de busca no DB (Admin Login):', userError);
             setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
             return;
         }
@@ -155,15 +155,12 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // ORDENAÇÃO REMOVIDA: A sintaxe estava causando erros persistentes 
-            // de PGRST000 e 42601 (syntax error).
-            // O histórico carregará na ordem padrão do banco (geralmente por id_u).
+            // ORDENAÇÃO REMOVIDA para evitar erros de PGRST000 e 42601
 
         setHistoryLoading(false);
 
         if (error) {
             console.error("Erro ao buscar histórico admin (resumo):", error);
-            // Mensagem de erro para o usuário
             setError(`Erro ao carregar o histórico de testes do banco de dados. ${error.message || ''}`); 
             return [];
         }
@@ -188,7 +185,6 @@ function App() {
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
                 .from('respostas_usuario')
-                // CORREÇÃO: Usando string de seleção em uma linha para evitar erros de parsing.
                 .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
@@ -226,7 +222,6 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
-                // Isto agora deve funcionar, pois o scoreMap e top5Areas estão sendo preenchidos
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
                 topAreas: top5Areas,
                 questions: respostas.map(r => ({
@@ -663,7 +658,6 @@ function App() {
                 ? 'Histórico Geral de Testes (ADMIN)' 
                 : 'Seu Histórico Local';
 
-            // O erro de ordenação foi contornado, então esta parte deve carregar
             if (historyLoading) { 
                 return <div className="loading">Carregando histórico do servidor...</div>;
             }
@@ -690,7 +684,6 @@ function App() {
                                     <li 
                                         key={index} 
                                         className={`result-item ${isMasterAdmin ? 'clickable' : ''}`}
-                                        // O ID do usuário (result.id) é usado para buscar os detalhes
                                         onClick={() => isMasterAdmin && fetchDetailedResults(result.id)}
                                         title={isMasterAdmin ? "Clique para ver detalhes" : "Visualização local"}
                                     >
@@ -725,8 +718,6 @@ function App() {
             );
 
         case 'detailedHistory':
-            // Esta tela agora deve carregar os dados completos, pois a correção de seleção
-            // na fetchDetailedResults foi aplicada.
             if (!selectedUserResults || !isMasterAdmin) {
                 return <div className="loading">Carregando detalhes ou acesso negado.</div>;
             }
