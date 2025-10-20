@@ -105,74 +105,79 @@ function App() {
   // --- FUNÇÕES DE ADMIN ---
   
   async function handleAdminLogin(e) {
-  e.preventDefault();
-  setAdminError(null);
-  setLoading(true);
+    e.preventDefault();
+    setAdminError(null);
+    setLoading(true);
 
-  // 1. Busca o Apelido e a SENHA PURA (coluna 'senha_hash') do DB
-  const { data: userData, error: userError } = await supabase
-    .from('user_mestre')
-    .select(`
-        apelido, 
-        senha_hash
-    `)
-    .eq('apelido', adminApelido) // Busca pelo apelido digitado
-    .single();
-  
-  setLoading(false);
+    // 1. Busca o Apelido e a SENHA PURA (coluna 'senha_hash') do DB
+    const { data: userData, error: userError } = await supabase
+      .from('user_mestre')
+      .select(`
+          apelido, 
+          senha_hash
+      `)
+      .eq('apelido', adminApelido) // Busca pelo apelido digitado
+      .single();
+    
+    setLoading(false);
 
-  // 2. Trata erro de busca (usuário não encontrado ou erro de DB)
-  // Se o erro for um retorno de "não existe linha", ou se userData for nulo.
-  if (userError && userError.code !== 'PGRST116') { // PGRST116 = não encontrou a linha (trataremos como credencial incorreta)
-      console.error('Erro de busca no DB:', userError);
-      setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
-      return;
-  }
-  
-  if (!userData || userError) { // Se não encontrou o usuário (incluindo o erro PGRST116)
-      setAdminError('Apelido ou senha mestre incorretos.');
-      return;
+    // 2. Trata erro de busca (usuário não encontrado ou erro de DB)
+    // Se o erro for um retorno de "não existe linha", ou se userData for nulo.
+    if (userError && userError.code !== 'PGRST116') { // PGRST116 = não encontrou a linha (trataremos como credencial incorreta)
+        console.error('Erro de busca no DB:', userError);
+        setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
+        return;
+    }
+    
+    if (!userData || userError) { // Se não encontrou o usuário (incluindo o erro PGRST116)
+        setAdminError('Apelido ou senha mestre incorretos.');
+        return;
+    }
+
+    const savedPassword = userData.senha_hash;
+    
+    // 3. Checagem DIRETA: Compara a senha digitada (case-sensitive) com a senha PURA salva no DB
+    if (adminPassword === savedPassword) {
+        setIsMasterAdmin(true);
+        
+        // ✅ ALTERAÇÃO CHAVE: Carregar os resultados aqui!
+        const results = await fetchAllResults(); 
+        setAllDbResults(results); 
+        
+        setView('history'); 
+    } else {
+        setAdminError('Apelido ou senha mestre incorretos.');
+    }
   }
 
-  const savedPassword = userData.senha_hash;
-  
-  // 3. Checagem DIRETA: Compara a senha digitada (case-sensitive) com a senha PURA salva no DB
-  if (adminPassword === savedPassword) {
-      setIsMasterAdmin(true);
-      
-      // ✅ ALTERAÇÃO CHAVE: Carregar os resultados aqui!
-      const results = await fetchAllResults(); 
-      setAllDbResults(results); 
-      
-      setView('history'); 
-  } else {
-      setAdminError('Apelido ou senha mestre incorretos.');
-  }
-}
   async function fetchAllResults() {
       setHistoryLoading(true);
       
+      // CORREÇÃO AQUI: Removemos 'created_at' da tabela 'resultado'
+      // e adicionamos 'data_criacao' da tabela 'usuarios'
       const { data, error } = await supabase
           .from('resultado')
           .select(`
               area_principal,
-              created_at, // <<<<< CORREÇÃO AQUI: USAR created_at (sem alias)
-              usuarios(apelido)
+              usuarios(apelido, data_criacao) 
           `)
-          .order('created_at', { ascending: false }); 
+          // ATENÇÃO: Se 'created_at' não existe em 'resultado',
+          // não podemos ordenar por ela. Ordenaremos por 'area_principal' ou mude no DB.
+          .order('area_principal', { ascending: true }); 
 
       setHistoryLoading(false);
 
       if (error) {
           console.error("Erro ao buscar histórico admin:", error);
-          setError('Erro ao carregar o histórico de testes do banco de dados.');
+          // Define um erro claro, embora a correção deva resolver o 42703
+          setError('Erro ao carregar o histórico de testes do banco de dados.'); 
           return [];
       }
 
       return data.map(item => ({
           nickname: item.usuarios.apelido,
-          // <<<<< CORREÇÃO AQUI: Mudar de item.data_criacao para item.created_at
-          date: new Date(item.created_at).toLocaleDateString('pt-BR'),
+          // CORREÇÃO AQUI: Acessa a data de criação do usuário (usuarios.data_criacao)
+          date: new Date(item.usuarios.data_criacao).toLocaleDateString('pt-BR'),
           area: item.area_principal,
       }));
   }
