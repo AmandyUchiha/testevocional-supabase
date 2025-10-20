@@ -361,7 +361,7 @@ h1 {
     min-width: unset;
   }
 
-  /* Reduz o tamanho da imagem do Wall-E e a posiciona melhor para não cortar */
+  /* Reduz o tamanho da imagem do Wall-E e posiciona melhor para não cortar */
   .admin-trigger {
     width: 100px;
     height: 100px;
