@@ -35,7 +35,7 @@ function App() {
     const [selectedUserResults, setSelectedUserResults] = useState(null); 
     
     // Efeito para carregar as questões e histórico local
-    useEffect(() => {
+    useEffect(() => { 
         async function getQuestionsAndOptions() {
             const { data, error } = await supabase
                 .from('questoes')
@@ -62,7 +62,7 @@ function App() {
     }, []);
 
     // Alterna classes no <body>
-    useEffect(() => {
+    useEffect(() => { 
         const bodyClassList = document.body.classList;
         bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page', 'adminLogin', 'detailedHistory');
 
@@ -86,7 +86,7 @@ function App() {
     }, [view]);
 
     // Efeito para aplicar o ajuste de fonte
-    useEffect(() => {
+    useEffect(() => { 
         const baseFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
         const newSize = baseFontSize + fontSizeAdjustment;
         document.body.style.fontSize = `${newSize}px`;
@@ -144,7 +144,7 @@ function App() {
         }
     }
 
-    // FUNÇÃO 1: BUSCA RESUMO (CORRIGIDA: Ordenação pela data de criação)
+    // FUNÇÃO 1: BUSCA RESUMO (CORRIGIDA: Sintaxe de ordenação Supabase ajustada)
     async function fetchAllResults() {
         setHistoryLoading(true);
         
@@ -155,8 +155,9 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // ORDENAÇÃO CORRIGIDA para pegar o histórico completo, do mais recente ao mais antigo
-            .order('data_criacao', { foreignTable: 'usuarios', ascending: false }); 
+            // CORREÇÃO: Uso da notação 'tabela_relacionada.coluna' para ordenar 
+            // pela data de criação do usuário (mais recente primeiro).
+            .order('usuarios.data_criacao', { ascending: false }); 
 
         setHistoryLoading(false);
 
@@ -175,7 +176,7 @@ function App() {
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (Retorna Perguntas/Respostas e Top 5 Áreas)
+    // FUNÇÃO 2: BUSCA DETALHES (Mostra Q/R e Top 5 Áreas)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -228,12 +229,11 @@ function App() {
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
                 topAreas: top5Areas,
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A',
-                // Mapeia as respostas, formatando os dados para a exibição (pergunta + resposta)
+                // Mapeia as respostas (Pergunta + Resposta Escolhida)
                 questions: respostas.map(r => ({
                     enunciado: r.questoes.enunciado,
                     resposta: r.opcoes.opcao,
-                    // Não precisamos das pontuações detalhadas (a soma já foi feita no passo 2)
-                    // Mas manteremos o campo para referência, filtrando valores zero.
+                    // Pontuações (mantidas apenas para debug/referência, mas não exibidas no JSX detalhadamente)
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
             };
@@ -348,7 +348,7 @@ function App() {
     async function handleSubmitTest(answers) { 
         setLoading(true);
 
-        // 1. SALVA RESPOSTAS NA TABELA `respostas_usuario` (CRUCIAL para o histórico detalhado)
+        // 1. SALVA RESPOSTAS NA TABELA `respostas_usuario`
         const answersToSave = answers.map(a => ({
             id_u: userId,
             id_q: a.id_q,
@@ -571,7 +571,6 @@ function App() {
             const currentQuestion = questions[currentQuestionIndex];
             const selectedOption = userAnswers.find(a => a.id_q === currentQuestion.id_q);
             
-            // Certifique-se de que a pergunta e as opções existem
             if (!currentQuestion) return <div className="loading">Carregando questões...</div>;
             
             return (
@@ -601,8 +600,6 @@ function App() {
                                 if (currentQuestionIndex === questions.length - 1) {
                                     handleSubmitTest(userAnswers);
                                 } else {
-                                    // Apenas avança se uma opção foi selecionada (o que é garantido pelo handleAnswer)
-                                    // A lógica de handleAnswer já avança, mas este botão pode ser ajustado para garantir a transição
                                     setCurrentQuestionIndex(currentQuestionIndex + 1);
                                 }
                             }} 
@@ -746,9 +743,6 @@ function App() {
                             <div key={index} className="question-detail-item">
                                 <h3>Q{index + 1}: {q.enunciado}</h3>
                                 <p><strong>Resposta Escolhida:</strong> {q.resposta}</p>
-                                {/* Removido a exibição detalhada da soma de pontos, conforme solicitado, 
-                                    mantendo apenas a pergunta e resposta.
-                                */}
                             </div>
                         ))}
                     </div>
