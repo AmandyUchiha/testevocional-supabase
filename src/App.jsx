@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient.js'; 
 import './App.css';
 
-// DECLARAÇÃO DAS CONSTANTES DE TABELA (Adicionadas conforme sua solicitação)
+// DECLARAÇÃO DAS CONSTANTES DE TABELA
 const RESULTADO_NOVO_TABLE = 'resultado';
 const RESULTADO_ANTIGO_TABLE = 'resultado_antigo';
 const RESPOSTAS_NOVO_TABLE = 'respostas_usuario';
@@ -39,7 +39,11 @@ function App() {
     const [showAdminPassword, setShowAdminPassword] = useState(false); 
     // ESTADO NOVO: Detalhe do usuário selecionado no histórico admin
     const [selectedUserResults, setSelectedUserResults] = useState(null); 
-    
+    // ESTADOS ADICIONAIS DO ADMIN (Top 7 e View Toggle)
+    const [top7Results, setTop7Results] = useState([]);
+    const [top7Loading, setTop7Loading] = useState(false);
+    const [adminHistoryView, setAdminHistoryView] = useState(RESULTADO_NOVO_TABLE); 
+
     // Efeito para carregar as questões e histórico local
     useEffect(() => { 
         async function getQuestionsAndOptions() {
@@ -66,6 +70,14 @@ function App() {
             setPastResults(JSON.parse(savedResults));
         }
     }, []);
+
+    // Efeito para carregar o Top 7 e o histórico admin ao entrar na view 'history' (ADMIN)
+    useEffect(() => {
+        if (view === 'history' && isMasterAdmin) {
+            fetchTop7(RESULTADO_NOVO_TABLE).then(data => setTop7Results(data));
+            fetchAllResults(adminHistoryView).then(data => setAllDbResults(data));
+        }
+    }, [view, isMasterAdmin, adminHistoryView]);
 
     // Alterna classes no <body>
     useEffect(() => { 
@@ -140,11 +152,9 @@ function App() {
 
         const savedPassword = userData.senha_hash;
         
-        // CORREÇÃO: Usando a tabela nova para buscar os resultados
         if (adminPassword === savedPassword) {
             setIsMasterAdmin(true);
-            const results = await fetchAllResults(RESULTADO_NOVO_TABLE); 
-            setAllDbResults(results); 
+            setAdminHistoryView(RESULTADO_NOVO_TABLE); // Define a visualização inicial
             setView('history'); 
         } else {
             setAdminError('Apelido ou senha mestre incorretos.');
@@ -155,7 +165,7 @@ function App() {
     async function fetchAllResults(tableName) {
         setHistoryLoading(true);
         
-        // CORREÇÃO: Usando a constante da tabela correta
+        // Esta busca **requer** a Foreign Key no Supabase (resultado(id_u) -> usuarios(id_u))
         const { data, error } = await supabase
             .from(tableName) 
             .select(`
@@ -163,14 +173,13 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // Ordena pela data de criação do usuário (mais recente primeiro)
             .order('usuarios.data_criacao', { ascending: false }); 
 
         setHistoryLoading(false);
 
         if (error) {
             console.error("Erro ao buscar histórico admin (resumo):", error);
-            setError('Erro ao carregar o histórico de testes do banco de dados.'); 
+            setError(`Erro PGRST: Verifique se a Foreign Key existe na tabela ${tableName}.`); 
             return [];
         }
 
@@ -182,8 +191,7 @@ function App() {
         }));
     }
 
-
-    // FUNÇÃO 2: BUSCA DETALHES 
+    // FUNÇÃO 2: BUSCA DETALHES (Mantida Inalterada)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -191,10 +199,12 @@ function App() {
         setAdminError(null);
 
         try {
+            // Usa a tabela de respostas correspondente à view atual do Admin
+            const respostasTable = adminHistoryView === RESULTADO_NOVO_TABLE ? RESPOSTAS_NOVO_TABLE : RESPOSTAS_ANTIGO_TABLE;
+            
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
-                // CORREÇÃO: Usando a constante da tabela correta
-                .from(RESPOSTAS_NOVO_TABLE) 
+                .from(respostasTable) 
                 .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
@@ -207,7 +217,6 @@ function App() {
             // 2. Calcular o score total (Top 5)
             const scoreMap = {};
             respostas.forEach(r => {
-                // Acessa a pontuação através da estrutura de objetos aninhados
                 if (r.opcoes && r.opcoes.pontuacao) {
                     r.opcoes.pontuacao.forEach(p => {
                         scoreMap[p.area] = (scoreMap[p.area] || 0) + (p.valor || 0);
@@ -233,14 +242,10 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
-                // Garante que a área principal seja a primeira da lista ou "N/A"
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
                 topAreas: top5Areas,
-                // Mapeia as respostas (Pergunta + Resposta Escolhida)
                 questions: respostas.map(r => ({
-                    // Acessa o enunciado através do relacionamento 'questoes'
                     enunciado: r.questoes.enunciado, 
-                    // Acessa a opção através do relacionamento 'opcoes'
                     resposta: r.opcoes.opcao, 
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
@@ -255,6 +260,34 @@ function App() {
         } finally {
             setLoading(false);
         }
+    }
+
+    // FUNÇÃO 3: BUSCA TOP 7 (Para a área ADMIN)
+    async function fetchTop7(tableName) {
+        setTop7Loading(true);
+        
+        // Esta query *deve* calcular o TOP 7 da area_principal. 
+        // Dependendo de como a tabela está estruturada, 
+        // talvez precise de uma *View* ou *Function* no Supabase para agregar.
+        // Assumindo que você tem uma coluna 'percentual_principal' ou similar para ordenar.
+        const { data, error } = await supabase
+            .from(tableName) 
+            .select(`area_principal, percentual_principal`) 
+            .order('percentual_principal', { ascending: false })
+            .limit(7);
+
+        setTop7Loading(false);
+
+        if (error) {
+            console.error("Erro ao buscar Top 7:", error);
+            return [];
+        }
+
+        // Se 'percentual_principal' não for um percentual, ajuste a formatação aqui.
+        return data.map(item => ({
+            area_principal: item.area_principal,
+            percentual_principal: item.percentual_principal, // Assume que é um valor numérico
+        }));
     }
 
     // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
@@ -332,6 +365,7 @@ function App() {
         setAdminPassword('');
         setAllDbResults([]);
         setSelectedUserResults(null); 
+        setAdminHistoryView(RESULTADO_NOVO_TABLE); // Resetar view admin
         setView('register');
     }
 
@@ -363,7 +397,6 @@ function App() {
             id_o: a.id_o,
         }));
         
-        // CORREÇÃO: Usando a constante da tabela correta
         const { error: answersError } = await supabase
             .from(RESPOSTAS_NOVO_TABLE) 
             .insert(answersToSave);
@@ -443,7 +476,6 @@ function App() {
             };
 
             // 6. Salva o Resultado Principal no Banco (tabela 'resultado')
-            // CORREÇÃO: Usando a constante da tabela correta
             const { error: saveError } = await supabase
                 .from(RESULTADO_NOVO_TABLE) 
                 .insert({
@@ -469,13 +501,51 @@ function App() {
         setLoading(false);
     }
     
-    // --- RENDERIZAÇÃO ---
+    // --- RENDERIZAÇÃO DE COMPONENTES DE ADMIN ---
+
+    const renderTop7 = () => {
+        if (top7Loading) return <p>Carregando Top 7...</p>;
+        if (top7Results.length === 0) return <p>Nenhum ranking de área encontrado.</p>;
+
+        return (
+            <div className="top7-list">
+                <h3>Top 7 Áreas Principais ({RESULTADO_NOVO_TABLE})</h3>
+                <ol className="suggestions">
+                    {top7Results.map((item, index) => (
+                        <li key={index}>
+                            <strong className="area">{item.area_principal}</strong> 
+                            <span className="percentual"> ({item.percentual_principal})</span>
+                        </li>
+                    ))}
+                </ol>
+            </div>
+        );
+    };
+
+    const renderAdminHistorySwitch = () => (
+        <div className="toggle-buttons-admin">
+            <button 
+                onClick={() => setAdminHistoryView(RESULTADO_NOVO_TABLE)} 
+                className={adminHistoryView === RESULTADO_NOVO_TABLE ? 'active' : ''}
+            >
+                Resultados Novos ({RESULTADO_NOVO_TABLE})
+            </button>
+            <button 
+                onClick={() => setAdminHistoryView(RESULTADO_ANTIGO_TABLE)} 
+                className={adminHistoryView === RESULTADO_ANTIGO_TABLE ? 'active' : ''}
+            >
+                Resultados Antigos ({RESULTADO_ANTIGO_TABLE})
+            </button>
+        </div>
+    );
+    
+    // --- RENDERIZAÇÃO DA VIEW ---
 
     if (loading && view !== 'history' && view !== 'detailedHistory') { 
         return <div className="loading">Carregando...</div>;
     }
 
-    if (error) {
+    if (error && view !== 'history' && view !== 'detailedHistory') {
         return <div className="error">{error}</div>;
     }
 
@@ -675,10 +745,6 @@ function App() {
                 ? 'Histórico Geral de Testes (ADMIN)' 
                 : 'Seu Histórico Local';
 
-            if (historyLoading) {
-                return <div className="loading">Carregando histórico do servidor...</div>;
-            }
-            
             return (
                 <div className="app-container">
                     <div 
@@ -689,54 +755,64 @@ function App() {
                     </div>
                     
                     <h1>{historyTitle}</h1>
-                    {isMasterAdmin && adminError && <div className="error-message">{adminError}</div>}
+                    {isMasterAdmin && renderTop7()} 
                     
-                    {displayedResults.length > 0 ? (
-                        <>
-                            <p className="instruction">
-                                {isMasterAdmin ? 'Clique em um registro para ver as respostas detalhadas.' : 'Este é o seu histórico salvo localmente.'}
-                            </p>
-                            <ul className="result-list">
-                                {displayedResults.map((result, index) => (
-                                    <li 
-                                        key={index} 
-                                        className={`result-item ${isMasterAdmin ? 'clickable' : ''}`}
-                                        onClick={() => isMasterAdmin && fetchDetailedResults(result.id)}
-                                        title={isMasterAdmin ? "Clique para ver detalhes" : "Visualização local"}
-                                    >
-                                        <div>Apelido: **{result.nickname}**</div>
-                                        <div>Data: {result.date}</div>
-                                        <div>Área Principal: **{result.area}**</div>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="extra-buttons">
-                                {!isMasterAdmin && (
-                                    <button onClick={handleClearHistory} className="clear-history-button">
-                                        Limpar Histórico Local
-                                    </button>
-                                )}
-                                <button onClick={handleGoToRegister} className="back-to-test-button">
-                                    {isMasterAdmin ? 'Sair do Admin e Voltar' : 'Voltar para Registro'}
-                                </button>
-                            </div>
-                        </>
+                    {isMasterAdmin && renderAdminHistorySwitch()} 
+
+                    {historyLoading ? (
+                        <div className="loading">Carregando histórico do servidor ({adminHistoryView})...</div>
                     ) : (
                         <>
-                            <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
-                            <div className="extra-buttons">
-                                <button onClick={handleGoToRegister} className="back-to-test-button">
-                                    Voltar para Registro
-                                </button>
-                            </div>
+                            {isMasterAdmin && error && <div className="error-message">{error}</div>}
+                            {displayedResults.length > 0 ? (
+                                <>
+                                    <p className="instruction">
+                                        {isMasterAdmin ? `Visualizando ${adminHistoryView}. Clique para ver os detalhes das respostas.` : 'Este é o seu histórico salvo localmente.'}
+                                    </p>
+                                    <ul className="result-list">
+                                        {displayedResults.map((result, index) => (
+                                            <li 
+                                                key={index} 
+                                                className={`result-item ${isMasterAdmin ? 'clickable' : ''}`}
+                                                onClick={() => isMasterAdmin && fetchDetailedResults(result.id)}
+                                                title={isMasterAdmin ? "Clique para ver detalhes" : "Visualização local"}
+                                            >
+                                                <div>Apelido: <strong>{result.nickname}</strong></div>
+                                                <div>Data: {result.date}</div>
+                                                <div>Área Principal: <strong>{result.area}</strong></div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div className="extra-buttons">
+                                        {!isMasterAdmin && (
+                                            <button onClick={handleClearHistory} className="clear-history-button">
+                                                Limpar Histórico Local
+                                            </button>
+                                        )}
+                                        <button onClick={handleGoToRegister} className="back-to-test-button">
+                                            {isMasterAdmin ? 'Sair do Admin e Voltar' : 'Voltar para Registro'}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p>Nenhum resultado {isMasterAdmin ? `encontrado na tabela ${adminHistoryView}.` : 'anterior encontrado localmente.'}</p>
+                                    <div className="extra-buttons">
+                                        <button onClick={handleGoToRegister} className="back-to-test-button">
+                                            Voltar para Registro
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </>
                     )}
                 </div>
             );
 
         case 'detailedHistory':
+            if (loading) return <div className="loading">Carregando detalhes...</div>;
             if (!selectedUserResults || !isMasterAdmin) {
-                return <div className="loading">Carregando detalhes ou acesso negado.</div>;
+                return <div className="error">Detalhes indisponíveis ou acesso negado.</div>;
             }
 
             return (
@@ -751,42 +827,45 @@ function App() {
                     <p className="result-summary">
                         **Data:** {selectedUserResults.date} | **Área Principal:** **{selectedUserResults.principalArea}**
                     </p>
-                    {adminError && <div className="error-message">{adminError}</div>}
-
-                    <h2>5 Áreas Principais de Interesse</h2>
-                    <ul className="suggestions top-areas-list">
-                        {selectedUserResults.topAreas.map((item, index) => (
-                            <li key={item.area} className={index === 0 ? 'top-1' : ''}>
-                                <strong>{index + 1}º. {item.area}</strong> ({item.score} pontos)
-                            </li>
-                        ))}
-                    </ul>
-
-                    <h2>Respostas Detalhadas</h2>
-                    <div className="question-list">
-                        {selectedUserResults.questions.map((q, index) => (
-                            <div key={index} className="question-detail-item">
-                                <h3>Q{index + 1}: {q.enunciado}</h3>
-                                <p><strong>Resposta Escolhida:</strong> {q.resposta}</p>
-                                {q.pontuacoes.length > 0 && (
-                                    <p className="pontuacao-detail">
-                                        (Pontuou em: {q.pontuacoes.map(p => `${p.area} [+${p.valor}]`).join(', ')})
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
                     
+                    <div className="detail-section">
+                        <h2>Top Áreas Calculadas:</h2>
+                        <ul className="suggestions">
+                            {selectedUserResults.topAreas.map((item, index) => (
+                                <li key={item.area}>
+                                    <strong>{index + 1}º. {item.area}</strong> (Pontuação: {item.score})
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="detail-section">
+                        <h2>Respostas do Usuário:</h2>
+                        <ul className="questions-answered">
+                            {selectedUserResults.questions.map((q, index) => (
+                                <li key={index}>
+                                    <p><strong>P{index + 1}:</strong> {q.enunciado}</p>
+                                    <p className="user-answer"><strong>Resposta:</strong> {q.resposta}</p>
+                                    {q.pontuacoes.length > 0 && (
+                                        <p className="pontuacoes-detail">
+                                            (Pontuação: {q.pontuacoes.map(p => `${p.area}: +${p.valor}`).join('; ')})
+                                        </p>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
                     <div className="extra-buttons">
-                        <button onClick={() => setView('history')} className="back-to-history-button">
+                        <button onClick={() => setView('history')} className="back-button">
                             Voltar ao Histórico Geral
                         </button>
                     </div>
                 </div>
             );
-
+            
         default:
-            return <div className="error">View Error</div>;
+            return <div className="error">View inválida.</div>;
     }
 }
 
