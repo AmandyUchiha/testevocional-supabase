@@ -144,7 +144,7 @@ function App() {
         }
     }
 
-    // FUNÇÃO 1: BUSCA RESUMO (CORRIGIDA: Sintaxe de ordenação Supabase ajustada)
+    // FUNÇÃO 1: BUSCA RESUMO (Histórico Global - Ordenação corrigida)
     async function fetchAllResults() {
         setHistoryLoading(true);
         
@@ -155,15 +155,14 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            // CORREÇÃO: Uso da notação 'tabela_relacionada.coluna' para ordenar 
-            // pela data de criação do usuário (mais recente primeiro).
+            // Ordena pela data de criação do usuário (mais recente primeiro)
             .order('usuarios.data_criacao', { ascending: false }); 
 
         setHistoryLoading(false);
 
         if (error) {
             console.error("Erro ao buscar histórico admin (resumo):", error);
-            setError('Erro ao carregar o histórico de testes do banco de dados. Verifique o console para detalhes.'); 
+            setError('Erro ao carregar o histórico de testes do banco de dados.'); 
             return [];
         }
 
@@ -176,7 +175,7 @@ function App() {
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (Mostra Q/R e Top 5 Áreas)
+    // FUNÇÃO 2: BUSCA DETALHES (CORRIGIDA: String de SELECT mais robusta)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -187,21 +186,20 @@ function App() {
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
                 .from('respostas_usuario')
-                .select(`
-                    id_ru,
-                    id_q,
-                    id_o,
-                    questoes(enunciado),
-                    opcoes(opcao, pontuacao(area, valor))
-                `)
+                // CORREÇÃO: Usando string de seleção em uma linha para evitar erros de parsing
+                .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
 
-            if (resError) throw resError;
+            if (resError) {
+                console.error("Erro na busca de detalhes:", resError);
+                throw resError;
+            }
 
             // 2. Calcular o score total (Top 5)
             const scoreMap = {};
             respostas.forEach(r => {
+                // Acessa a pontuação através da estrutura de objetos aninhados
                 if (r.opcoes && r.opcoes.pontuacao) {
                     r.opcoes.pontuacao.forEach(p => {
                         scoreMap[p.area] = (scoreMap[p.area] || 0) + (p.valor || 0);
@@ -227,13 +225,15 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
+                // Garante que a área principal seja a primeira da lista ou "N/A"
+                principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
                 topAreas: top5Areas,
-                principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A',
                 // Mapeia as respostas (Pergunta + Resposta Escolhida)
                 questions: respostas.map(r => ({
-                    enunciado: r.questoes.enunciado,
-                    resposta: r.opcoes.opcao,
-                    // Pontuações (mantidas apenas para debug/referência, mas não exibidas no JSX detalhadamente)
+                    // Acessa o enunciado através do relacionamento 'questoes'
+                    enunciado: r.questoes.enunciado, 
+                    // Acessa a opção através do relacionamento 'opcoes'
+                    resposta: r.opcoes.opcao, 
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
             };
@@ -243,7 +243,7 @@ function App() {
 
         } catch (err) {
             console.error("Erro ao buscar detalhes do histórico:", err);
-            setAdminError('Erro ao carregar os detalhes do histórico. Verifique se a tabela `respostas_usuario` está preenchida.');
+            setAdminError('Erro ao carregar os detalhes do histórico. Verifique o console para a query ESSENCIAL.');
         } finally {
             setLoading(false);
         }
