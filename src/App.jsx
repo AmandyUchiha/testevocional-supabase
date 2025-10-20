@@ -187,7 +187,7 @@ function App() {
       }));
   }
 
-  // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
+    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
 
   async function handleRegister(e) { 
     e.preventDefault();
