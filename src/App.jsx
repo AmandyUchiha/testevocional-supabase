@@ -144,7 +144,7 @@ function App() {
         }
     }
 
-    // FUNÇÃO 1: BUSCA RESUMO (Corrigida: sem comentário interno)
+    // FUNÇÃO 1: BUSCA RESUMO (CORRIGIDA: Ordenação pela data de criação)
     async function fetchAllResults() {
         setHistoryLoading(true);
         
@@ -155,7 +155,8 @@ function App() {
                 area_principal,
                 usuarios(apelido, data_criacao) 
             `)
-            .order('area_principal', { ascending: true }); 
+            // ORDENAÇÃO CORRIGIDA para pegar o histórico completo, do mais recente ao mais antigo
+            .order('data_criacao', { foreignTable: 'usuarios', ascending: false }); 
 
         setHistoryLoading(false);
 
@@ -174,7 +175,7 @@ function App() {
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (Para a tela 'detailedHistory')
+    // FUNÇÃO 2: BUSCA DETALHES (Retorna Perguntas/Respostas e Top 5 Áreas)
     async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
@@ -227,9 +228,12 @@ function App() {
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
                 topAreas: top5Areas,
                 principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A',
+                // Mapeia as respostas, formatando os dados para a exibição (pergunta + resposta)
                 questions: respostas.map(r => ({
                     enunciado: r.questoes.enunciado,
                     resposta: r.opcoes.opcao,
+                    // Não precisamos das pontuações detalhadas (a soma já foi feita no passo 2)
+                    // Mas manteremos o campo para referência, filtrando valores zero.
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
             };
@@ -245,9 +249,9 @@ function App() {
         }
     }
 
-    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE (Inalteradas, mas incluídas por completude) ---
+    // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
     
-    async function handleRegister(e) { /* ... função inalterada ... */ 
+    async function handleRegister(e) { 
         e.preventDefault();
         setRegistrationError(null);
         if (!userNickname.trim()) {
@@ -264,7 +268,7 @@ function App() {
 
         let currentUserId;
 
-        if (fetchError && fetchError.code === 'PGRST116') { // Usuário não existe, então insere
+        if (fetchError && fetchError.code === 'PGRST116') { 
             const { data: newUser, error: insertError } = await supabase
                 .from('usuarios')
                 .insert([{ apelido: userNickname }])
@@ -284,7 +288,7 @@ function App() {
             setLoading(false);
             return;
         } else {
-            currentUserId = existingUser.id_u; // Usuário já existe
+            currentUserId = existingUser.id_u; 
         }
 
         setUserId(currentUserId);
@@ -297,7 +301,6 @@ function App() {
         newAnswers.push({ id_q: questionId, id_o: optionId });
         setUserAnswers(newAnswers);
 
-        // Avança para a próxima questão automaticamente
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         }
@@ -358,7 +361,6 @@ function App() {
 
         if (answersError) {
             console.error('Erro ao salvar as respostas:', answersError);
-            // Continua o processo, mas notifica que o histórico detalhado pode falhar
         }
 
         // 2. Calcula a Pontuação (Lógica inalterada)
@@ -569,6 +571,9 @@ function App() {
             const currentQuestion = questions[currentQuestionIndex];
             const selectedOption = userAnswers.find(a => a.id_q === currentQuestion.id_q);
             
+            // Certifique-se de que a pergunta e as opções existem
+            if (!currentQuestion) return <div className="loading">Carregando questões...</div>;
+            
             return (
                 <div className="app-container">
                     <div className="admin-trigger" onClick={() => setView('adminLogin')} title="Acesso Administrativo"></div>
@@ -596,11 +601,13 @@ function App() {
                                 if (currentQuestionIndex === questions.length - 1) {
                                     handleSubmitTest(userAnswers);
                                 } else {
-                                    handleAnswer(currentQuestion.id_q, selectedOption?.id_o || null); // Simula o avançar
+                                    // Apenas avança se uma opção foi selecionada (o que é garantido pelo handleAnswer)
+                                    // A lógica de handleAnswer já avança, mas este botão pode ser ajustado para garantir a transição
+                                    setCurrentQuestionIndex(currentQuestionIndex + 1);
                                 }
                             }} 
                             className="start-button"
-                            disabled={!selectedOption}
+                            disabled={!selectedOption && currentQuestionIndex < questions.length - 1}
                         >
                             {currentQuestionIndex === questions.length - 1 ? 'Ver Resultado' : 'Avançar'}
                         </button>
@@ -722,7 +729,6 @@ function App() {
 
         case 'detailedHistory':
             if (!selectedUserResults || !isMasterAdmin) {
-                 // Retorna ou redireciona se não for admin ou se os dados não estiverem prontos
                 return <div className="loading">Carregando detalhes ou acesso negado.</div>;
             }
 
@@ -730,11 +736,24 @@ function App() {
                 <div className="app-container">
                     <h1>Detalhes do Teste de **{selectedUserResults.nickname}**</h1>
                     <p className="result-summary">
-                        **Data:** {selectedUserResults.date} | **Área Principal Calculada:** **{selectedUserResults.principalArea}**
+                        **Data:** {selectedUserResults.date} | **Área Principal:** **{selectedUserResults.principalArea}**
                     </p>
                     {adminError && <div className="error-message">{adminError}</div>}
 
-                    <h2>Resumo da Pontuação (Top 5)</h2>
+                    <h2>Respostas Detalhadas</h2>
+                    <div className="question-list">
+                        {selectedUserResults.questions.map((q, index) => (
+                            <div key={index} className="question-detail-item">
+                                <h3>Q{index + 1}: {q.enunciado}</h3>
+                                <p><strong>Resposta Escolhida:</strong> {q.resposta}</p>
+                                {/* Removido a exibição detalhada da soma de pontos, conforme solicitado, 
+                                    mantendo apenas a pergunta e resposta.
+                                */}
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <h2>5 Áreas Principais de Interesse</h2>
                     <ul className="suggestions top-areas-list">
                         {selectedUserResults.topAreas.map((item, index) => (
                             <li key={item.area}>
@@ -742,27 +761,6 @@ function App() {
                             </li>
                         ))}
                     </ul>
-
-                    <h2>Respostas e Pontuações Detalhadas</h2>
-                    <div className="question-list">
-                        {selectedUserResults.questions.map((q, index) => (
-                            <div key={index} className="question-detail-item">
-                                <h3>Q{index + 1}: {q.enunciado}</h3>
-                                <p><strong>Resposta Escolhida:</strong> {q.resposta}</p>
-                                
-                                {q.pontuacoes && q.pontuacoes.length > 0 && (
-                                    <>
-                                        <h4>Pontuação desta resposta:</h4>
-                                        <ul className="pontuacao-list">
-                                            {q.pontuacoes.map((p, pIndex) => (
-                                                <li key={pIndex}>{p.area}: **+{p.valor}**</li>
-                                            ))}
-                                        </ul>
-                                    </>
-                                )}
-                            </div>
-                        ))}
-                    </div>
 
                     <div className="extra-buttons">
                         <button onClick={() => setView('history')} className="back-button">
