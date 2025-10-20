@@ -58,9 +58,6 @@ function App() {
     }
   }, []);
 
-  // ❌ REMOVIDO: O useEffect anterior que tentava carregar o histórico universal no momento errado.
-  // A lógica foi movida para dentro de handleAdminLogin.
-
   // Alterna classes no <body>
   useEffect(() => {
     const bodyClassList = document.body.classList;
@@ -126,13 +123,13 @@ function App() {
 
   // 2. Trata erro de busca (usuário não encontrado ou erro de DB)
   // Se o erro for um retorno de "não existe linha", ou se userData for nulo.
-  if (userError && userError.code !== 'PGRST116') { 
+  if (userError && userError.code !== 'PGRST116') { // PGRST116 = não encontrou a linha (trataremos como credencial incorreta)
       console.error('Erro de busca no DB:', userError);
       setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
       return;
   }
   
-  if (!userData || userError) { // Se não encontrou o usuário
+  if (!userData || userError) { // Se não encontrou o usuário (incluindo o erro PGRST116)
       setAdminError('Apelido ou senha mestre incorretos.');
       return;
   }
@@ -143,7 +140,7 @@ function App() {
   if (adminPassword === savedPassword) {
       setIsMasterAdmin(true);
       
-      // ✅ CORREÇÃO: Chamando o carregamento do histórico aqui, antes de mudar a view
+      // ✅ ALTERAÇÃO CHAVE: Carregar os resultados aqui!
       const results = await fetchAllResults(); 
       setAllDbResults(results); 
       
@@ -152,16 +149,14 @@ function App() {
       setAdminError('Apelido ou senha mestre incorretos.');
   }
 }
-
   async function fetchAllResults() {
       setHistoryLoading(true);
       
-      // Buscando todos os resultados e fazendo JOIN com a tabela 'usuarios' para pegar o apelido
       const { data, error } = await supabase
           .from('resultado')
           .select(`
               area_principal,
-              data_criacao:created_at,
+              created_at, // <<<<< CORREÇÃO AQUI: USAR created_at (sem alias)
               usuarios(apelido)
           `)
           .order('created_at', { ascending: false }); 
@@ -175,9 +170,9 @@ function App() {
       }
 
       return data.map(item => ({
-          // Acessando o apelido através do objeto 'usuarios' do JOIN
-          nickname: item.usuarios.apelido, 
-          date: new Date(item.data_criacao).toLocaleDateString('pt-BR'),
+          nickname: item.usuarios.apelido,
+          // <<<<< CORREÇÃO AQUI: Mudar de item.data_criacao para item.created_at
+          date: new Date(item.created_at).toLocaleDateString('pt-BR'),
           area: item.area_principal,
       }));
   }
