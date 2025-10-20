@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient.js'; 
 import './App.css';
 
-// MODIFICAÇÃO: Constantes para os nomes das tabelas antigas
-const RESPOSTAS_ANTIGO_TABLE = 'respostas_usuario_antigo';
+// DECLARAÇÃO DAS CONSTANTES DE TABELA (Adicionadas conforme sua solicitação)
+const RESULTADO_NOVO_TABLE = 'resultado';
 const RESULTADO_ANTIGO_TABLE = 'resultado_antigo';
+const RESPOSTAS_NOVO_TABLE = 'respostas_usuario';
+const RESPOSTAS_ANTIGO_TABLE = 'respostas_usuario_antigo'; // Assumindo que existe uma tabela antiga de respostas.
 
 function App() {
     // Estados Principais
@@ -55,7 +57,7 @@ function App() {
             } else {
                 setQuestions(data);
             }
-            setLoading(false); // <--- O `loading` se torna FALSE aqui, garantindo que a tela seja exibida.
+            setLoading(false);
         }
         getQuestionsAndOptions();
 
@@ -115,7 +117,7 @@ function App() {
     async function handleAdminLogin(e) {
         e.preventDefault();
         setAdminError(null);
-        setLoading(true); // <-- Inicia o loading
+        setLoading(true);
 
         const { data: userData, error: userError } = await supabase
             .from('user_mestre')
@@ -123,10 +125,10 @@ function App() {
             .eq('apelido', adminApelido)
             .single();
         
-        setLoading(false); // <-- Finaliza o loading após a busca
+        setLoading(false);
 
         if (userError && userError.code !== 'PGRST116') {
-            console.error('Erro de busca no DB (Admin Login):', userError);
+            console.error('Erro de busca no DB:', userError);
             setAdminError('Erro de conexão ao verificar o admin. Tente novamente.');
             return;
         }
@@ -138,15 +140,11 @@ function App() {
 
         const savedPassword = userData.senha_hash;
         
+        // CORREÇÃO: Usando a tabela nova para buscar os resultados
         if (adminPassword === savedPassword) {
             setIsMasterAdmin(true);
-            // MODIFICAÇÃO: Chamada para buscar tanto resultados atuais quanto antigos
-            const currentResults = await fetchAllResults('resultado'); 
-            const oldResults = await fetchAllResults(RESULTADO_ANTIGO_TABLE, RESPOSTAS_ANTIGO_TABLE); 
-            
-            // Juntamos os resultados. Note que o ID do usuário pode ter que ser ajustado dependendo
-            // de como sua tabela antiga trata isso (assumindo que o apelido e data_criacao podem ser usados para identificação)
-            setAllDbResults([...currentResults, ...oldResults]); 
+            const results = await fetchAllResults(RESULTADO_NOVO_TABLE); 
+            setAllDbResults(results); 
             setView('history'); 
         } else {
             setAdminError('Apelido ou senha mestre incorretos.');
@@ -154,29 +152,25 @@ function App() {
     }
 
     // FUNÇÃO 1: BUSCA RESUMO (Histórico Global)
-    // MODIFICAÇÃO: Parâmetros adicionados para suportar tabelas diferentes
-    async function fetchAllResults(resultTable, answersTable = 'respostas_usuario') {
+    async function fetchAllResults(tableName) {
         setHistoryLoading(true);
         
+        // CORREÇÃO: Usando a constante da tabela correta
         const { data, error } = await supabase
-            .from(resultTable) // Usa o nome da tabela passado
+            .from(tableName) 
             .select(`
                 id_u,
                 area_principal,
                 usuarios(apelido, data_criacao) 
-            `);
-            // Se as tabelas antigas não estiverem ligadas à tabela 'usuarios' como a nova,
-            // esta query falhará para a tabela antiga.
-            // Para simplicidade, mantive a estrutura, mas pode precisar de ajuste manual no DB.
+            `)
+            // Ordena pela data de criação do usuário (mais recente primeiro)
+            .order('usuarios.data_criacao', { ascending: false }); 
 
         setHistoryLoading(false);
 
         if (error) {
-            console.error(`Erro ao buscar histórico admin (resumo - Tabela: ${resultTable}):`, error);
-            // Se o erro for "relação não existe" para a tabela antiga, o código continua.
-            if (error.code !== '42P01') { // 42P01: undefined_table (Pode variar no Supabase/PostgREST)
-                setError(`Erro ao carregar o histórico de testes do banco de dados (Tabela: ${resultTable}). ${error.message || ''}`); 
-            }
+            console.error("Erro ao buscar histórico admin (resumo):", error);
+            setError('Erro ao carregar o histórico de testes do banco de dados.'); 
             return [];
         }
 
@@ -185,42 +179,35 @@ function App() {
             nickname: item.usuarios.apelido,
             date: new Date(item.usuarios.data_criacao).toLocaleDateString('pt-BR'),
             area: item.area_principal,
-            // MODIFICAÇÃO: Adicionar um identificador para a tabela de origem
-            sourceTable: resultTable, 
         }));
     }
 
 
-    // FUNÇÃO 2: BUSCA DETALHES (CORRIGIDA: Seleção aninhada ajustada)
-    // MODIFICAÇÃO: Alterada para suportar a busca no banco de dados antigo
-    async function fetchDetailedResults(userId, sourceTable = 'resultado') {
+    // FUNÇÃO 2: BUSCA DETALHES 
+    async function fetchDetailedResults(userId) {
         if (!isMasterAdmin) return; 
 
         setLoading(true); 
         setAdminError(null);
-        
-        // MODIFICAÇÃO: Determina as tabelas de respostas e resultados
-        const respostasTable = sourceTable === 'resultado' ? 'respostas_usuario' : RESPOSTAS_ANTIGO_TABLE;
-        const resultadoTable = sourceTable === 'resultado' ? 'resultado' : RESULTADO_ANTIGO_TABLE;
-        // Se a tabela de usuários for a mesma para as duas, está ok.
-        const userTable = 'usuarios'; 
 
         try {
             // 1. Buscar todas as respostas do usuário e suas pontuações associadas
             const { data: respostas, error: resError } = await supabase
-                .from(respostasTable) // Usa a tabela de respostas correta
+                // CORREÇÃO: Usando a constante da tabela correta
+                .from(RESPOSTAS_NOVO_TABLE) 
                 .select('questoes(enunciado), opcoes(opcao, pontuacao(area,valor))')
                 .eq('id_u', userId)
                 .order('id_q', { ascending: true }); 
 
             if (resError) {
-                console.error(`Erro na busca de detalhes (Tabela: ${respostasTable}):`, resError);
+                console.error("Erro na busca de detalhes:", resError);
                 throw resError;
             }
 
-            // 2. Calcular o score total (Top 7)
+            // 2. Calcular o score total (Top 5)
             const scoreMap = {};
             respostas.forEach(r => {
+                // Acessa a pontuação através da estrutura de objetos aninhados
                 if (r.opcoes && r.opcoes.pontuacao) {
                     r.opcoes.pontuacao.forEach(p => {
                         scoreMap[p.area] = (scoreMap[p.area] || 0) + (p.valor || 0);
@@ -228,15 +215,14 @@ function App() {
                 }
             });
 
-            // MODIFICAÇÃO: Alterado de .slice(0, 5) para .slice(0, 7)
-            let topAreas = Object.entries(scoreMap)
+            let top5Areas = Object.entries(scoreMap)
                 .map(([area, score]) => ({ area, score }))
                 .sort((a, b) => b.score - a.score)
-                .slice(0, 7);
+                .slice(0, 5);
             
             // 3. Buscar o Apelido e a Data de Criação do Usuário
             const { data: user, error: userError } = await supabase
-                .from(userTable)
+                .from('usuarios')
                 .select('apelido, data_criacao')
                 .eq('id_u', userId)
                 .single();
@@ -247,10 +233,14 @@ function App() {
             const detailedResult = {
                 nickname: user.apelido,
                 date: new Date(user.data_criacao).toLocaleDateString('pt-BR'),
-                principalArea: topAreas.length > 0 ? topAreas[0].area : 'N/A', 
-                topAreas: topAreas, // MODIFICAÇÃO: Agora contém o Top 7
+                // Garante que a área principal seja a primeira da lista ou "N/A"
+                principalArea: top5Areas.length > 0 ? top5Areas[0].area : 'N/A', 
+                topAreas: top5Areas,
+                // Mapeia as respostas (Pergunta + Resposta Escolhida)
                 questions: respostas.map(r => ({
+                    // Acessa o enunciado através do relacionamento 'questoes'
                     enunciado: r.questoes.enunciado, 
+                    // Acessa a opção através do relacionamento 'opcoes'
                     resposta: r.opcoes.opcao, 
                     pontuacoes: r.opcoes.pontuacao ? r.opcoes.pontuacao.filter(p => p.valor && p.valor !== 0) : []
                 }))
@@ -261,7 +251,7 @@ function App() {
 
         } catch (err) {
             console.error("Erro ao buscar detalhes do histórico:", err);
-            setAdminError(`Erro ao carregar os detalhes do histórico da tabela ${respostasTable}. O erro pode ser na estrutura das suas tabelas de pontuação ou na conexão.`);
+            setAdminError('Erro ao carregar os detalhes do histórico. Verifique o console.');
         } finally {
             setLoading(false);
         }
@@ -366,15 +356,16 @@ function App() {
     async function handleSubmitTest(answers) { 
         setLoading(true);
 
-        // 1. SALVA RESPOSTAS NA TABELA `respostas_usuario`
+        // 1. SALVA RESPOSTAS NA TABELA `respostas_usuario` (Tabela Nova)
         const answersToSave = answers.map(a => ({
             id_u: userId,
             id_q: a.id_q,
             id_o: a.id_o,
         }));
-
+        
+        // CORREÇÃO: Usando a constante da tabela correta
         const { error: answersError } = await supabase
-            .from('respostas_usuario')
+            .from(RESPOSTAS_NOVO_TABLE) 
             .insert(answersToSave);
 
         if (answersError) {
@@ -395,13 +386,12 @@ function App() {
             }
         });
 
-        // 3. Ordena as Áreas e Pega o Top 7
+        // 3. Ordena as Áreas e Pega o Top 5
         let areas = Object.entries(scoreMap)
             .map(([area, score]) => ({ area, score }))
             .sort((a, b) => b.score - a.score);
 
-        // MODIFICAÇÃO: Alterado de .slice(0, 5) para .slice(0, 7)
-        const top7Areas = areas.slice(0, 7); 
+        const top5Areas = areas.slice(0, 5);
         
         // 4. Mapeamento de Sugestões de Cursos (Lógica inalterada)
         const areaMapping = { 
@@ -438,9 +428,8 @@ function App() {
             ]
         };
 
-        // MODIFICAÇÃO: Uso do Top 7
-        if (top7Areas.length > 0) {
-            const principalArea = top7Areas[0];
+        if (top5Areas.length > 0) {
+            const principalArea = top5Areas[0];
             const finalArea = principalArea.area;
             const suggestions = areaMapping[finalArea] || [];
 
@@ -449,13 +438,14 @@ function App() {
                 nickname: userNickname,
                 date: new Date().toLocaleDateString('pt-BR'),
                 area: finalArea,
-                topAreas: top7Areas, // MODIFICAÇÃO: Top 7
+                topAreas: top5Areas,
                 sugestoes: suggestions
             };
 
             // 6. Salva o Resultado Principal no Banco (tabela 'resultado')
+            // CORREÇÃO: Usando a constante da tabela correta
             const { error: saveError } = await supabase
-                .from('resultado')
+                .from(RESULTADO_NOVO_TABLE) 
                 .insert({
                     id_u: userId,
                     area_principal: finalArea,
@@ -647,10 +637,8 @@ function App() {
                     </div>
                     
                     <div className="top-areas-list">
-                        {/* MODIFICAÇÃO: Título alterado para Top 7 */}
-                        <h2>Suas 7 Maiores Aptidões:</h2>
+                        <h2>Suas 5 Maiores Aptidões:</h2>
                         <ul className="suggestions">
-                            {/* MODIFICAÇÃO: O loop exibirá 7 itens, já que finalResult.topAreas agora tem 7 */}
                             {finalResult.topAreas.map((item, index) => (
                                 <li key={item.area} className={index === 0 ? 'top-1' : ''}>
                                     <strong>{index + 1}º. {item.area}</strong> 
@@ -687,7 +675,7 @@ function App() {
                 ? 'Histórico Geral de Testes (ADMIN)' 
                 : 'Seu Histórico Local';
 
-            if (historyLoading) { 
+            if (historyLoading) {
                 return <div className="loading">Carregando histórico do servidor...</div>;
             }
             
@@ -713,17 +701,12 @@ function App() {
                                     <li 
                                         key={index} 
                                         className={`result-item ${isMasterAdmin ? 'clickable' : ''}`}
-                                        // MODIFICAÇÃO: Passa o identificador da tabela de origem para fetchDetailedResults
-                                        onClick={() => isMasterAdmin && fetchDetailedResults(result.id, result.sourceTable)}
+                                        onClick={() => isMasterAdmin && fetchDetailedResults(result.id)}
                                         title={isMasterAdmin ? "Clique para ver detalhes" : "Visualização local"}
                                     >
                                         <div>Apelido: **{result.nickname}**</div>
                                         <div>Data: {result.date}</div>
                                         <div>Área Principal: **{result.area}**</div>
-                                        {/* MODIFICAÇÃO: Indica a fonte (apenas para admin) */}
-                                        {isMasterAdmin && result.sourceTable !== 'resultado' && (
-                                            <div style={{color: 'red', fontWeight: 'bold'}}>HISTÓRICO ANTIGO</div>
-                                        )}
                                     </li>
                                 ))}
                             </ul>
@@ -758,11 +741,26 @@ function App() {
 
             return (
                 <div className="app-container">
+                    <div 
+                        className="admin-trigger" 
+                        onClick={() => setView('history')} 
+                        title="Voltar ao Histórico Geral"
+                    >
+                    </div>
                     <h1>Detalhes do Teste de **{selectedUserResults.nickname}**</h1>
                     <p className="result-summary">
                         **Data:** {selectedUserResults.date} | **Área Principal:** **{selectedUserResults.principalArea}**
                     </p>
                     {adminError && <div className="error-message">{adminError}</div>}
+
+                    <h2>5 Áreas Principais de Interesse</h2>
+                    <ul className="suggestions top-areas-list">
+                        {selectedUserResults.topAreas.map((item, index) => (
+                            <li key={item.area} className={index === 0 ? 'top-1' : ''}>
+                                <strong>{index + 1}º. {item.area}</strong> ({item.score} pontos)
+                            </li>
+                        ))}
+                    </ul>
 
                     <h2>Respostas Detalhadas</h2>
                     <div className="question-list">
@@ -770,23 +768,17 @@ function App() {
                             <div key={index} className="question-detail-item">
                                 <h3>Q{index + 1}: {q.enunciado}</h3>
                                 <p><strong>Resposta Escolhida:</strong> {q.resposta}</p>
+                                {q.pontuacoes.length > 0 && (
+                                    <p className="pontuacao-detail">
+                                        (Pontuou em: {q.pontuacoes.map(p => `${p.area} [+${p.valor}]`).join(', ')})
+                                    </p>
+                                )}
                             </div>
                         ))}
                     </div>
                     
-                    {/* MODIFICAÇÃO: Título alterado para Top 7 */}
-                    <h2>7 Áreas Principais de Interesse</h2>
-                    <ul className="suggestions top-areas-list">
-                        {/* MODIFICAÇÃO: O loop exibirá 7 itens, já que selectedUserResults.topAreas agora tem 7 */}
-                        {selectedUserResults.topAreas.map((item, index) => (
-                            <li key={item.area}>
-                                **{index + 1}º.** {item.area} ({item.score} pontos)
-                            </li>
-                        ))}
-                    </ul>
-                    
                     <div className="extra-buttons">
-                        <button onClick={() => setView('history')} className="back-button">
+                        <button onClick={() => setView('history')} className="back-to-history-button">
                             Voltar ao Histórico Geral
                         </button>
                     </div>
