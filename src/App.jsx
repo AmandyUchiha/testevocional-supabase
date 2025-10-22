@@ -258,13 +258,14 @@ function App() {
                   area_principal,
                   usuarios_antigo(apelido, data_criacao)
               `)
-              .order('id_r', { ascending: false })); // Assume 'id_r' existe em 'resultado_antigo'
+              .order('id_r', { ascending: false })
+              .limit(10000)); // <-- MUDANÇA: Adicionado limite
 
           setHistoryLoading(false);
 
           if (error) {
               console.error("Erro ao buscar histórico antigo:", error);
-              setError('Erro ao carregar o histórico do BANCO ANTIGO. Verifique se as tabelas "resultado_antigo" e "usuarios_antigo" existem.');
+              setError('Erro ao carregar o histórico do BANCO ANTIGO. Verifique se as tabelas "resultado_antigo" e "usuarios_antigo" existem e se o RLS está desabilitado.');
               return [];
           }
 
@@ -294,13 +295,15 @@ function App() {
                   foco_principal,
                   usuarios(apelido, data_criacao)
               `)
-              .order('id_r', { ascending: false })); // Ordena pelo ID do resultado
+              .order('id_r', { ascending: false }) // Ordena pelo ID do resultado
+              .limit(10000)); // <-- MUDANÇA: Adicionado limite
+
 
           setHistoryLoading(false);
 
           if (error) {
               console.error("Erro ao buscar histórico admin (novo):", error);
-              setError('Erro ao carregar o histórico do BANCO NOVO.');
+              setError('Erro ao carregar o histórico do BANCO NOVO. Verifique se o RLS está desabilitado para as tabelas "resultado" e "usuarios".');
               return [];
           }
 
@@ -322,7 +325,9 @@ function App() {
       }
   }
 
-  // Busca detalhes (perguntas/respostas) do usuário clicado
+  // ========================================================================
+  // MUDANÇA: Função 'handleViewHistoryDetails' reescrita para ser mais robusta
+  // ========================================================================
   async function handleViewHistoryDetails(userId) {
       if (!userId) {
         console.error('ID do usuário nulo, não é possível buscar detalhes.');
@@ -341,33 +346,62 @@ function App() {
       const questoesTable = isOldDb ? 'questoes_antigo' : 'questoes';
       const opcoesTable = isOldDb ? 'opcoes_antigo' : 'opcoes';
 
-      // Busca as respostas, questões e opções correspondentes
-      const { data, error } = await supabase
-        .from(respostasTable)
-        .select(`
-          ${questoesTable}(enunciado),
-          ${opcoesTable}(opcao)
-        `)
-        .eq('id_u', userId);
+      try {
+        // 1. Buscar todas as respostas (pares de ID)
+        const { data: respostasData, error: respostasError } = await supabase
+          .from(respostasTable)
+          .select('id_q, id_o')
+          .eq('id_u', userId);
 
-      if (error) {
-        console.error("Erro ao buscar detalhes do histórico:", error);
-        setAdminError(`Erro ao buscar as respostas. Verifique se as tabelas "${respostasTable}", "${questoesTable}" e "${opcoesTable}" existem e estão relacionadas.`);
-        setHistoryDetails([]); 
-      } else {
-        // Mapeia os dados para um formato consistente
-        const validData = data
-          .filter(d => d[questoesTable] && d[opcoesTable]) // Filtra nulos
-          .map(d => ({ 
-            // Padroniza a saída para o JSX
-            questoes: { enunciado: d[questoesTable].enunciado },
-            opcoes: { opcao: d[opcoesTable].opcao }
-          }));
-        
-        setHistoryDetails(validData);
+        if (respostasError) throw new Error(`Erro ao buscar respostas: ${respostasError.message}`);
+        if (!respostasData || respostasData.length === 0) {
+          setHistoryDetails([]); // Usuário sem respostas
+          setHistoryDetailsLoading(false);
+          return;
+        }
+
+        // 2. Coletar IDs únicos
+        const questionIds = [...new Set(respostasData.map(r => r.id_q))];
+        const optionIds = [...new Set(respostasData.map(r => r.id_o))];
+
+        // 3. Buscar os textos das perguntas e opções
+        const { data: questoesData, error: questoesError } = await supabase
+          .from(questoesTable)
+          .select('id_q, enunciado')
+          .in('id_q', questionIds);
+
+        if (questoesError) throw new Error(`Erro ao buscar questões: ${questoesError.message}`);
+
+        const { data: opcoesData, error: opcoesError } = await supabase
+          .from(opcoesTable)
+          .select('id_o, opcao')
+          .in('id_o', optionIds);
+
+        if (opcoesError) throw new Error(`Erro ao buscar opções: ${opcoesError.message}`);
+
+        // 4. Mapear os textos para facilitar a busca
+        const questoesMap = new Map(questoesData.map(q => [q.id_q, q.enunciado]));
+        const opcoesMap = new Map(opcoesData.map(o => [o.id_o, o.opcao]));
+
+        // 5. Combinar tudo
+        const combinedDetails = respostasData.map(resposta => ({
+          questoes: {
+            enunciado: questoesMap.get(resposta.id_q) || 'Texto da questão não encontrado'
+          },
+          opcoes: {
+            opcao: opcoesMap.get(resposta.id_o) || 'Texto da resposta não encontrado'
+          }
+        }));
+
+        setHistoryDetails(combinedDetails);
+
+      } catch (err) {
+        console.error("Erro ao buscar detalhes do histórico:", err);
+        setAdminError(`Erro ao buscar detalhes: ${err.message}. Verifique o RLS das tabelas ${respostasTable}, ${questoesTable}, e ${opcoesTable}.`);
+        setHistoryDetails([]);
+      } finally {
+        setHistoryDetailsLoading(false);
       }
-      
-      setHistoryDetailsLoading(false);
   }
 
 
@@ -663,7 +697,7 @@ function App() {
   	 	 	 	 <p>Apelido Mestre:</p>
   	 	 	 	 <input
   	 	 	 	 	 type="text"
-  	 	 	 	 	 value={adminApelido}
+    	 	 	 	 value={adminApelido}
   	 	 	 	 	 onChange={(e) => setAdminApelido(e.target.value)}
   	 	 	 	 	 placeholder="Apelido do Administrador"
   	 	 	 	 	 required
@@ -681,7 +715,7 @@ function App() {
   	 	 	 	 	 	 	 padding: '10px', 
   	 	 	 	 	 	 	 paddingRight: '40px', 
   	 	 	 	 	 	 	 boxSizing: 'border-box', 
-  	 	 	 	 	 	 	 borderRadius: '5px',
+  	 	   	 	 	 	 borderRadius: '5px',
   	 	 	 	 	 	 	 border: '1px solid #ccc'
   	 	 	 	 	 	 }} 
   	 	 	 	 	 />
@@ -697,7 +731,7 @@ function App() {
   	 	 	 	 	 	 	 border: 'none',
   	 	 	 	 	 	 	 cursor: 'pointer',
   	 	 	 	 	 	 	 color: '#2e2e2e', 
-  	 	 	 	 	 	 	 fontSize: '1.2rem',
+    	 	 	 	 	 	 fontSize: '1.2rem',
   	 	 	 	 	 	 }}
   	 	 	 	 	 	 aria-label={showAdminPassword ? 'Esconder senha' : 'Mostrar senha'}
   	 	 	 	 	 >
@@ -732,7 +766,7 @@ function App() {
   	 	 	 	 <div className="admin-db-select-buttons">
   	 	 	 	 	 <button 
   	 	 	 	 	 	 className="start-button"
-  	 	 	 	 	 	 onClick={() => { setAdminSelectedDb('new'); setView('history'); }}
+    	 	 	 	 	 onClick={() => { setAdminSelectedDb('new'); setView('history'); }}
   	 	 	 	 	 >
   	 	 	 	 	 	 Histórico (Novo Banco)
   	 	 	 	 	 </button>
@@ -900,7 +934,7 @@ function App() {
   	 	 	 	 	 	 	 <ul className="result-list">
   	 	 	 	 	 	 	 	 {displayedResults.map((result, index) => (
   	 	 	 	 	 	 	 	 	 <li key={result.id_u + '-' + index} className="result-item">
-  	 	 	 	 	 	 	 	 	 	 <div>
+s   	 	 	 	 	 	 	 	 	 <div>
   	 	 	 	 	 	 	 	 	 	 	 {/* Botão no apelido (Request 5) */}
   	 	 	 	 	 	 	 	 	 	 	 {isMasterAdmin ? (
   	 	 	 	 	 	 	 	 	 	 	 	 <button 
@@ -930,16 +964,13 @@ function App() {
   	 	 	 	 	 	 	 	 	 <button onClick={() => { setView('admin_db_select'); setAllDbResults([]); }} className="back-button">
   	 	 	 	 	 	 	 	 	 	 Trocar Banco
   	 	 	 	 	 	 	 	 	 </button>
-  	 	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	   	 )}
   	 	 	 	 	 	 	 	 <button onClick={handleGoToRegister} className="back-to-test-button">
   	 	 	 	 	 	 	 	 	 {isMasterAdmin ? 'Sair do Admin' : 'Voltar para Registro'}
   	 	 	 	 	 	 	 	 </button>
   	 	 	 	 	 	 	 </div>
   	 	 	 	 	 	 </>
   	 	 	 	 	 ) : (
-                        // ==========================================================
-                        // ERRO DE SINTAXE ESTAVA AQUI (REMOVIDO)
-                        // ==========================================================
   	 	 	 	 	 	 <>
   	 	 	 	 	 	 	 <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
   	 	 	 	 	 	 	 <div className="extra-buttons">
