@@ -70,8 +70,6 @@ function App() {
         setLoading(true);
         setError(null);
         try {
-          // ... (código de busca de 'questoes', 'foco_pontuacao_maxima', 'cursos_por_foco') ...
-          // (O código interno desta função está correto e não precisa mudar)
           const { data: questionsData, error: questionsError } = await supabase
             .from('questoes')
             .select(`id_q, enunciado, opcoes(id_o, opcao, pontuacao(foco, valor))`);
@@ -200,7 +198,6 @@ function App() {
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
   async function handleAdminLogin(e) { 
-      // ... (código da função sem alteração) ...
       e.preventDefault();
       setAdminError(null);
       setLoading(true);
@@ -231,7 +228,6 @@ function App() {
   }
 
   async function fetchAllResults(dbSource) { 
-      // ... (código da função sem alteração) ...
       let data, error;
       let results = []; 
 
@@ -289,7 +285,6 @@ function App() {
   }
 
   async function handleViewHistoryDetails(userId, userNickname) { 
-      // ... (código da função sem alteração) ...
       console.log(`[handleViewHistoryDetails] Iniciando para userId: ${userId}, nickname: ${userNickname}`);
       if (!userId || !userNickname) {
         const errorMsg = 'ID ou Apelido do usuário ausente ao tentar ver detalhes.';
@@ -406,7 +401,6 @@ function App() {
   }
 
   function handleGoToRegister() { 
-      // ... (código da função sem alteração) ...
       setFontSizeAdjustment(0);
       setUserId(null);
       setUserNickname('');
@@ -429,7 +423,6 @@ function App() {
   }
   
   async function handleRegister(e) { 
-      // ... (código da função sem alteração) ...
       e.preventDefault();
       setRegistrationError(null);
       setError(null);
@@ -467,7 +460,6 @@ function App() {
   }
   
   function handleAnswer(questionId, optionId) { 
-      // ... (código da função sem alteração) ...
       const newAnswers = [...userAnswers.filter(a => a.id_q !== questionId), { id_u: userId, id_q: questionId, id_o: optionId }];
       setUserAnswers(newAnswers);
 
@@ -487,7 +479,6 @@ function App() {
   function handleRestartTest() { handleGoToRegister(); }
 
   function handleSaveResult(result) { 
-      // ... (código da função sem alteração) ...
       try {
       const resultToSave = {
           ...result,
@@ -511,7 +502,6 @@ function App() {
   }
 
   function handleClearHistory() { 
-      // ... (código da função sem alteração) ...
       try {
         setPastResults([]);
         localStorage.removeItem('testHistory');
@@ -521,7 +511,9 @@ function App() {
   }
 
   async function handleSubmitTest(answers) { 
-      // ... (código da função sem alteração, já com as correções de 7 cursos e ranking) ...
+      // Esta função está 100% correta e já inclui:
+      // 1. Correção dos 7 Cursos (Método do Pool)
+      // 2. Salvar o ranking_completo no banco de dados
       setLoading(true);
       setError(null); 
 
@@ -687,7 +679,6 @@ function App() {
                 onChange={(e) => setUserNickname(e.target.value)}
                 placeholder="Seu apelido"
                 maxLength="50"
-                // O CSS não parece ter uma classe específica para o input
             />
             <button type="submit" disabled={loading || !userNickname.trim()} className="start-button">
                 {loading ? 'Carregando...' : 'Iniciar Teste'}
@@ -695,12 +686,9 @@ function App() {
         </form>
         {registrationError && <p className="error-message">{registrationError}</p>}
         
-        {/* O gatilho admin (Wall-E) é renderizado no <div className="app-container"> principal */}
-        
         {pastResults.length > 0 && (
-            <div className="past-results"> {/* O CSS não tem .past-results, mas usamos para agrupar */}
+            <div className="past-results" style={{marginTop: '20px', width: '100%'}}> 
                 <h3>Resultados Locais</h3>
-                {/* Reutilizando as classes do histórico global */}
                 <ul className="result-list">
                     {pastResults.map((result, index) => (
                         <li key={index} className="result-item">
@@ -733,20 +721,18 @@ function App() {
     return (
         <>
             <h2>Questão {currentQuestionIndex + 1} de {questions.length}</h2>
-            <p className="question-enunciado">{currentQuestion.enunciado}</p>
-            {/* O CSS espera .option-buttons-container */}
+            <p className="question-enunciado" style={{padding: '0 10px'}}>{currentQuestion.enunciado}</p>
             <div className="option-buttons-container">
                 {currentQuestion.opcoes.map(option => (
                     <button
                         key={option.id_o}
-                        className="option-button" // Classe do CSS
+                        className="option-button" 
                         onClick={() => handleAnswer(currentQuestion.id_q, option.id_o)}
                     >
                         {option.opcao}
                     </button>
                 ))}
             </div>
-            {/* O CSS espera .extra-buttons */}
             <div className="extra-buttons">
                 {currentQuestionIndex > 0 && (
                     <button onClick={handleBack} className="back-button">
@@ -774,24 +760,22 @@ function App() {
             <p className="result-text">Sua área principal é:</p>
             <h3 className="main-result">{mainFocoName} ({mainFocoPercent}%)</h3>
             
-            {/* O CSS espera .suggestions */}
             <div className="suggestions">
                 <h4>Os 7 Cursos Mais Recomendados:</h4>
-                <ul>
+                <ul> {/* Lista ordenada para os cursos */}
                     {finalResult.sugestoes.map((curso, index) => (
                         <li key={index}>{index + 1}°. {curso}</li>
                     ))}
-                    {/* Preenchimento para 7 itens (para corrigir o bug visual) */}
+                    {/* Preenchimento para 7 itens */}
                     {Array(7 - finalResult.sugestoes.length).fill().map((_, i) => (
                          <li key={`filler-${i}`}>{finalResult.sugestoes.length + i + 1}°. -</li>
                     ))}
                 </ul>
             </div>
 
-            {/* O CSS não tem .foco-ranking, mas podemos reutilizar .suggestions */}
             <div className="suggestions">
                 <h4>Ranking Completo das Áreas:</h4>
-                <ul>
+                <ul> {/* Lista normal para o ranking */}
                     {finalResult.topFocosRank.map(item => (
                         <li key={item.foco}>
                             <strong>{prettyFocusNames[item.foco] || item.foco}:</strong> {item.percentual.toFixed(2)}%
@@ -820,8 +804,7 @@ function App() {
                 onChange={(e) => setAdminApelido(e.target.value)}
                 placeholder="Apelido Mestre"
             />
-            {/* O CSS não tem .password-wrapper, mas não é necessário */}
-            <div> 
+            <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', margin: '10px 0'}}> 
               <input
                   type={showAdminPassword ? "text" : "password"}
                   value={adminPassword}
@@ -829,7 +812,7 @@ function App() {
                   placeholder="Senha Mestre"
               />
               <button type="button" onClick={() => setShowAdminPassword(!showAdminPassword)} className="font-toggle-button">
-                  {showAdminPassword ? 'Ocultar' : 'Mostrar'}
+                  {showAdminPassword ? 'Ver' : 'Ver'}
               </button>
             </div>
             <button type="submit" disabled={loading} className="start-button">
@@ -850,12 +833,11 @@ function App() {
     <>
         <h2>Selecionar Banco</h2>
         <p>Qual banco de dados você deseja consultar?</p>
-        {/* O CSS não tem .db-buttons, usamos .extra-buttons */}
         <div className="extra-buttons">
-            <button onClick={() => { setAdminSelectedDb('new'); setView('history'); }} className="start-button">
+            <button onClick={() => { setAdminSelectedDb('new'); setView('history'); }} className="start-button" style={{flexBasis: '100%', margin: '5px 0'}}>
                 Banco Novo (Ativo)
             </button>
-            <button onClick={() => { setAdminSelectedDb('old'); setView('history'); }} className="start-button">
+            <button onClick={() => { setAdminSelectedDb('old'); setView('history'); }} className="start-button" style={{flexBasis: '100%', margin: '5px 0'}}>
                 Banco Antigo (Legado)
             </button>
         </div>
@@ -878,14 +860,12 @@ function App() {
             <p>Nenhum resultado encontrado neste banco de dados.</p>
         )}
 
-        {/* Usando a estrutura de lista que o CSS espera */}
         {!historyLoading && allDbResults.length > 0 && (
             <ul className="result-list">
                 {allDbResults.map((result) => (
                     <li key={`${result.id_u}-${result.date}-${result.time}`} className="result-item">
                         <div>
                             <strong>Apelido: </strong>
-                            {/* O botão de detalhes é o próprio apelido, como no CSS */}
                             <button 
                                 className="history-nickname-button" 
                                 onClick={() => handleViewHistoryDetails(result.id_u, result.nickname)}
@@ -920,11 +900,11 @@ function App() {
         
         {/* Seção do Ranking */}
         {!historyDetailsLoading && historyRanking && historyRanking.length > 0 && (
-            <div className="ranking-details"> {/* Div de agrupamento */}
+            <div className="ranking-details" style={{width: '100%', marginTop: '15px'}}> 
                 <h3>Ranking de Áreas (%)</h3>
-                <ul className="history-details-list"> {/* Classe do CSS */}
+                <ul className="history-details-list"> 
                     {historyRanking.map(item => (
-                        <li key={item.foco} className="history-detail-item"> {/* Classe do CSS */}
+                        <li key={item.foco} className="history-detail-item"> 
                             <p>
                                 <strong>{prettyFocusNames[item.foco] || item.foco}:</strong> {item.percentual.toFixed(2)}%
                             </p>
@@ -939,11 +919,11 @@ function App() {
 
         {/* Seção de Respostas Q&A */}
         {!historyDetailsLoading && historyDetails && historyDetails.length > 0 && (
-            <div className="qa-details"> {/* Div de agrupamento */}
+            <div className="qa-details" style={{width: '100%', marginTop: '15px'}}> 
                 <h3>Respostas Q&A</h3>
-                <ul className="history-details-list"> {/* Classe do CSS */}
+                <ul className="history-details-list"> 
                     {historyDetails.map((detail, index) => (
-                        <li key={index} className="history-detail-item"> {/* Classe do CSS */}
+                        <li key={index} className="history-detail-item"> 
                             <p><strong>P:</strong> {detail.questoes.enunciado}</p>
                             <p><strong>R:</strong> {detail.opcoes.opcao}</p>
                         </li>
@@ -966,14 +946,14 @@ function App() {
 
   // --- RENDERIZAÇÃO PRINCIPAL (ATUALIZADA PARA O CSS WALL-E) ---
   return (
-    <div className="App"> {/* O CSS não usa .App, mas o React sim */}
+    <div className="App"> {/* Classe raiz do React */}
       
       {/* Erro global (carregamento inicial) */}
       {error && view === 'register' && (
-          <div className="app-container error-message global-error">
-              {/* O Wall-E não aparece aqui */}
-              <h2>Erro Crítico</h2>
-              <p>{error}</p>
+          <div className="app-container" style={{borderColor: 'red'}}>
+              {/* O Wall-E não aparece aqui intencionalmente */}
+              <h1>Erro Crítico</h1>
+              <p className="error-message">{error}</p>
               <p>Por favor, recarregue a página e verifique sua conexão.</p>
           </div>
       )}
