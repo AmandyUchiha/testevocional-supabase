@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll Livre + Wall-E Original Visível SEM Dicas) */
+/* App.css - Tema Wall-E (Scroll Interno no Container - Posição Original Mantida) */
 
 /* Cores temáticas */
 :root {
@@ -29,18 +29,14 @@ html {
 
 body {
   margin: 0;
-  padding: 20px;
+  /* padding removido do body, pois o container é absoluto */
   min-height: 100vh;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* Alinha container no topo */
-  align-items: center; /* Centraliza container horizontalmente */
+  overflow-x: hidden; /* Previne scroll horizontal acidental */
+  /* overflow-y: hidden; */ /* Desabilitado/Comentado - Não impede o scroll do container */
   font-family: 'Orbitron', sans-serif;
   background-color: var(--cor-fundo-perguntas);
-  position: relative;
+  position: relative; /* Pode ser útil para outros elementos posicionados */
   z-index: 0;
-  overflow-y: auto; /* Garante scroll no body */
 }
 
 /* Fundo GIF borrado */
@@ -64,12 +60,18 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 
 /* === Contêiner Principal === */
 .app-container {
-  position: relative; /* Necessário para o .admin-trigger absoluto */
+  /* --- MANTIDO: Posicionamento original --- */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* --- FIM MANTIDO --- */
+
   max-width: 650px;
-  width: 100%;
-  /* --- AJUSTE ESPAÇO: Aumenta margem superior e padding esquerdo/superior --- */
-  margin: 50px 0 20px 0; /* Mais margem no topo */
-  padding: 40px 30px 20px 60px; /* Aumentado padding esquerdo (60px) e superior (40px) */
+  width: 90%;
+  /* margin removido, pois position: absolute já cuida */
+  /* padding mantido, mas talvez precise ajustar o top/left se o Wall-E sobrepuser */
+  padding: 20px 30px;
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -77,58 +79,63 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   text-align: center;
   display: flex;
   flex-direction: column;
+  /* justify-content: center; */ /* Removido para conteúdo começar do topo */
   align-items: center;
   box-sizing: border-box;
+
+  /* --- AJUSTE SCROLL: Permite scroll DENTRO do container --- */
+  max-height: 90vh; /* Limita a altura máxima do container */
+  overflow-y: auto; /* Adiciona scrollbar vertical SE o conteúdo interno exceder max-height */
+  /* --- FIM AJUSTE SCROLL --- */
+
+  /* min-height mantido para dar uma altura mínima inicial */
+  min-height: 400px;
 }
 
 
-/* === Gatilho Admin (Wall-E) - Posição Original, Visível, Sem Dicas === */
+/* === Gatilho Admin (Wall-E) === */
 .admin-trigger {
-  position: absolute; /* Relativo ao .app-container */
-  /* --- REVERTIDO: Posição original (ajuste fino se necessário) --- */
+  /* --- MANTIDO: Posição original relativa ao .app-container --- */
+  position: absolute;
   top: -6px;
   left: -30px;
-  width: 150px; /* Tamanho original */
+  width: 150px;
   height: 150px;
   background-image: url('./assets/walle.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  transform: rotate(-15deg); /* Rotação original */
-  z-index: 2;        /* Acima do container */
-  /* --- ALTERAÇÃO: Garante visibilidade e remove dicas --- */
-  opacity: 1;        /* VISÍVEL */
-  cursor: default;   /* Sem cursor de link */
-  /* --- FIM ALTERAÇÃO --- */
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  transform: rotate(-15deg);
+  z-index: 2;
+  /* --- FIM MANTIDO --- */
 
-  /* Transição removida */
-  /* transition: transform 0.2s ease-in-out; */
+  /* --- MANTIDO: Visível, sem dicas de clique --- */
+  opacity: 1;
+  cursor: default;
+  /* --- FIM MANTIDO --- */
 }
 
-/* Remove qualquer efeito visual no hover */
+/* Remove efeito hover visual (Mantido) */
 .admin-trigger:hover {
-  /* Mantém a aparência original */
-  transform: rotate(-15deg); /* Garante que a rotação não mude */
-  opacity: 1; /* Garante que continue visível */
+  transform: rotate(-15deg);
+  opacity: 1;
 }
 
 
 /* === Estilos Comuns (Títulos, Botões, etc.) === */
-/* (Mantidos EXATAMENTE iguais à versão anterior) */
-h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
+/* (Mantidos EXATAMENTE iguais ao que você forneceu) */
+h1 { font-size: 2rem; margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
 button { font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; font-weight: bold; }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
 .start-button { padding: 10px 20px; background-color: var(--dourado-claro); border: 2px solid var(--bordo-marrom); color: var(--cinza-escuro); margin: 20px auto 0; display: block; }
 .start-button:hover { filter: brightness(1.1); box-shadow: 0 0 10px var(--amarelo-wall-e); }
-.option-buttons-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 15px; }
-.option-button { padding: 12px; background-color: var(--marrom-claro); border: 2px solid var(--bordo-marrom-escuro); color: var(--cinza-escuro); margin: 6px 0; width: 90%; max-width: 400px; text-align: center; }
+.option-buttons-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.option-button { padding: 12px; background-color: var(--marrom-claro); border: 2px solid var(--bordo-marrom-escuro); color: var(--cinza-escuro); font-weight: bold; margin: 8px 0; width: 80%; text-align: center; }
 .option-button:hover { background-color: var(--dourado-claro); }
 .option-button.selected { background-color: var(--azul-wall-e); color: var(--eve-branco); border-color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.8); }
-.extra-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 25px; width: 100%; }
-.back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { padding: 10px 15px; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); flex: 1 1 130px; max-width: 200px; }
+.extra-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
+.back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { padding: 10px 20px; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); font-weight: bold; flex: 1; min-width: 120px; max-width: 200px; }
 .back-button:hover, .history-button:hover, .clear-history-button:hover, .back-to-test-button:hover, .restart-button:hover { filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro); }
 .font-controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; width: 100%; }
-.font-toggle-button { width: 50px; padding: 6px 8px; font-size: 1rem; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); }
+.font-toggle-button { width: 60px; padding: 8px 10px; font-size: 1.2rem; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); font-weight: bold; font-family: 'Orbitron', sans-serif; }
 .font-toggle-button:hover { filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro); }
 
 
@@ -136,32 +143,35 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 /* Tela de Resultado (Mantido igual) */
 .result-text { margin-bottom: 10px; }
-.main-result { font-size: clamp(1.3rem, 4vw, 1.5rem); font-weight: bold; margin: 15px 0; color: var(--amarelo-wall-e); }
-.suggestions-courses h2 { font-size: clamp(1rem, 3vw, 1.2rem); color: var(--dourado-claro); margin-bottom: 10px; }
+.main-result { font-size: 1.5rem; font-weight: bold; margin: 20px 0; color: var(--amarelo-wall-e); }
 .suggestions ul { list-style: none; padding: 0; }
-.suggestions li { margin: 5px 0; font-size: 0.95rem; }
+.suggestions li { margin: 5px 0; }
 
-/* Tela de Histórico e Detalhes - Layout (Mantido igual) */
+/* Tela de Histórico e Detalhes - Layout */
 .history-page .app-container,
 .detail-page .app-container {
-  height: auto;
-  justify-content: flex-start;
+  /* height: auto; */ /* Não necessário com max-height */
+  justify-content: flex-start; /* Alinha listas no topo */
 }
 
 /* Lista de Resultados (Histórico) */
 .result-list {
   list-style: none;
-  padding: 10px;
-  margin: 15px 0;
-  width: 100%;
-  /* Sem overflow-y ou max-height */
-  border: 1px solid #444;
+  padding: 10px; /* Adicionado padding interno */
+  margin: 15px 0; /* Mantido espaçamento */
+  width: 100%; /* Ocupa largura do container */
+  /* --- AJUSTE SCROLL: Remove limites internos, scroll será no container --- */
+  /* overflow-y: auto; */
+  /* max-height: ... */
+  /* --- FIM AJUSTE SCROLL --- */
+  border: 1px solid #444; /* Mantido para visualização */
   border-radius: 5px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.2); /* Mantido */
+  text-align: left; /* Alinha o texto dos itens à esquerda */
 }
 /* Estilos .result-item e .history-nickname-button (Mantidos iguais) */
-.result-item { background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco); padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; border-left: 5px solid var(--azul-wall-e); font-size: 0.9rem; line-height: 1.5; text-align: left; }
-.result-item div { margin-bottom: 4px; }
+.result-item { background-color: var(--carvao-wall-e); padding: 12px; border-radius: 8px; color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.3); font-size: 1rem; line-height: 1.6; margin-bottom: 15px; border-left: 5px solid var(--azul-wall-e);}
+.result-item div { margin-bottom: 5px; } /* Espaço entre linhas do item */
 .history-nickname-button { background: none; border: none; padding: 0; margin: 0; color: #87CEFA; text-decoration: underline; cursor: pointer; font-size: inherit; font-weight: bold; }
 .history-nickname-button:hover { color: #ADD8E6; }
 
@@ -172,13 +182,17 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   padding: 10px;
   margin: 15px 0;
   width: 100%;
-  /* Sem overflow-y ou max-height */
+  /* --- AJUSTE SCROLL: Remove limites internos --- */
+  /* overflow-y: auto; */
+  /* max-height: ... */
+  /* --- FIM AJUSTE SCROLL --- */
   border: 1px solid #444;
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2);
+  text-align: left;
 }
 /* Estilos .history-detail-item (Mantidos iguais) */
-.history-detail-item { background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco); padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; border-left: 5px solid var(--verde-planta); text-align: left; }
+.history-detail-item { background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco); padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; border-left: 5px solid var(--verde-planta); }
 .history-detail-item p { margin: 5px 0; font-size: 0.9rem; }
 .history-detail-item p strong { color: var(--amarelo-wall-e); }
 
@@ -190,18 +204,24 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 
 /* === Responsividade (Telas Pequenas) === */
-@media (max-width: 700px) {
+@media (max-width: 700px) { /* Aumentado breakpoint */
   body { padding: 10px; }
   body.gif-active::after { background-image: none; filter: none; }
 
   .app-container {
-    margin: 30px 0 10px 0; /* Margem superior mobile */
-    width: 95%;
-    /* --- AJUSTE ESPAÇO MOBILE: Padding para Wall-E original --- */
-    padding: 30px 15px 15px 45px; /* Ajustado padding top/left */
+    /* --- AJUSTE SCROLL: Mantém posição absoluta, mas ajusta width/padding --- */
+    position: absolute; /* Mantido */
+    top: 50%; left: 50%; transform: translate(-50%, -50%); /* Mantido */
+    width: 95%; /* Ocupa mais largura */
+    padding: 30px 15px 15px 35px; /* Ajusta padding para Wall-E mobile */
+    /* --- AJUSTE SCROLL: Define max-height e overflow no mobile --- */
+    max-height: 95vh; /* Limita altura */
+    overflow-y: auto; /* Scroll INTERNO no mobile */
+    /* --- FIM AJUSTE SCROLL --- */
+    margin: 0 auto; /* Remove margem vertical, centraliza com transform */
   }
 
-  /* --- REVERTIDO: Wall-E visível posição original no mobile --- */
+  /* --- MANTIDO: Wall-E visível posição original no mobile --- */
   .admin-trigger {
     width: 100px; /* Tamanho original mobile */
     height: 100px;
@@ -215,16 +235,16 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
      transform: rotate(-10deg); /* Sem scale no hover */
      opacity: 1;
   }
-  /* --- FIM REVERSÃO --- */
+  /* --- FIM MANTIDO --- */
 
-  /* Outros ajustes de tamanho e espaçamento (Mantidos iguais) */
+  /* Outros ajustes (Mantidos iguais) */
   h1 { font-size: 1.4rem; }
   .option-button { width: 95%; font-size: 0.9rem; }
   .main-result { font-size: 1.2rem; }
   .extra-buttons { gap: 8px; }
   .back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { flex-basis: 48%; font-size: 0.85rem; padding: 8px 10px; }
   .font-toggle-button { width: 45px; padding: 5px; font-size: 0.9rem; }
-  .result-list, .history-details-list { padding: 5px; }
+  .result-list, .history-details-list { padding: 5px; /* Sem max-height ou overflow */ }
   .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
 
