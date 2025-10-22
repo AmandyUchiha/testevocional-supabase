@@ -30,8 +30,8 @@ html {
 body {
   margin: 0;
   padding: 20px; /* Adiciona espaçamento geral */
-  min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100vh; /* Garante altura mínima */
+  overflow-x: hidden; /* Previne scroll horizontal */
   /* --- AJUSTE SCROLL: Usa Flexbox para centralizar e alinhar no topo --- */
   display: flex;
   flex-direction: column;
@@ -42,7 +42,7 @@ body {
   background-color: var(--cor-fundo-perguntas);
   position: relative; /* Para o pseudo-elemento ::after */
   z-index: 0;
-  overflow-y: auto; /* Garante scroll vertical no body */
+  overflow-y: auto; /* Garante scroll vertical NO BODY */
 }
 
 /* Fundo GIF borrado */
@@ -55,9 +55,11 @@ body.gif-active::after {
   background-position: center; background-attachment: fixed;
   filter: blur(5px);
 }
+/* Remove GIF na tela de perguntas */
 body.question-page.gif-active::after { background-image: none; filter: none; }
 body.question-page { background-color: var(--cor-fundo-perguntas); }
-body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
+/* Adiciona GIF na tela de detalhes (já estava ok) */
+body.detail-page.gif-active::after {
   content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
   background-image: url('./assets/fundo.gif'); background-repeat: no-repeat; background-size: cover;
   background-position: center; background-attachment: fixed; filter: blur(5px);
@@ -67,11 +69,11 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 /* === Contêiner Principal === */
 .app-container {
   /* --- AJUSTE SCROLL: Remove posicionamento absoluto e transform --- */
-  /* position: absolute; */
-  /* top: 50%; */
-  /* left: 50%; */
-  /* transform: translate(-50%, -50%); */
-  position: relative; /* Mantém relativo para o .admin-trigger funcionar */
+  /* position: absolute; */ /* Comentado/Removido */
+  /* top: 50%; */ /* Comentado/Removido */
+  /* left: 50%; */ /* Comentado/Removido */
+  /* transform: translate(-50%, -50%); */ /* Comentado/Removido */
+  position: relative; /* Mantém relativo APENAS para o .admin-trigger funcionar */
   /* --- FIM AJUSTE SCROLL --- */
   max-width: 650px;
   width: 100%; /* Ocupa largura disponível (limitado pelo max-width e padding do body) */
@@ -84,12 +86,9 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   text-align: center;
   display: flex;
   flex-direction: column;
-  /* === AJUSTE SCROLL: Deixa o conteúdo alinhar no topo === */
-  /* justify-content: center; */
   align-items: center;
-  /* === REMOVIDO: min-height, a altura será definida pelo conteúdo === */
-  /* min-height: 400px; */
-  box-sizing: border-box;
+  /* Sem min-height ou max-height, altura definida pelo conteúdo */
+  box-sizing: border-box; /* Já estava aqui, mantido */
 }
 
 
@@ -109,7 +108,7 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 
 
 /* === Estilos Comuns (Títulos, Botões, etc.) === */
-/* (Mantidos iguais ao CSS que você forneceu) */
+/* (Mantidos EXATAMENTE iguais ao que você forneceu) */
 h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
 button { font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; font-weight: bold; }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
@@ -191,7 +190,10 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
   .app-container {
     margin: 10px 0; padding: 15px; width: 95%; /* Ajusta container */
-    /* Sem max-height */
+    /* --- AJUSTE SCROLL: Mantém position relative para o trigger --- */
+    /* position: relative; */ /* Já está definido acima */
+    /* top: auto; left: auto; transform: none; */ /* Não são mais necessários */
+    /* --- FIM AJUSTE SCROLL --- */
   }
 
   .admin-trigger {
