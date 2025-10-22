@@ -258,7 +258,7 @@ function App() {
                   area_principal,
                   usuarios_antigo(apelido, data_criacao)
               `)
-              .order('id_r', { ascending: false })); 
+              .order('id_r', { ascending: false })); // Assume 'id_r' existe em 'resultado_antigo'
 
           setHistoryLoading(false);
 
@@ -284,7 +284,7 @@ function App() {
           });
       } 
       
-      // --- LÓGICA DO "NOVO BANCO" (Corrigida da última vez) ---
+      // --- LÓGICA DO "NOVO BANCO" (CORRIGIDA) ---
       else {
           // Busca de 'resultado' e 'usuarios'
           ({ data, error } = await supabase
@@ -336,6 +336,7 @@ function App() {
 
       // --- Lógica de seleção de Banco ---
       const isOldDb = adminSelectedDb === 'old';
+      // Assumindo que as tabelas antigas TÊM o sufixo _antigo
       const respostasTable = isOldDb ? 'respostas_usuario_antigo' : 'respostas_usuario';
       const questoesTable = isOldDb ? 'questoes_antigo' : 'questoes';
       const opcoesTable = isOldDb ? 'opcoes_antigo' : 'opcoes';
@@ -639,318 +640,321 @@ function App() {
             </button>
             <button 
               onClick={increaseFontSize} 
-              className="font-toggle-button"
-              aria-label="Aumentar tamanho da fonte"
+            	className="font-toggle-button"
+            	aria-label="Aumentar tamanho da fonte"
             >
-              A+
+      	     A+
             </button>
           </div>
-        </div>
-      );
+  	   </div>
+  	 );
 
-    case 'adminLogin':
-      return (
-        <div className="app-container">
-          <div 
-            className="admin-trigger" 
-            onClick={handleGoToRegister}
-            title="Voltar ao Início"
-          >
-          </div>
-          <h1>Acesso Administrativo</h1>
-          <form onSubmit={handleAdminLogin} className="register-form">
-            <p>Apelido Mestre:</p>
-            <input
-              type="text"
-              value={adminApelido}
-              onChange={(e) => setAdminApelido(e.target.value)}
-              placeholder="Apelido do Administrador"
-              required
-            />
-            <p>Senha:</p>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '300px', margin: '0 auto 15px' }}>
-              <input
-                type={showAdminPassword ? 'text' : 'password'}
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="********"
-                required
-                style={{ 
-                    width: '100%', 
-                    padding: '10px', 
-                    paddingRight: '40px', 
-                    boxSizing: 'border-box', 
-                    borderRadius: '5px',
-                    border: '1px solid #ccc'
-                }} 
-              />
-              <button
-                type="button" 
-                onClick={() => setShowAdminPassword(!showAdminPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '5px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#2e2e2e', 
-                  fontSize: '1.2rem',
-                }}
-                aria-label={showAdminPassword ? 'Esconder senha' : 'Mostrar senha'}
-              >
-                {showAdminPassword ? '🔒' : '👁️'}
-              </button>
-            </div>
-            
-            <button className="start-button" disabled={loading}>
-                {loading ? 'Entrando...' : 'Entrar como Administrador'}
-            </button>
-          </form>
-          {adminError && <div className="error-message"><p>{adminError}</p></div>}
-          <div className="extra-buttons">
-            <button onClick={handleGoToRegister} className="back-button">
-                Voltar
-            </button>
-          </div>
-        </div>
-      );
-    
-    case 'admin_db_select':
-      return (
-        <div className="app-container">
-          <div 
-            className="admin-trigger" 
-            onClick={handleGoToRegister}
-            title="Sair do modo Admin"
-          >
-          </div>
-          <h1>Seleção de Histórico</h1>
-          <p>Olá, {adminApelido}. De qual banco de dados você deseja ver o histórico?</p>
-          <div className="admin-db-select-buttons">
-            <button 
-              className="start-button"
-              onClick={() => { setAdminSelectedDb('new'); setView('history'); }}
-            >
-              Histórico (Novo Banco)
-            </button>
-            <button 
-              className="start-button"
-              onClick={() => { setAdminSelectedDb('old'); setView('history'); }}
-            >
-              Histórico (Antigo Banco)
-            </button>
-          </div>
-          <div className="extra-buttons">
-            <button onClick={handleGoToRegister} className="back-button">
-                Sair
-            </button>
-          </div>
-        </div>
-      );
+  	 case 'adminLogin':
+  	   return (
+  	 	 <div className="app-container">
+  	 	 	 <div 
+  	 	 	 	 className="admin-trigger" 
+  	 	 	 	 onClick={handleGoToRegister}
+  	 	 	 	 title="Voltar ao Início"
+  	 	 	 >
+  	 	 	 </div>
+  	 	 	 <h1>Acesso Administrativo</h1>
+  	 	 	 <form onSubmit={handleAdminLogin} className="register-form">
+  	 	 	 	 <p>Apelido Mestre:</p>
+  	 	 	 	 <input
+  	 	 	 	 	 type="text"
+  	 	 	 	 	 value={adminApelido}
+  	 	 	 	 	 onChange={(e) => setAdminApelido(e.target.value)}
+  	 	 	 	 	 placeholder="Apelido do Administrador"
+  	 	 	 	 	 required
+  	 	 	 	 />
+  	 	 	 	 <p>Senha:</p>
+  	 	 	 	 <div style={{ position: 'relative', width: '100%', maxWidth: '300px', margin: '0 auto 15px' }}>
+  	 	 	 	 	 <input
+  	 	 	 	 	 	 type={showAdminPassword ? 'text' : 'password'}
+  	 	 	 	 	 	 value={adminPassword}
+  	 	 	 	 	 	 onChange={(e) => setAdminPassword(e.target.value)}
+  	 	 	 	 	 	 placeholder="********"
+  	 	 	 	 	 	 required
+  	 	 	 	 	 	 style={{ 
+  	 	 	 	 	 	 	 width: '100%', 
+  	 	 	 	 	 	 	 padding: '10px', 
+  	 	 	 	 	 	 	 paddingRight: '40px', 
+  	 	 	 	 	 	 	 boxSizing: 'border-box', 
+  	 	 	 	 	 	 	 borderRadius: '5px',
+  	 	 	 	 	 	 	 border: '1px solid #ccc'
+  	 	 	 	 	 	 }} 
+  	 	 	 	 	 />
+  	 	 	 	 	 <button
+  	 	 	 	 	 	 type="button" 
+  	 	 	 	 	 	 onClick={() => setShowAdminPassword(!showAdminPassword)}
+  	 	 	 	 	 	 style={{
+  	 	 	 	 	 	 	 position: 'absolute',
+  	 	 	 	 	 	 	 right: '5px',
+  	 	 	 	 	 	 	 top: '50%',
+  	 	 	 	 	 	 	 transform: 'translateY(-50%)',
+  	 	 	 	 	 	 	 background: 'none',
+  	 	 	 	 	 	 	 border: 'none',
+  	 	 	 	 	 	 	 cursor: 'pointer',
+  	 	 	 	 	 	 	 color: '#2e2e2e', 
+  	 	 	 	 	 	 	 fontSize: '1.2rem',
+  	 	 	 	 	 	 }}
+  	 	 	 	 	 	 aria-label={showAdminPassword ? 'Esconder senha' : 'Mostrar senha'}
+  	 	 	 	 	 >
+  	 	 	 	 	 	 {showAdminPassword ? '🔒' : '👁️'}
+  	 	 	 	 	 </button>
+  	 	 	 	 </div>
+  	 	 	 	 
+  	 	 	 	 <button className="start-button" disabled={loading}>
+  	 	 	 	 	 {loading ? 'Entrando...' : 'Entrar como Administrador'}
+  	 	 	 	 </button>
+  	 	 	 </form>
+  	 	 	 {adminError && <div className="error-message"><p>{adminError}</p></div>}
+  	 	 	 <div className="extra-buttons">
+  	 	 	 	 <button onClick={handleGoToRegister} className="back-button">
+  	 	 	 	 	 Voltar
+  	 	 	 	 </button>
+  	 	 	 </div>
+  	 	 </div>
+  	 );
+  	 
+  	 case 'admin_db_select':
+  	 	 return (
+  	 	 	 <div className="app-container">
+  	 	 	 	 <div 
+  	 	 	 	 	 className="admin-trigger" 
+  	 	 	 	 	 onClick={handleGoToRegister}
+  	 	 	 	 	 title="Sair do modo Admin"
+  	 	 	 	 >
+  	 	 	 	 </div>
+  	 	 	 	 <h1>Seleção de Histórico</h1>
+  	 	 	 	 <p>Olá, {adminApelido}. De qual banco de dados você deseja ver o histórico?</p>
+  	 	 	 	 <div className="admin-db-select-buttons">
+  	 	 	 	 	 <button 
+  	 	 	 	 	 	 className="start-button"
+  	 	 	 	 	 	 onClick={() => { setAdminSelectedDb('new'); setView('history'); }}
+  	 	 	 	 	 >
+  	 	 	 	 	 	 Histórico (Novo Banco)
+  	 	 	 	 	 </button>
+  	 	 	 	 	 <button 
+  	 	 	 	 	 	 className="start-button"
+  	 	 	 	 	 	 onClick={() => { setAdminSelectedDb('old'); setView('history'); }}
+  	 	 	 	 	 >
+  	 	 	 	 	 	 Histórico (Antigo Banco)
+  	 	 	 	 	 </button>
+  	 	 	 	 </div>
+  	 	 	 	 <div className="extra-buttons">
+  	 	 	 	 	 <button onClick={handleGoToRegister} className="back-button">
+  	 	 	 	 	 	 Sair
+    	 	 	 	 	 </button>
+  	 	 	 	 </div>
+  	 	 	 </div>
+  	 	 );
 
-    case 'quiz': 
-      const currentQuestion = questions[currentQuestionIndex];
-      if (!currentQuestion) {
-         return <div className="loading">Carregando questão...</div>;
-      }
-      const selectedOption = userAnswers.find(a => a.id_q === currentQuestion.id_q);
-      
-      return (
-        <div className="app-container">
-          <div 
-            className="admin-trigger" 
-            onClick={() => setView('adminLogin')}
-            title="Acesso Administrativo"
-          >
-          </div>
-          <h1>Teste Vocacional</h1>
-          <p className="question-text">
-            Questão {currentQuestionIndex + 1} de {questions.length}
-          </p>
-          <div className="question-item">
-            <p className="question-enunciado">{currentQuestion.enunciado}</p>
-            <div className="options-container option-buttons-container">
-              {currentQuestion.opcoes.map(o => (
-                <button
-                  key={o.id_o}
-                  className={`option-button ${selectedOption && selectedOption.id_o === o.id_o ? 'selected' : ''}`}
-                  onClick={() => handleAnswer(currentQuestion.id_q, o.id_o)}>
-                  {o.opcao}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="extra-buttons">
-            {currentQuestionIndex > 0 && (
-              <button onClick={handleBack} className="back-button">Voltar</button>
-            )}
-            <button onClick={handleRestartTest} className="restart-button">
-              Reiniciar Teste
-            </button>
-          </div>
-        </div>
-      );
+  	 case 'quiz': 
+  	 	 const currentQuestion = questions[currentQuestionIndex];
+  	 	 if (!currentQuestion) {
+  	 	 	return <div className="loading">Carregando questão...</div>;
+  	 	 }
+  	 	 const selectedOption = userAnswers.find(a => a.id_q === currentQuestion.id_q);
+  	 	 
+  	 	 return (
+  	 	 	 <div className="app-container">
+  	 	 	 	 <div 
+  	 	 	 	 	 className="admin-trigger" 
+  	 	 	 	 	 onClick={() => setView('adminLogin')}
+  	 	 	 	 	 title="Acesso Administrativo"
+  	 	 	 	 >
+  	 	 	 	 </div>
+  	 	 	 	 <h1>Teste Vocacional</h1>
+  	 	 	 	 <p className="question-text">
+  	 	 	 	 	 Questão {currentQuestionIndex + 1} de {questions.length}
+  	 	 	 	 </p>
+  	 	 	 	 <div className="question-item">
+  	 	 	 	 	 <p className="question-enunciado">{currentQuestion.enunciado}</p>
+  	 	 	 	 	 <div className="options-container option-buttons-container">
+  	 	 	 	 	 	 {currentQuestion.opcoes.map(o => (
+  	 	 	 	 	 	 	 <button
+  	 	 	 	 	 	 	 	 key={o.id_o}
+  	 	 	 	 	 	 	 	 className={`option-button ${selectedOption && selectedOption.id_o === o.id_o ? 'selected' : ''}`}
+  	 	 	 	 	 	 	 	 onClick={() => handleAnswer(currentQuestion.id_q, o.id_o)}>
+  	 	 	 	 	 	 	 	 {o.opcao}
+  	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 ))}
+  	 	 	 	 	 </div>
+  	 	 	 	 </div>
+  	 	 	 	 <div className="extra-buttons">
+  	 	 	 	 	 {currentQuestionIndex > 0 && (
+  	 	 	 	 	 	 <button onClick={handleBack} className="back-button">Voltar</button>
+  	 	 	 	 	 )}
+  	 	 	 	 	 <button onClick={handleRestartTest} className="restart-button">
+  	 	 	 	 	 	 Reiniciar Teste
+  	 	 	 	 	 </button>
+  	 	 	 	 </div>
+  	 	 	 </div>
+  	 	 );
 
-    case 'result': 
-      if (!finalResult) return <div className="error">Resultado indisponível.</div>;
+  	 case 'result': 
+  	 	 if (!finalResult) return <div className="error">Resultado indisponível.</div>;
 
-      const focoPrincipalBD = finalResult.foco; 
-      const focoPrincipalNomeBonito = prettyFocusNames[focoPrincipalBD] || focoPrincipalBD;
+  	 	 const focoPrincipalBD = finalResult.foco; 
+  	 	 const focoPrincipalNomeBonito = prettyFocusNames[focoPrincipalBD] || focoPrincipalBD;
 
-      return (
-        <div className="app-container">
-          <div 
-            className="admin-trigger" 
-            onClick={() => setView('adminLogin')}
-            title="Acesso Administrativo"
-          >
-          </div>
-    A     <h1>Seu Resultado</h1>
-          <p className="result-text">Olá, {userNickname}! Sua área principal de interesse é:</p>
-          <div className="main-result">
-            <p className="result-area-principal">{focoPrincipalNomeBonito}</p>
-          </div>
-          
-          {/* A LISTA 3-2-2 (7 CURSOS) - SEM PERCENTUAL */}
-          {finalResult.sugestoes.length > 0 && (
-            <div className="suggestions-courses">
-              <h2>Os 7 Cursos Mais Recomendados para seu perfil:</h2>
-              <ul className="suggestions">
-                {finalResult.sugestoes.map((curso, index) => (
-                  <li key={index}>
-                     <strong>{index + 1}º. {curso}</strong>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          <div className="extra-buttons">
-            <button onClick={() => setView('history')} className="history-button">
-              Ver Histórico
-            </button>
-            <button onClick={handleRestartTest} className="restart-button">
-              Reiniciar Teste
-            </button>
-          </div>
-        </div>
-      );
+  	 	 return (
+  	 	 	 <div className="app-container">
+  	 	 	 	 <div 
+  	 	 	 	 	 className="admin-trigger" 
+  	 	 	 	 	 onClick={() => setView('adminLogin')}
+  	 	 	 	 	 title="Acesso Administrativo"
+  	 	 	 	 >
+  	 	 	 	 </div>
+  	 	 	 	 <h1>Seu Resultado</h1>
+  	 	 	 	 <p className="result-text">Olá, {userNickname}! Sua área principal de interesse é:</p>
+  	 	 	 	 <div className="main-result">
+  	 	 	 	 	 <p className="result-area-principal">{focoPrincipalNomeBonito}</p>
+  	 	 	 	 </div>
+  	 	 	 	 
+  	 	 	 	 {/* A LISTA 3-2-2 (7 CURSOS) - SEM PERCENTUAL */}
+  	 	 	 	 {finalResult.sugestoes.length > 0 && (
+  	 	 	 	 	 <div className="suggestions-courses">
+  	 	 	 	 	 	 <h2>Os 7 Cursos Mais Recomendados para seu perfil:</h2>
+  	 	 	 	 	 	 <ul className="suggestions">
+  	 	 	 	 	 	 	 {finalResult.sugestoes.map((curso, index) => (
+  	 	 	 	 	 	 	 	 <li key={index}>
+  	 	 	 	 	 	 	 	 	<strong>{index + 1}º. {curso}</strong>
+  	 	 	 	 	 	 	 	 </li>
+  	 	 	 	 	 	 	 ))}
+  	 	 	 	 	 	 </ul>
+  	 	 	 	 	 </div>
+  	 	 	 	 )}
+  	 	 	 	 
+  	 	 	 	 <div className="extra-buttons">
+  	 	 	 	 	 <button onClick={() => setView('history')} className="history-button">
+  	 	 	 	 	 	 Ver Histórico
+  	 	 	 	 	 </button>
+  	 	 	 	 	 <button onClick={handleRestartTest} className="restart-button">
+  	 	 	 	 	 	 Reiniciar Teste
+  	 	 	 	 	 </button>
+  	 	 	 	 </div>
+  	 	 	 </div>
+  	 	 );
 
-    case 'history':
-      const displayedResults = isMasterAdmin ? allDbResults : pastResults;
-      const historyTitle = isMasterAdmin 
-          ? `Histórico Geral (${adminSelectedDb === 'new' ? 'Novo Banco' : 'Antigo Banco'})`
-          : 'Seu Histórico Local';
+  	 case 'history':
+  	 	 const displayedResults = isMasterAdmin ? allDbResults : pastResults;
+  	 	 const historyTitle = isMasterAdmin 
+  	 	 	 ? `Histórico Geral (${adminSelectedDb === 'new' ? 'Novo Banco' : 'Antigo Banco'})`
+  	 	 	 : 'Seu Histórico Local';
 
-      if (historyLoading) {
-        return <div className="loading">Carregando histórico do servidor...</div>;
-      }
-      
-      return (
-        <>
-          {/* --- Modal de Detalhes (Request 5) --- */}
-          {viewingHistoryDetails && (
-            <div className="history-details-modal-backdrop">
-              <div className="history-details-modal">
-                <h2>Respostas do Usuário</h2>
-                <button 
-                  className="close-modal-button"
-                  onClick={() => setViewingHistoryDetails(null)}
-                >
-                  &times;
-                </button>
-                {historyDetailsLoading && <div className="loading">Carregando respostas...</div>}
-                
-                {/* Mostra erro específico do modal */}
-                {adminError && <div className="error-message"><p>{adminError}</p></div>}
+  	 	 if (historyLoading) {
+  	 	 	 return <div className="loading">Carregando histórico do servidor...</div>;
+  	 	 }
+  	 	 
+  	 	 return (
+  	 	 	 <>
+  	 	 	 	 {/* --- Modal de Detalhes (Request 5) --- */}
+  	 	 	 	 {viewingHistoryDetails && (
+  	 	 	 	 	 <div className="history-details-modal-backdrop">
+  	 	 	 	 	 	 <div className="history-details-modal">
+  	 	 	 	 	 	 	 <h2>Respostas do Usuário</h2>
+  	 	 	 	 	 	 	 <button 
+  	 	 	 	 	 	 	 	 className="close-modal-button"
+  	 	 	 	 	 	 	 	 onClick={() => setViewingHistoryDetails(null)}
+  	 	 	 	 	 	 	 >
+  	 	 	 	 	 	 	 	 &times;
+  	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 {historyDetailsLoading && <div className="loading">Carregando respostas...</div>}
+  	 	 	 	 	 	 	 
+  	 	 	 	 	 	 	 {/* Mostra erro específico do modal */}
+  	 	 	 	 	 	 	 {adminError && <div className="error-message"><p>{adminError}</p></div>}
 
-          A     {historyDetails && historyDetails.length > 0 && (
-                  <ul className="history-details-list">
-                    {historyDetails.map((detail, index) => (
-                      <li key={index} className="history-detail-item">
-                        <p><strong>Pergunta:</strong> {detail.questoes.enunciado}</p>
-                        <p><strong>Resposta:</strong> {detail.opcoes.opcao}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {historyDetails && historyDetails.length === 0 && !historyDetailsLoading && (
-                  <p>Nenhum detalhe de resposta encontrado para este usuário.</p>
-                )}
-              </div>
-            </div>
-          )}
+  	 	 	 	 	 	 	 {historyDetails && historyDetails.length > 0 && (
+  	 	 	 	 	 	 	 	 <ul className="history-details-list">
+  	 	 	 	 	 	 	 	 	 {historyDetails.map((detail, index) => (
+  	 	 	 	 	 	 	 	 	 	 <li key={index} className="history-detail-item">
+  	 	 	 	 	 	 	 	 	 	 	 <p><strong>Pergunta:</strong> {detail.questoes.enunciado}</p>
+  	 	 	 	 	 	 	 	 	 	 	 <p><strong>Resposta:</strong> {detail.opcoes.opcao}</p>
+  	 	 	 	 	 	 	 	 	 	 </li>
+  	 	 	 	 	 	 	 	 	 ))}
+  	 	 	 	 	 	 	 	 </ul>
+  	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	 	 {historyDetails && historyDetails.length === 0 && !historyDetailsLoading && (
+  	 	 	 	 	 	 	 	 <p>Nenhum detalhe de resposta encontrado para este usuário.</p>
+  	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	 </div>
+  	 	 	 	 	 </div>
+  	 	 	 	 )}
 
-          {/* --- Página de Histórico Principal --- */}
-          <div className="app-container">
-            <div 
-              className="admin-trigger" 
-              onClick={handleGoToRegister} 
-              title="Sair do modo Admin / Voltar ao Início"
-            >
-            </div>
-            
-            <h1>{historyTitle}</h1>
-            
-            {displayedResults.length > 0 ? (
-              <>
-                <ul className="result-list">
-                  {displayedResults.map((result, index) => (
-                    <li key={result.id_u + '-' + index} className="result-item">
-                      <div>
-                        {/* Botão no apelido (Request 5) */}
-                        {isMasterAdmin ? (
-                          <button 
-                            className="history-nickname-button" 
-                            onClick={() => handleViewHistoryDetails(result.id_u)}
-                            title="Ver respostas do usuário"
-                          >
-                            Apelido: <strong>{result.nickname}</strong> 
-                          </button>
-                        ) : (
-                          <div>Apelido: <strong>{result.nickname}</strong></div>
-                        )}
-                      </div>
-                      {/* Exibe data E hora (Request 4) */}
-                      <div>Data: {result.date} {isMasterAdmin ? `às ${result.time}` : ''}</div>
-                      <div>Área Principal: {result.foco}</div>
-                    </li>
-                  ))}
-                </ul>
-                <div className="extra-buttons">
-                  {!isMasterAdmin && (
-                      <button onClick={handleClearHistory} className="clear-history-button">
-                        Limpar Histórico Local
-                      </button>
-                  )}
-                  {isMasterAdmin && (
-                    <button onClick={() => { setView('admin_db_select'); setAllDbResults([]); }} className="back-button">
-                      Trocar Banco
-                    </button>
-                  )}
-                  <button onClick={handleGoToRegister} className="back-to-test-button">
-                    {isMasterAdmin ? 'Sair do Admin' : 'Voltar para Registro'}
-                  </button>
-                </div>
-              </>
-            ) : (
-             <>
-                <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
-                <div className="extra-buttons">
-                  <button onClick={handleGoToRegister} className="back-to-test-button">
-                    Voltar para Registro
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </>
-      );
+  	 	 	 	 {/* --- Página de Histórico Principal --- */}
+  	 	 	 	 <div className="app-container">
+  	 	 	 	 	 <div 
+  	 	 	 	 	 	 className="admin-trigger" 
+  	 	 	 	 	 	 onClick={handleGoToRegister} 
+  	 	 	 	 	 	 title="Sair do modo Admin / Voltar ao Início"
+  	 	 	 	 	 >
+  	 	 	 	 	 </div>
+  	 	 	 	 	 
+  	 	 	 	 	 <h1>{historyTitle}</h1>
+  	 	 	 	 	 
+  	 	 	 	 	 {displayedResults.length > 0 ? (
+  	 	 	 	 	 	 <>
+  	 	 	 	 	 	 	 <ul className="result-list">
+  	 	 	 	 	 	 	 	 {displayedResults.map((result, index) => (
+  	 	 	 	 	 	 	 	 	 <li key={result.id_u + '-' + index} className="result-item">
+  	 	 	 	 	 	 	 	 	 	 <div>
+  	 	 	 	 	 	 	 	 	 	 	 {/* Botão no apelido (Request 5) */}
+  	 	 	 	 	 	 	 	 	 	 	 {isMasterAdmin ? (
+  	 	 	 	 	 	 	 	 	 	 	 	 <button 
+  	 	 	 	 	 	 	 	 	 	 	 	 	 className="history-nickname-button" 
+  	 	 	 	 	 	 	 	 	 	 	 	 	 onClick={() => handleViewHistoryDetails(result.id_u)}
+  	 	 	 	 	 	 	 	 	 	 	 	 	 title="Ver respostas do usuário"
+  	 	 	 	 	 	 	 	 	 	 	 	 >
+  	 	 	 	 	 	 	 	 	 	 	 	 	 Apelido: <strong>{result.nickname}</strong> 
+  	 	 	 	 	 	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 	 	 	 	 ) : (
+  	 	 	 	 	 	 	 	 	 	 	 	 <div>Apelido: <strong>{result.nickname}</strong></div>
+  	 	 	 	 	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	 	 	 	 	 </div>
+  	 	 	 	 	 	 	 	 	 	 {/* Exibe data E hora (Request 4) */}
+  	 	 	 	 	 	 	 	 	 	 <div>Data: {result.date} {isMasterAdmin ? `às ${result.time}` : ''}</div>
+  	 	 	 	 	 	 	 	 	 	 <div>Área Principal: {result.foco}</div>
+  	 	 	 	 	 	 	 	 	 </li>
+  	 	 	 	 	 	 	 	 ))}
+  	 	 	 	 	 	 	 </ul>
+  	 	 	 	 	 	 	 <div className="extra-buttons">
+  	 	 	 	 	 	 	 	 {!isMasterAdmin && (
+  	 	 	 	 	 	 	 	 	 <button onClick={handleClearHistory} className="clear-history-button">
+  	 	 	 	 	 	 	 	 	 	 Limpar Histórico Local
+  	 	 	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	 	 	 {isMasterAdmin && (
+  	 	 	 	 	 	 	 	 	 <button onClick={() => { setView('admin_db_select'); setAllDbResults([]); }} className="back-button">
+  	 	 	 	 	 	 	 	 	 	 Trocar Banco
+  	 	 	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 	 )}
+  	 	 	 	 	 	 	 	 <button onClick={handleGoToRegister} className="back-to-test-button">
+  	 	 	 	 	 	 	 	 	 {isMasterAdmin ? 'Sair do Admin' : 'Voltar para Registro'}
+  	 	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 </div>
+  	 	 	 	 	 	 </>
+  	 	 	 	 	 ) : (
+                        // ==========================================================
+                        // ERRO DE SINTAXE ESTAVA AQUI (REMOVIDO)
+                        // ==========================================================
+  	 	 	 	 	 	 <>
+  	 	 	 	 	 	 	 <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
+  	 	 	 	 	 	 	 <div className="extra-buttons">
+  	 	 	 	 	 	 	 	 <button onClick={handleGoToRegister} className="back-to-test-button">
+  	 	 	 	 	 	 	 	 	 Voltar para Registro
+  	 	 	 	 	 	 	 	 </button>
+  	 	 	 	 	 	 	 </div>
+  	 	 	 	 	 	 </>
+  	 	 	 	 	 )}
+  	 	 	 	 </div>
+  	 	 	 </>
+  	 	 );
 
-    default:
-      return null;
+  	 default:
+  	 	 return null;
   }
 }
 
