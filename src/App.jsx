@@ -59,11 +59,9 @@ function App() {
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
   const [historyRanking, setHistoryRanking] = useState(null); 
-  // Estados para o acesso admin secreto REINSERIDOS
-  const [adminClickCount, setAdminClickCount] = useState(0); 
-  const [adminClickTimer, setAdminClickTimer] = useState(null);
+  // REMOVIDOS os estados de clique secreto: adminClickCount, adminClickTimer
 
-  // Efeitos (sem alterações significativas, apenas limpeza)
+  // Efeitos (sem alterações)
   useEffect(() => { 
     async function getInitialData() {
         setLoading(true); setError(null);
@@ -71,9 +69,9 @@ function App() {
           const { data: qData, error: qError } = await supabase.from('questoes').select(`id_q, enunciado, opcoes(id_o, opcao, pontuacao(foco, valor))`);
           if (qError) throw qError; if (!qData || qData.length === 0) throw new Error("Nenhuma questão."); setQuestions(qData);
           const { data: mData, error: mError } = await supabase.from('foco_pontuacao_maxima').select('foco, valor_maximo');
-          if (mError) throw mError; if (!mData) throw new Error("Nenhuma pont. máxima."); const mScoresMap = mData.reduce((acc, i)=>{if(i.foco&&typeof i.valor_maximo==='number')acc[i.foco]=i.valor_maximo;return acc;},{}); if(Object.keys(mScoresMap).length===0)throw new Error("Nenhuma pont. máxima válida."); setMaxScores(mScoresMap);
+          if (mError) throw mError; if (!mData) throw new Error("Nenhuma pont. máxima."); const mScoresMap = mData.reduce((acc, i) => { if (i.foco && typeof i.valor_maximo === 'number') acc[i.foco] = i.valor_maximo; return acc; }, {}); if (Object.keys(mScoresMap).length === 0) throw new Error("Nenhuma pont. máxima válida."); setMaxScores(mScoresMap);
           const { data: cData, error: cError } = await supabase.from('cursos_por_foco').select('foco, curso_nome');
-          if (cError) throw cError; if (!cData) throw new Error("Nenhum curso."); const cMapObj = cData.reduce((acc, i)=>{if(i.foco&&i.curso_nome){if(!acc[i.foco])acc[i.foco]=[];acc[i.foco].push(i.curso_nome);}return acc;},{}); setCourseMap(cMapObj);
+          if (cError) throw cError; if (!cData) throw new Error("Nenhum curso."); const cMapObj = cData.reduce((acc, i) => { if (i.foco && i.curso_nome) { if (!acc[i.foco]) acc[i.foco] = []; acc[i.foco].push(i.curso_nome); } return acc; }, {}); setCourseMap(cMapObj);
           const savedResults = localStorage.getItem('testHistory'); if(savedResults){try{setPastResults(JSON.parse(savedResults));}catch(e){console.error("Erro hist local:",e);localStorage.removeItem('testHistory');}}
         } catch (err){console.error('Erro dados:',err);setError(`Falha:${err.message}.`);} 
         finally {setLoading(false);}
@@ -97,19 +95,7 @@ function App() {
   function increaseFontSize() { setFontSizeAdjustment(adj => Math.min(adj + 2, 8)); }
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
-  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO REINSERIDA ---
-  function handleSecretAdminTrigger() {
-    const newClickCount = adminClickCount + 1;
-    setAdminClickCount(newClickCount);
-    if (adminClickTimer) clearTimeout(adminClickTimer); 
-    if (newClickCount >= 5) { 
-      console.log("Acesso admin!"); 
-      setAdminClickCount(0); setView('adminLogin'); 
-    } else { 
-      const timer = setTimeout(() => { setAdminClickCount(0); setAdminClickTimer(null); }, 1000); 
-      setAdminClickTimer(timer);
-    }
-  }
+  // REMOVIDA a função handleSecretAdminTrigger
 
   // --- FUNÇÕES DE ADMIN --- (sem alterações)
   async function handleAdminLogin(e) { /* ... */ e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); } }
@@ -123,16 +109,13 @@ function App() {
       setAdminApelido(''); setAdminPassword(''); setAllDbResults([]); setAdminSelectedDb(null);
       setDetailedUser(null); setHistoryDetails(null); setHistoryRanking(null); 
       setAdminError(null); setError(null); 
-      // Reset do acesso secreto REINSERIDO
-      setAdminClickCount(0); 
-      if (adminClickTimer) clearTimeout(adminClickTimer); 
-      setAdminClickTimer(null);
+      // REMOVIDO o reset do clique secreto
       document.documentElement.removeAttribute('data-initial-font-size'); 
       document.documentElement.style.fontSize = ''; 
       setView('register');
   }
   
-  async function handleRegister(e) { 
+  async function handleRegister(e) { /* ... (sem alterações) ... */ 
       e.preventDefault(); setRegistrationError(null); setError(null);
       if (!userNickname.trim()) { setRegistrationError('Por favor, digite um apelido.'); return; }
       setLoading(true);
@@ -147,7 +130,7 @@ function App() {
       } finally { setLoading(false); }
   }
   
-  // TRANSIÇÃO AUTOMÁTICA
+  // TRANSIÇÃO AUTOMÁTICA (sem alterações)
   function handleAnswer(questionId, optionId) { 
       const newAnswers = [...userAnswers.filter(a => a.id_q !== questionId), { id_u: userId, id_q: questionId, id_o: optionId }];
       setUserAnswers(newAnswers);
@@ -158,13 +141,13 @@ function App() {
       }
   }
 
-  function handleBack() { 
+  function handleBack() { /* ... (sem alterações) ... */ 
       if (currentQuestionIndex > 0) { setCurrentQuestionIndex(currentQuestionIndex - 1); }
   }
 
   function handleRestartTest() { handleGoToRegister(); }
 
-  function handleSaveResult(result) { 
+  function handleSaveResult(result) { /* ... (sem alterações) ... */ 
       try {
         const resultToSave = { nickname: result.nickname, date: result.date, foco: prettyFocusNames[result.foco] || result.foco || '?', sugestoes: result.sugestoes };
         const currentHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
@@ -175,12 +158,12 @@ function App() {
       } catch (e) { console.error("Erro save local:", e); }
   }
 
-  function handleClearHistory() { 
+  function handleClearHistory() { /* ... (sem alterações) ... */ 
       try { setPastResults([]); localStorage.removeItem('testHistory'); } 
       catch (e) { console.error("Erro limpar:", e); setError("Não foi possível limpar."); }
   }
 
-  async function handleSubmitTest(answersToSubmit) { 
+  async function handleSubmitTest(answersToSubmit) { /* ... (sem alterações) ... */ 
     setLoading(true); setError(null); 
     const currentAnswers = answersToSubmit || userAnswers; 
     if (!currentAnswers || currentAnswers.length === 0) { setError("Nenhuma resposta."); setLoading(false); setView('quiz'); return; }
@@ -242,7 +225,6 @@ function App() {
         </button>
       </form>
       {registrationError && <div className="error-message"><p>{registrationError}</p></div>} 
-      {/* Histórico local e botões relacionados REMOVIDOS daqui */}
       {renderFontControls()} 
     </div>
   );
@@ -303,7 +285,7 @@ function App() {
   const renderHistory = () => ( <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p style={{margin:'20px 0',color:'var(--amarelo-wall-e)'}}>Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   const renderDetailView = () => { if (!detailedUser) { setView('history'); return null; } return ( <div className="container detail-view-container"><h1>Detalhes de {detailedUser.nickname}</h1><p>(ID: {detailedUser.id})</p>{historyDetailsLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{historyRanking&&historyRanking.length>0&&( <div style={{width:'100%',marginBottom:'20px'}}><h3 style={{color:'var(--amarelo-wall-e)'}}>Ranking (DB)</h3><ul style={{listStyle:'none',padding:'10px',margin:'15px 0',width:'100%',border:'1px solid #444',borderRadius:'5px',backgroundColor:'rgba(0,0,0,0.2)',textAlign:'left'}}>{historyRanking.map((item,i)=>(<li key={i} style={{backgroundColor:'rgba(0,0,0,0.6)',color:'var(--eve-branco)',padding:'10px 15px',marginBottom:'8px',borderRadius:'4px',borderLeft:'5px solid var(--amarelo-wall-e)'}}>{i+1}. {prettyFocusNames[item.foco]||item.foco}: {item.percentual}%</li>))}</ul></div> )}{historyDetails&&historyDetails.length>0&&( <div style={{width:'100%'}}><h3 style={{color:'var(--amarelo-wall-e)'}}>Respostas</h3><ul className="history-details-list">{historyDetails.map((item,i)=>( <li key={i} className="history-detail-item"><p><strong>P:</strong> {item.questoes?.enunciado||'?'}</p><p><strong>R:</strong> {item.opcoes?.opcao||'?'}</p></li> ))}</ul></div> )}{!historyDetailsLoading&&(!historyDetails||historyDetails.length===0)&&(!historyRanking||historyRanking.length===0)&&!adminError&&(<p style={{margin:'20px 0',color:'var(--amarelo-wall-e)'}}>Nenhum detalhe.</p>)}<div className="extra-buttons"><button onClick={()=>{setView('history');setHistoryDetails(null);setDetailedUser(null);setHistoryRanking(null);setAdminError(null);}} className="back-button">Voltar</button></div></div> ); };
 
-  // === TELA: Histórico Local (com botões Corretos) ===
+  // === TELA: Histórico Local (sem alterações) ===
   const renderLocalHistory = () => (
     <div className="container local-history-container"> 
         <h1>Histórico Local</h1>
@@ -346,21 +328,20 @@ function App() {
       case 'result': return renderResult();
       case 'adminLogin': return renderAdminLogin();
       case 'admin_db_select': return renderAdminDbSelect();
-      case 'history': return renderHistory(); // Histórico Admin (DB)
+      case 'history': return renderHistory(); 
       case 'detailView': return renderDetailView();
-      case 'localHistory': return renderLocalHistory(); // Histórico Local (localStorage)
+      case 'localHistory': return renderLocalHistory(); 
       case 'register': default: return renderRegister();
     }
   };
 
-  // Retorno final
+  // Retorno final com onClick no admin-trigger REINSERIDO
   return (
     <div className="app-container">
-      {/* Gatilho admin secreto REINSERIDO */}
       <div 
         className="admin-trigger" 
-        onClick={handleSecretAdminTrigger} 
-        title=""
+        onClick={() => setView('adminLogin')} // ALTERADO AQUI para clique direto
+        title="" // Remove tooltip, mas mantém clicável
       ></div> 
       
       {renderCurrentView()}
