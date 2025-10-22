@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll Livre - Mínimas Alterações de Layout) */
+/* App.css - Tema Wall-E (Scroll Livre + Wall-E Visível no Canto da Caixa) */
 
 /* Cores temáticas */
 :root {
@@ -29,20 +29,18 @@ html {
 
 body {
   margin: 0;
-  padding: 20px; /* Adiciona espaçamento geral */
-  min-height: 100vh; /* Garante altura mínima */
-  overflow-x: hidden; /* Previne scroll horizontal */
-  /* --- AJUSTE SCROLL: Usa Flexbox para centralizar e alinhar no topo --- */
+  padding: 20px;
+  min-height: 100vh;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Alinha o app-container no topo */
-  align-items: center; /* Centraliza o app-container horizontalmente */
-  /* --- FIM AJUSTE SCROLL --- */
+  justify-content: flex-start; /* Alinha container no topo */
+  align-items: center; /* Centraliza container horizontalmente */
   font-family: 'Orbitron', sans-serif;
   background-color: var(--cor-fundo-perguntas);
-  position: relative; /* Para o pseudo-elemento ::after */
+  position: relative;
   z-index: 0;
-  overflow-y: auto; /* Garante scroll vertical NO BODY */
+  overflow-y: auto; /* Garante scroll no body */
 }
 
 /* Fundo GIF borrado */
@@ -55,11 +53,9 @@ body.gif-active::after {
   background-position: center; background-attachment: fixed;
   filter: blur(5px);
 }
-/* Remove GIF na tela de perguntas */
 body.question-page.gif-active::after { background-image: none; filter: none; }
 body.question-page { background-color: var(--cor-fundo-perguntas); }
-/* Adiciona GIF na tela de detalhes (já estava ok) */
-body.detail-page.gif-active::after {
+body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
   background-image: url('./assets/fundo.gif'); background-repeat: no-repeat; background-size: cover;
   background-position: center; background-attachment: fixed; filter: blur(5px);
@@ -68,17 +64,12 @@ body.detail-page.gif-active::after {
 
 /* === Contêiner Principal === */
 .app-container {
-  /* --- AJUSTE SCROLL: Remove posicionamento absoluto e transform --- */
-  /* position: absolute; */ /* Comentado/Removido */
-  /* top: 50%; */ /* Comentado/Removido */
-  /* left: 50%; */ /* Comentado/Removido */
-  /* transform: translate(-50%, -50%); */ /* Comentado/Removido */
-  position: relative; /* Mantém relativo APENAS para o .admin-trigger funcionar */
-  /* --- FIM AJUSTE SCROLL --- */
+  position: relative; /* Necessário para o .admin-trigger absoluto */
   max-width: 650px;
-  width: 100%; /* Ocupa largura disponível (limitado pelo max-width e padding do body) */
-  margin: 20px 0; /* Margem vertical, centralizado horizontalmente pelo flex do body */
-  padding: 20px 30px; /* Aumentado padding */
+  width: 100%;
+  margin: 20px 0;
+  /* --- AJUSTE: Adiciona padding no topo/esquerda para o Wall-E não sobrepor conteúdo --- */
+  padding: 40px 30px 20px 50px; /* Aumentado padding top/left */
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -87,28 +78,43 @@ body.detail-page.gif-active::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Sem min-height ou max-height, altura definida pelo conteúdo */
-  box-sizing: border-box; /* Já estava aqui, mantido */
+  box-sizing: border-box;
 }
 
 
-/* === Gatilho Admin (Wall-E) === */
+/* === Gatilho Admin (Wall-E) - Visível no Canto da Caixa === */
 .admin-trigger {
-  position: absolute; /* Continua absoluto em relação ao app-container */
-  top: 2px; left: -40px; /* Ajustado */
-  width: 150px; height: 150px;
+  /* --- ALTERAÇÃO: Posicionamento Absoluto na Caixa --- */
+  position: absolute; /* Relativo ao .app-container */
+  top: -15px;       /* Posição no canto superior esquerdo da caixa */
+  left: -40px;      /* (Ajuste fino conforme necessário) */
+  width: 100px;     /* Tamanho um pouco menor */
+  height: 100px;
   background-image: url('./assets/walle.png');
-  background-size: contain; background-repeat: no-repeat; background-position: center;
-  transform: rotate(-15deg);
-  z-index: 2;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transform: rotate(-15deg); /* Mantém a rotação */
+  z-index: 2;        /* Acima do container */
+  /* --- ALTERAÇÃO: Visível, sem dicas de clique --- */
+  opacity: 1;        /* VISÍVEL */
+  cursor: default;   /* Sem cursor de link */
+  /* --- FIM ALTERAÇÃO --- */
+
+  /* Transição removida, pois não haverá efeito hover visual */
+  /* transition: transform 0.2s ease-in-out; */
 }
-.admin-trigger:hover { transform: rotate(-15deg) scale(1.05); }
+
+/* Remove qualquer efeito visual no hover */
+.admin-trigger:hover {
+  /* Mantém a aparência original */
+  transform: rotate(-15deg); /* Garante que a rotação não mude */
+  opacity: 1; /* Garante que continue visível */
+}
 
 
 /* === Estilos Comuns (Títulos, Botões, etc.) === */
-/* (Mantidos EXATAMENTE iguais ao que você forneceu) */
+/* (Mantidos EXATAMENTE iguais à versão anterior) */
 h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
 button { font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; font-weight: bold; }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
@@ -185,22 +191,31 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 /* === Responsividade (Telas Pequenas) === */
 @media (max-width: 700px) {
-  body { padding: 10px; } /* Menos padding no body */
-  body.gif-active::after { background-image: none; filter: none; } /* Remove GIF */
+  body { padding: 10px; }
+  body.gif-active::after { background-image: none; filter: none; }
 
   .app-container {
-    margin: 10px 0; padding: 15px; width: 95%; /* Ajusta container */
-    /* --- AJUSTE SCROLL: Mantém position relative para o trigger --- */
-    /* position: relative; */ /* Já está definido acima */
-    /* top: auto; left: auto; transform: none; */ /* Não são mais necessários */
-    /* --- FIM AJUSTE SCROLL --- */
+    margin: 10px 0;
+    width: 95%;
+    /* --- AJUSTE: Padding mobile para Wall-E --- */
+    padding: 30px 15px 15px 35px; /* Ajustado padding top/left */
   }
 
+  /* --- ALTERAÇÃO: Ajusta Wall-E visível no mobile --- */
   .admin-trigger {
-    width: 80px; height: 80px; top: -10px; left: -15px; /* Ajusta Posição/Tamanho */
-    transform: rotate(-10deg);
+    width: 60px; /* Menor */
+    height: 60px;
+    top: -5px;   /* Ajusta posição */
+    left: -10px;
+    transform: rotate(-10deg); /* Mantém rotação leve */
+    opacity: 1; /* Garante visibilidade */
+    cursor: default; /* Garante sem cursor especial */
   }
-  .admin-trigger:hover { transform: rotate(-10deg); } /* Remove scale */
+  .admin-trigger:hover {
+     transform: rotate(-10deg); /* Sem scale no hover */
+     opacity: 1;
+  }
+  /* --- FIM ALTERAÇÃO --- */
 
   /* Outros ajustes de tamanho e espaçamento (Mantidos iguais) */
   h1 { font-size: 1.4rem; }
@@ -209,7 +224,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   .extra-buttons { gap: 8px; }
   .back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { flex-basis: 48%; font-size: 0.85rem; padding: 8px 10px; }
   .font-toggle-button { width: 45px; padding: 5px; font-size: 0.9rem; }
-  .result-list, .history-details-list { padding: 5px; /* Sem max-height */ }
+  .result-list, .history-details-list { padding: 5px; }
   .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
 
