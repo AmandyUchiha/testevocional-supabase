@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll Livre da Página) */
+/* App.css - Tema Wall-E (CORREÇÃO FINAL SCROLL LIVRE) */
 
 /* Cores temáticas */
 :root {
@@ -29,39 +29,37 @@ html {
 
 body {
   margin: 0;
-  padding: 20px;
-  min-height: 100vh;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
+  padding: 20px; /* Espaçamento geral */
+  min-height: 100vh; /* Garante altura mínima */
+  overflow-x: hidden; /* Previne scroll horizontal */
+  /* --- CORREÇÃO SCROLL --- */
+  display: flex; /* Usa flexbox para layout */
+  flex-direction: column; /* Organiza filhos verticalmente */
   justify-content: flex-start; /* Alinha container no topo */
-  align-items: center;
+  align-items: center; /* Centraliza container horizontalmente */
+  /* --- FIM CORREÇÃO SCROLL --- */
   font-family: 'Orbitron', sans-serif;
   background-color: var(--cor-fundo-perguntas);
-  position: relative;
+  position: relative; /* Para o ::after */
   z-index: 0;
-  overflow-y: auto; /* Garante scroll no body */
+  overflow-y: auto; /* Permite scroll vertical NO BODY */
 }
 
 /* Fundo GIF borrado */
 body.gif-active::after {
   content: '';
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   z-index: -1;
   background-image: url('./assets/fundo.gif');
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background-repeat: no-repeat; background-size: cover;
+  background-position: center; background-attachment: fixed;
   filter: blur(5px);
 }
 /* Remove GIF na tela de perguntas */
 body.question-page.gif-active::after { background-image: none; filter: none; }
 body.question-page { background-color: var(--cor-fundo-perguntas); }
-/* Adiciona GIF na tela de detalhes */
+/* Adiciona GIF na tela de detalhes (já estava ok) */
 body.detail-page.gif-active::after {
-  /* Regra duplicada para garantir que se aplique */
   content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
   background-image: url('./assets/fundo.gif'); background-repeat: no-repeat; background-size: cover;
   background-position: center; background-attachment: fixed; filter: blur(5px);
@@ -70,9 +68,13 @@ body.detail-page.gif-active::after {
 
 /* === Contêiner Principal === */
 .app-container {
+  /* --- CORREÇÃO SCROLL --- */
+  /* Removido position: absolute, top, left, transform */
+  position: relative; /* Mantém relativo para o .admin-trigger */
+  /* --- FIM CORREÇÃO SCROLL --- */
   max-width: 650px;
-  width: 100%;
-  margin: 20px 0; /* Margem vertical apenas */
+  width: 100%; /* Ocupa largura disponível (limitado pelo max-width e padding do body) */
+  margin: 20px 0; /* Margem vertical para espaçar do topo/fim */
   padding: 20px 30px;
   background-color: var(--cinza-escuro);
   border-radius: 12px;
@@ -82,8 +84,7 @@ body.detail-page.gif-active::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
-  /* Sem min-height ou max-height */
+  /* Sem min-height ou max-height, altura definida pelo conteúdo */
 }
 
 
@@ -103,58 +104,21 @@ body.detail-page.gif-active::after {
 
 
 /* === Estilos Comuns (Títulos, Botões, etc.) === */
-
-h1 {
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  margin-bottom: 20px;
-  color: var(--amarelo-wall-e);
-  text-shadow: 1px 1px 2px #000;
-}
-
-button {
-  font-family: 'Orbitron', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  font-weight: bold;
-}
+/* (Mantido igual à versão anterior - sem mudanças aqui) */
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
+button { font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; font-weight: bold; }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
-
-.start-button {
-  padding: 10px 20px; background-color: var(--dourado-claro);
-  border: 2px solid var(--bordo-marrom); color: var(--cinza-escuro);
-  margin: 20px auto 0; display: block;
-}
+.start-button { padding: 10px 20px; background-color: var(--dourado-claro); border: 2px solid var(--bordo-marrom); color: var(--cinza-escuro); margin: 20px auto 0; display: block; }
 .start-button:hover { filter: brightness(1.1); box-shadow: 0 0 10px var(--amarelo-wall-e); }
-
 .option-buttons-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 15px; }
-.option-button {
-  padding: 12px; background-color: var(--marrom-claro);
-  border: 2px solid var(--bordo-marrom-escuro); color: var(--cinza-escuro);
-  margin: 6px 0; width: 90%; max-width: 400px; text-align: center;
-}
+.option-button { padding: 12px; background-color: var(--marrom-claro); border: 2px solid var(--bordo-marrom-escuro); color: var(--cinza-escuro); margin: 6px 0; width: 90%; max-width: 400px; text-align: center; }
 .option-button:hover { background-color: var(--dourado-claro); }
-.option-button.selected {
-  background-color: var(--azul-wall-e); color: var(--eve-branco);
-  border-color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
-}
-
+.option-button.selected { background-color: var(--azul-wall-e); color: var(--eve-branco); border-color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.8); }
 .extra-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 25px; width: 100%; }
-.back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button {
-  padding: 10px 15px; background-color: var(--dourado-claro);
-  color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom);
-  flex: 1 1 130px; max-width: 200px;
-}
-.back-button:hover, .history-button:hover, .clear-history-button:hover, .back-to-test-button:hover, .restart-button:hover {
-  filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro);
-}
-
+.back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { padding: 10px 15px; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); flex: 1 1 130px; max-width: 200px; }
+.back-button:hover, .history-button:hover, .clear-history-button:hover, .back-to-test-button:hover, .restart-button:hover { filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro); }
 .font-controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; width: 100%; }
-.font-toggle-button {
-  width: 50px; padding: 6px 8px; font-size: 1rem;
-  background-color: var(--dourado-claro); color: var(--cinza-escuro);
-  border: 2px solid var(--bordo-marrom);
-}
+.font-toggle-button { width: 50px; padding: 6px 8px; font-size: 1rem; background-color: var(--dourado-claro); color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom); }
 .font-toggle-button:hover { filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro); }
 
 
@@ -172,6 +136,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 .detail-page .app-container {
   height: auto; /* Altura baseada no conteúdo */
   justify-content: flex-start; /* Alinha conteúdo no topo */
+  /* Sem max-height */
 }
 
 /* Lista de Resultados (Histórico) */
@@ -180,7 +145,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   padding: 10px;
   margin: 15px 0;
   width: 100%;
-  /* REMOVIDO: overflow-y e max-height */
+  /* Sem overflow-y ou max-height */
   border: 1px solid #444;
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2);
@@ -205,7 +170,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   padding: 10px;
   margin: 15px 0;
   width: 100%;
-  /* REMOVIDO: overflow-y e max-height */
+  /* Sem overflow-y ou max-height */
   border: 1px solid #444;
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2);
@@ -228,21 +193,22 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 }
 .error-message p { margin: 0; font-weight: bold; }
 
+
 /* === Responsividade (Telas Pequenas) === */
 @media (max-width: 700px) {
-  body { padding: 10px; }
-  body.gif-active::after { background-image: none; filter: none; }
+  body { padding: 10px; } /* Menos padding no body */
+  body.gif-active::after { background-image: none; filter: none; } /* Remove GIF */
 
   .app-container {
     margin: 10px 0; padding: 15px; width: 95%;
-    /* REMOVIDO: max-height */
+    /* Sem max-height */
   }
 
   .admin-trigger {
-    width: 80px; height: 80px; top: -10px; left: -15px;
+    width: 80px; height: 80px; top: -10px; left: -15px; /* Ajusta Posição/Tamanho */
     transform: rotate(-10deg);
   }
-  .admin-trigger:hover { transform: rotate(-10deg); }
+  .admin-trigger:hover { transform: rotate(-10deg); } /* Remove scale */
 
   h1 { font-size: 1.4rem; }
   .option-button { width: 95%; font-size: 0.9rem; }
@@ -256,7 +222,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   /* Ajusta listas no mobile */
   .result-list, .history-details-list {
     padding: 5px;
-    /* REMOVIDO: max-height */
+    /* Sem max-height */
   }
   .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
