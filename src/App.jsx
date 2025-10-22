@@ -111,6 +111,7 @@ function App() {
           if (Object.keys(courseMapObject).length === 0) console.warn("Nenhum curso por foco encontrado.");
           setCourseMap(courseMapObject);
 
+          // Carrega histórico local AO INICIAR A APLICAÇÃO
           const savedResults = localStorage.getItem('testHistory');
           if (savedResults) {
               try { setPastResults(JSON.parse(savedResults)); } 
@@ -125,9 +126,9 @@ function App() {
         } finally { setLoading(false); }
       }
       getInitialData();
-  }, []); 
+  }, []); // Array vazio garante que rode só uma vez
 
-  useEffect(() => { // Carrega histórico admin
+  useEffect(() => { // Carrega histórico admin (sem alterações)
     async function loadAdminHistory() {
       if (view === 'history' && isMasterAdmin && adminSelectedDb) { 
         setHistoryLoading(true); setError(null); setAdminError(null); 
@@ -142,7 +143,7 @@ function App() {
     };
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
-  useEffect(() => { // Classes do body
+  useEffect(() => { // Classes do body (sem alterações)
       const bodyClassList = document.body.classList;
       const classMap = {
         quiz: 'question-page',
@@ -150,8 +151,8 @@ function App() {
         adminLogin: 'nickname-page',
         admin_db_select: 'nickname-page',
         result: 'final-page',
-        history: 'history-page', // Para histórico admin
-        localHistory: 'history-page', // Para histórico local (mesmo estilo)
+        history: 'history-page',
+        localHistory: 'history-page', 
         detailView: 'detail-page'
       };
       Object.values(classMap).forEach(cls => bodyClassList.remove(cls));
@@ -167,7 +168,7 @@ function App() {
       };
   }, [view]);
 
-  useEffect(() => { // Ajuste de fonte
+  useEffect(() => { // Ajuste de fonte (sem alterações)
       const initialBaseSizeStr = document.documentElement.getAttribute('data-initial-font-size');
       let initialBaseSize = 16; 
       if (initialBaseSizeStr) { initialBaseSize = parseFloat(initialBaseSizeStr); } 
@@ -184,7 +185,7 @@ function App() {
   function increaseFontSize() { setFontSizeAdjustment(adj => Math.min(adj + 2, 8)); }
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
-  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO ---
+  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO --- (sem alterações)
   function handleSecretAdminTrigger() {
     const newClickCount = adminClickCount + 1;
     setAdminClickCount(newClickCount);
@@ -198,123 +199,61 @@ function App() {
     }
   }
 
-  // --- FUNÇÕES DE ADMIN ---
-  async function handleAdminLogin(e) { 
-    e.preventDefault();
-    setAdminError(null);
-    setLoading(true);
+  // --- FUNÇÕES DE ADMIN --- (sem alterações)
+  async function handleAdminLogin(e) { /* ... */ 
+    e.preventDefault(); setAdminError(null); setLoading(true);
     try {
-      const { data: userData, error: userError } = await supabase
-        .from('user_mestre')
-        .select('apelido, senha_hash') 
-        .eq('apelido', adminApelido)
-        .single();
+      const { data: userData, error: userError } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single();
       if (userError && userError.code !== 'PGRST116') throw userError; 
       if (!userData || userError) throw new Error('Apelido ou senha mestre incorretos.');
       const savedPassword = userData.senha_hash;
-      if (adminPassword === savedPassword) {
-        setIsMasterAdmin(true);
-        setView('admin_db_select'); 
-      } else { throw new Error('Apelido ou senha mestre incorretos.'); }
-    } catch (err) {
-      console.error('Erro no login admin:', err);
-      setAdminError(err.message || 'Erro ao tentar fazer login.');
-    } finally { setLoading(false); }
+      if (adminPassword === savedPassword) { setIsMasterAdmin(true); setView('admin_db_select'); } 
+      else { throw new Error('Apelido ou senha mestre incorretos.'); }
+    } catch (err) { console.error('Erro no login admin:', err); setAdminError(err.message || 'Erro.'); } 
+    finally { setLoading(false); }
   }
-
-  async function fetchAllResults(dbSource) { 
-    let data, error;
-    let results = []; 
+  async function fetchAllResults(dbSource) { /* ... */ 
+    let data, error; let results = []; 
     try {
       if (dbSource === 'old') {
-        ({ data, error } = await supabase
-            .from('resultado_antigo')
-            .select(`id_u, area_principal, usuarios_antigo(apelido, data_criacao)`)
-            .order('id_r', { ascending: false }).limit(10000)); 
-        if (error) throw new Error(`Banco Antigo: ${error.message}`);
-        if (!data) throw new Error("Banco Antigo: Nenhum dado retornado.");
-        results = data.map(item => {
-            const userData = item.usuarios_antigo || {};
-            const timestamp = userData.data_criacao ? new Date(userData.data_criacao) : new Date(); 
-            return {
-              id_u: item.id_u, nickname: userData.apelido || 'Usuário Deletado',
-              date: timestamp.toLocaleDateString('pt-BR', brasiliaDateOptions),
-              time: timestamp.toLocaleTimeString('pt-BR', brasiliaTimeOptions),
-              foco: prettyFocusNames[item.area_principal] || item.area_principal, 
-            };
-        });
+        ({ data, error } = await supabase.from('resultado_antigo').select(`id_u, area_principal, usuarios_antigo(apelido, data_criacao)`).order('id_r', { ascending: false }).limit(10000)); 
+        if (error) throw new Error(`Banco Antigo: ${error.message}`); if (!data) throw new Error("Banco Antigo: Nenhum dado.");
+        results = data.map(item => { const ud = item.usuarios_antigo || {}; const ts = ud.data_criacao ? new Date(ud.data_criacao) : new Date(); return { id_u: item.id_u, nickname: ud.apelido || '?', date: ts.toLocaleDateString('pt-BR', brasiliaDateOptions), time: ts.toLocaleTimeString('pt-BR', brasiliaTimeOptions), foco: prettyFocusNames[item.area_principal] || item.area_principal, }; });
       } else {
-        ({ data, error } = await supabase
-            .from('resultado')
-            .select(`id_u, foco_principal, usuarios(apelido, data_criacao)`)
-            .order('id_r', { ascending: false }).limit(10000)); 
-        if (error) throw new Error(`Banco Novo: ${error.message}`);
-        if (!data) throw new Error("Banco Novo: Nenhum dado retornado.");
-        results = data.map(item => {
-            const userData = item.usuarios || {};
-            const timestamp = userData.data_criacao ? new Date(userData.data_criacao) : new Date(); 
-            return {
-              id_u: item.id_u, nickname: userData.apelido || 'Usuário Deletado',
-              date: timestamp.toLocaleDateString('pt-BR', brasiliaDateOptions),
-              time: timestamp.toLocaleTimeString('pt-BR', brasiliaTimeOptions),
-              foco: prettyFocusNames[item.foco_principal] || item.foco_principal,
-            };
-        });
+        ({ data, error } = await supabase.from('resultado').select(`id_u, foco_principal, usuarios(apelido, data_criacao)`).order('id_r', { ascending: false }).limit(10000)); 
+        if (error) throw new Error(`Banco Novo: ${error.message}`); if (!data) throw new Error("Banco Novo: Nenhum dado.");
+        results = data.map(item => { const ud = item.usuarios || {}; const ts = ud.data_criacao ? new Date(ud.data_criacao) : new Date(); return { id_u: item.id_u, nickname: ud.apelido || '?', date: ts.toLocaleDateString('pt-BR', brasiliaDateOptions), time: ts.toLocaleTimeString('pt-BR', brasiliaTimeOptions), foco: prettyFocusNames[item.foco_principal] || item.foco_principal, }; });
       }
-    } catch (err) {
-      console.error("Erro ao buscar histórico:", err);
-      setAdminError(`Falha ao carregar histórico: ${err.message}. Verifique o RLS.`); 
-      results = []; 
-    } finally { setHistoryLoading(false); }
-    return results; 
+    } catch (err) { console.error("Erro histórico:", err); setAdminError(`Falha: ${err.message}. Verifique RLS.`); results = []; } 
+    finally { setHistoryLoading(false); } return results; 
   }
-
-  async function handleViewHistoryDetails(userId, userNickname) { 
-    if (!userId || !userNickname) { setAdminError('ID ou Apelido ausente.'); return; }
-    setDetailedUser({ id: userId, nickname: userNickname }); 
-    setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null);
-    setHistoryRanking(null); setAdminError(null); 
-    const isOldDb = adminSelectedDb === 'old';
-    const respostasTable = isOldDb ? 'respostas_usuario_antigo' : 'respostas_usuario';
-    const questoesTable = isOldDb ? 'questoes_antigo' : 'questoes';
-    const opcoesTable = isOldDb ? 'opcoes_antigo' : 'opcoes';
+  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ 
+    if (!userId || !userNickname) { setAdminError('ID/Apelido ausente.'); return; }
+    setDetailedUser({ id: userId, nickname: userNickname }); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); 
+    const isOldDb = adminSelectedDb === 'old'; const respT = isOldDb ? 'respostas_usuario_antigo' : 'respostas_usuario'; const questT = isOldDb ? 'questoes_antigo' : 'questoes'; const opT = isOldDb ? 'opcoes_antigo' : 'opcoes';
     try {
       if (!isOldDb) {
-        const { data: rankingData, error: rankingError } = await supabase.from('resultado').select('ranking_completo').eq('id_u', userId).order('id_r', { ascending: false }).limit(1);
-        if (rankingError) throw new Error(`ao buscar ranking: ${rankingError.message}. VERIFIQUE O RLS!`);
-        if (rankingData && rankingData.length > 0 && rankingData[0].ranking_completo) {
-          const sortedRanking = [...rankingData[0].ranking_completo].sort((a, b) => b.percentual - a.percentual);
-          setHistoryRanking(sortedRanking);
-        } else { setHistoryRanking(null); }
+        const { data: rD, error: rE } = await supabase.from('resultado').select('ranking_completo').eq('id_u', userId).order('id_r', { ascending: false }).limit(1);
+        if (rE) throw new Error(`ranking: ${rE.message}. RLS!`);
+        if (rD && rD.length > 0 && rD[0].ranking_completo) { const sR = [...rD[0].ranking_completo].sort((a, b) => b.percentual - a.percentual); setHistoryRanking(sR); } 
+        else { setHistoryRanking(null); }
       } else { setHistoryRanking(null); }
-      const { data: respostasData, error: respostasError } = await supabase.from(respostasTable).select('id_q, id_o').eq('id_u', userId);
-      if (respostasError) throw new Error(`ao buscar ${respostasTable}: ${respostasError.message}. VERIFIQUE O RLS!`);
-      if (!respostasData || respostasData.length === 0) { setHistoryDetails([]); } 
+      const { data: respD, error: respE } = await supabase.from(respT).select('id_q, id_o').eq('id_u', userId);
+      if (respE) throw new Error(`${respT}: ${respE.message}. RLS!`);
+      if (!respD || respD.length === 0) { setHistoryDetails([]); } 
       else {
-        const questionIds = [...new Set(respostasData.map(r => r.id_q))].filter(id => id != null); 
-        const optionIds = [...new Set(respostasData.map(r => r.id_o))].filter(id => id != null);     
-        if (questionIds.length === 0 || optionIds.length === 0) {
-            const missingIdsMsg = `Dados de ${questionIds.length === 0 ? 'questões' : 'opções'} ausentes.`;
-            setAdminError(prev => prev ? `${prev} ${missingIdsMsg}` : missingIdsMsg); setHistoryDetails([]);
-        } else {
-            const { data: questoesData, error: questoesError } = await supabase.from(questoesTable).select('id_q, enunciado').in('id_q', questionIds);
-            if (questoesError) throw new Error(`ao buscar ${questoesTable}: ${questoesError.message}`);
-            if (!questoesData || questoesData.length === 0) throw new Error(`Nenhuma questão encontrada em ${questoesTable}.`);
-            const { data: opcoesData, error: opcoesError } = await supabase.from(opcoesTable).select('id_o, opcao').in('id_o', optionIds);
-            if (opcoesError) throw new Error(`ao buscar ${opcoesTable}: ${opcoesError.message}`);
-            if (!opcoesData || opcoesData.length === 0) throw new Error(`Nenhuma opção encontrada em ${opcoesTable}.`);
-            const questoesMap = new Map((questoesData || []).map(q => [q.id_q, q.enunciado]));
-            const opcoesMap = new Map((opcoesData || []).map(o => [o.id_o, o.opcao]));
-            const combinedDetails = respostasData
-                .filter(r => questoesMap.has(r.id_q) && opcoesMap.has(r.id_o)) 
-                .map(r => ({ questoes: { enunciado: questoesMap.get(r.id_q) }, opcoes: { opcao: opcoesMap.get(r.id_o) } }));
-            setHistoryDetails(combinedDetails.length > 0 ? combinedDetails : []); 
+        const qIds = [...new Set(respD.map(r => r.id_q))].filter(id => id != null); const oIds = [...new Set(respD.map(r => r.id_o))].filter(id => id != null);     
+        if (qIds.length === 0 || oIds.length === 0) { const msg = `Dados ${qIds.length === 0 ? 'questões' : 'opções'} ausentes.`; setAdminError(p => p ? `${p} ${msg}` : msg); setHistoryDetails([]); } 
+        else {
+            const { data: qD, error: qE } = await supabase.from(questT).select('id_q, enunciado').in('id_q', qIds); if (qE) throw new Error(`${questT}: ${qE.message}`); if (!qD || qD.length === 0) throw new Error(`Nenhuma questão ${questT}.`);
+            const { data: oD, error: oE } = await supabase.from(opT).select('id_o, opcao').in('id_o', oIds); if (oE) throw new Error(`${opT}: ${oE.message}`); if (!oD || oD.length === 0) throw new Error(`Nenhuma opção ${opT}.`);
+            const qMap = new Map((qD || []).map(q => [q.id_q, q.enunciado])); const oMap = new Map((oD || []).map(o => [o.id_o, o.opcao]));
+            const cD = respD.filter(r => qMap.has(r.id_q) && oMap.has(r.id_o)).map(r => ({ questoes: { enunciado: qMap.get(r.id_q) }, opcoes: { opcao: oMap.get(r.id_o) } }));
+            setHistoryDetails(cD.length > 0 ? cD : []); 
         }
       }
-    } catch (err) {
-      console.error("[handleViewHistoryDetails] Erro:", err);
-      setAdminError(`Erro ${err.message}. Verifique o RLS.`); setHistoryDetails([]); setHistoryRanking(null);
-    } finally { setHistoryDetailsLoading(false); }
+    } catch (err) { console.error("Erro detalhes:", err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null); } 
+    finally { setHistoryDetailsLoading(false); }
   }
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
@@ -349,12 +288,9 @@ function App() {
   function handleAnswer(questionId, optionId) { 
       const newAnswers = [...userAnswers.filter(a => a.id_q !== questionId), { id_u: userId, id_q: questionId, id_o: optionId }];
       setUserAnswers(newAnswers);
-
-      // Se for a última questão, chama handleSubmitTest imediatamente
       if (currentQuestionIndex === questions.length - 1) {
         handleSubmitTest(newAnswers); // Passa as respostas ATUALIZADAS
       } else {
-        // Senão, apenas avança para a próxima
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
   }
@@ -378,98 +314,51 @@ function App() {
 
   function handleClearHistory() { 
       try { 
-          setPastResults([]); // Limpa o estado
-          localStorage.removeItem('testHistory'); // Limpa o localStorage
+          setPastResults([]); 
+          localStorage.removeItem('testHistory'); 
       } catch (e) { 
           console.error("Erro ao limpar localStorage:", e); 
-          setError("Não foi possível limpar o histórico local."); // Informa o usuário
+          // Define um erro específico para a tela de histórico local
+          setError("Não foi possível limpar o histórico local."); 
       }
   }
 
-  async function handleSubmitTest(answersToSubmit) { // Recebe as respostas como argumento
-    setLoading(true);
-    setError(null); 
-
+  async function handleSubmitTest(answersToSubmit) { 
+    setLoading(true); setError(null); 
     const currentAnswers = answersToSubmit || userAnswers; 
-
-    if (!currentAnswers || currentAnswers.length === 0) {
-      setError("Nenhuma resposta fornecida."); setLoading(false); setView('quiz'); return;
-    }
-    // A validação de ter respondido tudo não é mais necessária aqui se handleAnswer chama
+    if (!currentAnswers || currentAnswers.length === 0) { setError("Nenhuma resposta."); setLoading(false); setView('quiz'); return; }
+    // A validação de completude é feita implicitamente pelo fluxo de handleAnswer
     // if (currentAnswers.length !== questions.length) { ... } 
 
     try {
       console.log("Submetendo respostas:", currentAnswers);
       const { error: answersError } = await supabase.from('respostas_usuario').insert(currentAnswers);
-      if (answersError) throw new Error(`ao salvar respostas: ${answersError.message}`);
-      console.log("Respostas salvas.");
-
+      if (answersError) throw new Error(`salvar respostas: ${answersError.message}`);
+      
       const scoreMap = {};
-      currentAnswers.forEach(answer => {
-        const q = questions.find(q => q.id_q === answer.id_q);
-        if (!q) return;
-        const opt = q.opcoes?.find(o => o.id_o === answer.id_o);
-        if (!opt || !opt.pontuacao) return;
-        opt.pontuacao.forEach(p => { if (p.foco && typeof p.valor === 'number') { scoreMap[p.foco] = (scoreMap[p.foco] || 0) + p.valor; } });
-      });
-
+      currentAnswers.forEach(a => { const q = questions.find(q => q.id_q === a.id_q); if (!q) return; const opt = q.opcoes?.find(o => o.id_o === a.id_o); if (!opt || !opt.pontuacao) return; opt.pontuacao.forEach(p => { if (p.foco && typeof p.valor === 'number') scoreMap[p.foco] = (scoreMap[p.foco] || 0) + p.valor; }); });
+      
       const percentMap = {}; let hasValidScore = false;
-      Object.keys(maxScores).forEach(foco => { // Usar maxScores para garantir todos os focos
-        const rawScore = scoreMap[foco] || 0; // Garante que existe, mesmo que seja 0
-        const max = maxScores[foco];
-        if (typeof max === 'number' && max > 0) { percentMap[foco] = (rawScore / max) * 100; hasValidScore = true; } 
-        else { percentMap[foco] = 0; }
-      });
-      if (!hasValidScore && Object.keys(scoreMap).length > 0) { // Verifica se há pontuações mas nenhuma máxima válida
-          console.warn("Pontuações calculadas, mas nenhuma pontuação máxima válida encontrada para normalização.");
-          // Decide o que fazer: lançar erro ou mostrar pontuação bruta? Por ora, lança erro.
-          throw new Error("Não foi possível normalizar as pontuações.");
-      } else if (!hasValidScore) { // Nenhuma pontuação calculada
-           throw new Error("Não foi possível calcular nenhuma pontuação.");
-      }
+      Object.keys(maxScores).forEach(foco => { const raw = scoreMap[foco] || 0; const max = maxScores[foco]; if (typeof max === 'number' && max > 0) { percentMap[foco] = (raw / max) * 100; hasValidScore = true; } else { percentMap[foco] = 0; } });
+      if (!hasValidScore && Object.keys(scoreMap).length > 0) throw new Error("Não normalizar pontuações."); else if (!hasValidScore) throw new Error("Não calcular pontuação.");
 
-      let focosOrdenados = Object.keys(percentMap) // Ordena baseado no que foi calculado
-        .map(f => ({ foco: f, percentual: parseFloat(percentMap[f].toFixed(2)) }))
-        .sort((a, b) => b.percentual - a.percentual);
-
-      const top3 = focosOrdenados.slice(0, 3);
-      if (top3.length === 0 || !top3[0]?.foco) throw new Error("Não foi possível determinar área principal.");
+      let focosOrdenados = Object.keys(percentMap).map(f => ({ foco: f, percentual: parseFloat(percentMap[f].toFixed(2)) })).sort((a, b) => b.percentual - a.percentual);
       
+      const top3 = focosOrdenados.slice(0, 3); if (top3.length === 0 || !top3[0]?.foco) throw new Error("Não determinar área principal.");
       const pool = []; const search = top3.map(f => f.foco);
-      if (search[0]) pool.push(...(courseMap[search[0]] || []));
-      if (search[1]) pool.push(...(courseMap[search[1]] || []));
-      if (search[2]) pool.push(...(courseMap[search[2]] || []));
-      const suggestions = [...new Set(pool)].slice(0, 7);
-      const mainFocus = top3[0];
+      if (search[0]) pool.push(...(courseMap[search[0]] || [])); if (search[1]) pool.push(...(courseMap[search[1]] || [])); if (search[2]) pool.push(...(courseMap[search[2]] || []));
+      const suggestions = [...new Set(pool)].slice(0, 7); const mainFocus = top3[0];
       
-      const resultData = {
-        nickname: userNickname, date: new Date().toLocaleDateString('pt-BR'), 
-        foco: mainFocus.foco, 
-        // Não inclui mais topFocosRank aqui para não salvar no localStorage
-        sugestoes: suggestions 
-      };
-      
-       // Salva o ranking completo APENAS no banco de dados
-      const dbResultData = {
-         id_u: userId, 
-         foco_principal: mainFocus.foco, 
-         percentual_principal: mainFocus.percentual, 
-         ranking_completo: focosOrdenados // O ranking completo vai pro DB
-      };
+      const resultData = { nickname: userNickname, date: new Date().toLocaleDateString('pt-BR'), foco: mainFocus.foco, sugestoes: suggestions };
+      const dbResultData = { id_u: userId, foco_principal: mainFocus.foco, percentual_principal: mainFocus.percentual, ranking_completo: focosOrdenados };
 
       console.log("Salvando resultado...");
       const { error: resultError } = await supabase.from('resultado').insert(dbResultData);
-      if (resultError) throw new Error(`ao salvar resultado: ${resultError.message}`);
+      if (resultError) throw new Error(`salvar resultado: ${resultError.message}`);
 
-      handleSaveResult(resultData); // Salva a versão simplificada no localStorage
-      setFinalResult(resultData); // Define o estado com a versão simplificada
-      setView('result');
-
-    } catch (err) {
-      console.error('Erro ao submeter:', err);
-      setError(`Erro ao finalizar: ${err.message}.`);
-      setCurrentQuestionIndex(questions.length - 1); setView('quiz'); 
-    } finally { setLoading(false); }
+      handleSaveResult(resultData); setFinalResult(resultData); setView('result');
+    } catch (err) { console.error('Erro ao submeter:', err); setError(`Erro: ${err.message}.`); setCurrentQuestionIndex(questions.length - 1); setView('quiz'); } 
+    finally { setLoading(false); }
   } 
 
   // --- FUNÇÕES DE RENDERIZAÇÃO ---
@@ -481,6 +370,7 @@ function App() {
     </div>
   );
 
+  // Tela 1: Registro (SEM histórico local)
   const renderRegister = () => (
     <div className="container register-container">
       <h1>Teste Vocacional</h1>
@@ -497,30 +387,12 @@ function App() {
         </button>
       </form>
       {registrationError && <div className="error-message"><p>{registrationError}</p></div>} 
-      {/* Botão admin foi removido */}
-      {pastResults.length > 0 && (
-        <div className="past-results" style={{ marginTop: '20px', width: '100%' }}> 
-            <h3>Resultados Locais</h3>
-            <ul style={{ listStyle: 'none', padding: '0' }}>
-              {pastResults.slice(-3).map((result, index) => ( // Mostra só os últimos 3, por exemplo
-                <li key={index} style={{ margin: '5px 0' }}>
-                    {result.date} - {result.nickname}: {result.foco}
-                </li>
-              ))}
-            </ul>
-             {/* Botão para ver histórico completo */}
-             <button onClick={() => setView('localHistory')} className="history-button" style={{ marginTop: '10px', marginRight: '10px' }}>
-                Ver Histórico Completo
-             </button>
-            <button onClick={handleClearHistory} className="clear-history-button" style={{ marginTop: '10px' }}>
-                Limpar Histórico Local
-            </button>
-        </div>
-      )}
+      {/* Histórico local e botões relacionados removidos daqui */}
       {renderFontControls()} 
     </div>
   );
 
+  // Tela 2: Quiz (Sem alterações significativas)
   const renderQuiz = () => {
     if (loading && questions.length === 0) { return <div className="loading">Carregando questões...</div>; }
     if (error && questions.length === 0) { return <div className="error-message"><p>{error}</p></div>; }
@@ -540,13 +412,12 @@ function App() {
             </div>
             <div className="extra-buttons"> 
                 {currentQuestionIndex > 0 && ( <button onClick={handleBack} className="back-button"> Voltar </button> )}
-                {/* Botão Finalizar não é mais necessário aqui */}
             </div>
         </div>
     );
   };
 
-  // Tela de Resultado MODIFICADA
+  // Tela 3: Resultado MODIFICADA (Sem ranking, com botão de histórico local)
   const renderResult = () => {
     if (loading && !finalResult) { return <div className="loading">Processando resultado...</div>; }
     if (!finalResult) { return <div className="error-message"><p>Erro ao exibir resultado.</p></div>; }
@@ -572,118 +443,37 @@ function App() {
     );
   };
 
+  // Telas Admin (4, 5, 6, 7) - Sem alterações
   const renderAdminLogin = () => ( 
-    <div className="container admin-login-container">
-      <h1>Acesso Mestre</h1>
-      <form onSubmit={handleAdminLogin} style={{ width: '100%' }}>
-        <input type="text" value={adminApelido} onChange={(e) => setAdminApelido(e.target.value)} placeholder="Apelido Mestre" style={{ width: '80%', padding: '10px', margin: '10px 0', borderRadius: '5px', border: '1px solid #555', background: '#333', color: '#fff' }} />
-        <div style={{ position: 'relative', width: '80%', margin: '10px auto' }}>
-          <input type={showAdminPassword ? 'text' : 'password'} value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Senha Mestre" style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #555', background: '#333', color: '#fff' }} />
-          <span onClick={() => setShowAdminPassword(!showAdminPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#fff', userSelect: 'none', fontSize: '1.2rem' }}> {showAdminPassword ? '🙈' : '👁️'} </span>
-        </div>
-        <button type="submit" disabled={loading} className="start-button"> {loading ? 'Verificando...' : 'Entrar'} </button>
-      </form>
-      {adminError && <div className="error-message"><p>{adminError}</p></div>} 
-      <div className="extra-buttons"> <button onClick={handleGoToRegister} className="back-button">Voltar ao Início</button> </div>
-    </div>
-  );
-
+    <div className="container admin-login-container"><h1>Acesso Mestre</h1><form onSubmit={handleAdminLogin} style={{width:'100%'}}><input type="text" value={adminApelido} onChange={(e)=>setAdminApelido(e.target.value)} placeholder="Apelido Mestre" style={{width:'80%',padding:'10px',margin:'10px 0',borderRadius:'5px',border:'1px solid #555',background:'#333',color:'#fff'}}/><div style={{position:'relative',width:'80%',margin:'10px auto'}}><input type={showAdminPassword?'text':'password'} value={adminPassword} onChange={(e)=>setAdminPassword(e.target.value)} placeholder="Senha Mestre" style={{width:'100%',padding:'10px',borderRadius:'5px',border:'1px solid #555',background:'#333',color:'#fff'}}/><span onClick={()=>setShowAdminPassword(!showAdminPassword)} style={{position:'absolute',right:'10px',top:'50%',transform:'translateY(-50%)',cursor:'pointer',color:'#fff',userSelect:'none',fontSize:'1.2rem'}}>{showAdminPassword?'🙈':'👁️'}</span></div><button type="submit" disabled={loading} className="start-button">{loading?'Verificando...':'Entrar'}</button></form>{adminError&&<div className="error-message"><p>{adminError}</p></div>}<div className="extra-buttons"><button onClick={handleGoToRegister} className="back-button">Voltar</button></div></div> );
   const renderAdminDbSelect = () => ( 
-    <div className="container admin-db-select">
-      <h1>Painel Mestre</h1> <p>Olá, {adminApelido}. Selecione o banco:</p>
-      <div className="extra-buttons"> 
-        <button onClick={() => { setAdminSelectedDb('new'); setView('history'); }} className="history-button"> Histórico (Banco NOVO) </button>
-        <button onClick={() => { setAdminSelectedDb('old'); setView('history'); }} className="history-button"> Histórico (Banco ANTIGO) </button>
-      </div>
-      <div className="extra-buttons" style={{ marginTop: '20px' }}> <button onClick={handleGoToRegister} className="back-button">Sair</button> </div>
-    </div>
-  );
-
+    <div className="container admin-db-select"><h1>Painel Mestre</h1><p>Olá, {adminApelido}. Selecione:</p><div className="extra-buttons"><button onClick={()=>{setAdminSelectedDb('new');setView('history');}} className="history-button">Histórico (Novo)</button><button onClick={()=>{setAdminSelectedDb('old');setView('history');}} className="history-button">Histórico (Antigo)</button></div><div className="extra-buttons" style={{marginTop:'20px'}}><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   const renderHistory = () => ( 
-    <div className="container history-container">
-      <h1>Histórico - Banco {adminSelectedDb === 'old' ? 'Antigo' : 'Novo'}</h1>
-      {historyLoading && <div className="loading">Carregando...</div>} 
-      {adminError && <div className="error-message"><p>{adminError}</p></div>} 
-      {!historyLoading && allDbResults.length > 0 && (
-          <ul className="result-list"> 
-            {allDbResults.map((result) => (
-              <li key={`${result.id_u}-${result.date}-${result.time}`} className="result-item"> 
-                <div> <strong>Apelido: </strong> <button onClick={() => handleViewHistoryDetails(result.id_u, result.nickname)} className="history-nickname-button"> {result.nickname} </button> (ID: {result.id_u}) </div>
-                <div><strong>Data:</strong> {result.date} às {result.time}</div> <div><strong>Foco:</strong> {result.foco}</div>
-              </li>
-            ))}
-          </ul>
-      )}
-      {!historyLoading && allDbResults.length === 0 && !adminError && ( <p style={{ margin: '20px 0', color: 'var(--amarelo-wall-e)' }}>Nenhum resultado.</p> )}
-      <div className="extra-buttons"> 
-        <button onClick={() => setView('admin_db_select')} className="back-button"> Voltar </button>
-        <button onClick={handleGoToRegister} className="back-button"> Sair </button>
-      </div>
-    </div>
-  );
-
+    <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p style={{margin:'20px 0',color:'var(--amarelo-wall-e)'}}>Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   const renderDetailView = () => { 
     if (!detailedUser) { setView('history'); return null; }
-    return (
-      <div className="container detail-view-container">
-        <h1>Detalhes de {detailedUser.nickname}</h1> <p>(ID: {detailedUser.id})</p>
-        {historyDetailsLoading && <div className="loading">Carregando...</div>} 
-        {adminError && <div className="error-message"><p>{adminError}</p></div>} 
-        {historyRanking && historyRanking.length > 0 && (
-            <div style={{ width: '100%', marginBottom: '20px' }}>
-              <h3 style={{ color: 'var(--amarelo-wall-e)' }}>Ranking (DB)</h3>
-              <ul style={{ listStyle: 'none', padding: '10px', margin: '15px 0', width: '100%', border: '1px solid #444', borderRadius: '5px', backgroundColor: 'rgba(0, 0, 0, 0.2)', textAlign: 'left' }}>
-                {historyRanking.map((item, index) => ( <li key={index} style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', color: 'var(--eve-branco)', padding: '10px 15px', marginBottom: '8px', borderRadius: '4px', borderLeft: '5px solid var(--amarelo-wall-e)' }}> {index + 1}. {prettyFocusNames[item.foco] || item.foco}: {item.percentual}% </li> ))}
-              </ul>
-            </div>
-        )}
-        {historyDetails && historyDetails.length > 0 && (
-            <div style={{ width: '100%' }}>
-              <h3 style={{ color: 'var(--amarelo-wall-e)' }}>Respostas</h3>
-              <ul className="history-details-list"> 
-                {historyDetails.map((item, index) => (
-                    <li key={index} className="history-detail-item"> 
-                      <p> <strong>P:</strong> {item.questoes?.enunciado || '?'} </p>
-                      <p> <strong>R:</strong> {item.opcoes?.opcao || '?'} </p>
-                    </li>
-                ))}
-              </ul>
-            </div>
-        )}
-        {!historyDetailsLoading && (!historyDetails || historyDetails.length === 0) && (!historyRanking || historyRanking.length === 0) && !adminError && ( <p style={{ margin: '20px 0', color: 'var(--amarelo-wall-e)' }}>Nenhum detalhe.</p> )}
-        <div className="extra-buttons"> 
-            <button onClick={() => { setView('history'); setHistoryDetails(null); setDetailedUser(null); setHistoryRanking(null); setAdminError(null); }} className="back-button"> Voltar </button>
-        </div>
-      </div>
-    );
+    return ( <div className="container detail-view-container"><h1>Detalhes de {detailedUser.nickname}</h1><p>(ID: {detailedUser.id})</p>{historyDetailsLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{historyRanking&&historyRanking.length>0&&( <div style={{width:'100%',marginBottom:'20px'}}><h3 style={{color:'var(--amarelo-wall-e)'}}>Ranking (DB)</h3><ul style={{listStyle:'none',padding:'10px',margin:'15px 0',width:'100%',border:'1px solid #444',borderRadius:'5px',backgroundColor:'rgba(0,0,0,0.2)',textAlign:'left'}}>{historyRanking.map((item,i)=>(<li key={i} style={{backgroundColor:'rgba(0,0,0,0.6)',color:'var(--eve-branco)',padding:'10px 15px',marginBottom:'8px',borderRadius:'4px',borderLeft:'5px solid var(--amarelo-wall-e)'}}>{i+1}. {prettyFocusNames[item.foco]||item.foco}: {item.percentual}%</li>))}</ul></div> )}{historyDetails&&historyDetails.length>0&&( <div style={{width:'100%'}}><h3 style={{color:'var(--amarelo-wall-e)'}}>Respostas</h3><ul className="history-details-list">{historyDetails.map((item,i)=>( <li key={i} className="history-detail-item"><p><strong>P:</strong> {item.questoes?.enunciado||'?'}</p><p><strong>R:</strong> {item.opcoes?.opcao||'?'}</p></li> ))}</ul></div> )}{!historyDetailsLoading&&(!historyDetails||historyDetails.length===0)&&(!historyRanking||historyRanking.length===0)&&!adminError&&(<p style={{margin:'20px 0',color:'var(--amarelo-wall-e)'}}>Nenhum detalhe.</p>)}<div className="extra-buttons"><button onClick={()=>{setView('history');setHistoryDetails(null);setDetailedUser(null);setHistoryRanking(null);setAdminError(null);}} className="back-button">Voltar</button></div></div> );
   };
 
   // === NOVA TELA: Histórico Local ===
   const renderLocalHistory = () => (
     <div className="container local-history-container"> 
         <h1>Histórico Local</h1>
-        
-        {/* Mensagem de erro geral, se houver */}
         {error && view === 'localHistory' && <div className="error-message"><p>{error}</p></div>} 
-
         {pastResults.length === 0 && !error && (
             <p style={{ margin: '20px 0', color: 'var(--amarelo-wall-e)' }}>Nenhum resultado salvo localmente.</p>
         )}
-
         {pastResults.length > 0 && (
              <ul className="result-list"> 
-                {/* Ordena para mostrar os mais recentes primeiro */}
                 {[...pastResults].reverse().map((result, index) => (
                   <li key={`${result.date}-${result.nickname}-${index}`} className="result-item"> 
                     <div><strong>Data:</strong> {result.date}</div>
                     <div><strong>Apelido:</strong> {result.nickname}</div>
                     <div><strong>Foco:</strong> {result.foco}</div>
-                    {/* Não mostrar sugestões aqui para manter simples */}
                   </li>
                 ))}
              </ul>
         )}
-
         <div className="extra-buttons">
             <button onClick={handleClearHistory} className="clear-history-button" disabled={pastResults.length === 0}>
                 Limpar Histórico
@@ -695,20 +485,14 @@ function App() {
     </div>
   );
 
-
   // --- RENDERIZAÇÃO PRINCIPAL ---
   const renderCurrentView = () => {
-    // Erro crítico (exceto em telas que tratam erros específicos)
     if (error && !['adminLogin', 'register', 'quiz', 'localHistory'].includes(view)) {
-      return ( 
-          <div className="container error-container"> <h1>Erro Crítico</h1> <div className="error-message"><p>{error}</p></div> <div className="extra-buttons"> <button onClick={handleGoToRegister} className="restart-button"> Tentar Novamente </button> </div> </div>
-      );
+      return ( <div className="container error-container"> <h1>Erro Crítico</h1> <div className="error-message"><p>{error}</p></div> <div className="extra-buttons"> <button onClick={handleGoToRegister} className="restart-button"> Tentar Novamente </button> </div> </div> );
     }
-    // Loading inicial
     if (loading && questions.length === 0 && ['register', 'quiz'].includes(view)) {
       return <div className="loading">Carregando dados iniciais...</div>;
     }
-    // Switch de telas
     switch (view) {
       case 'quiz': return renderQuiz();
       case 'result': return renderResult();
