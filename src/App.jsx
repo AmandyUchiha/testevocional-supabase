@@ -3,10 +3,11 @@ import { supabase } from './supabaseClient.js';
 import './App.css';
 
 // ========================================================================
-// NOVO: MAPA DE "NOMES BONITOS"
-// Mapeia os nomes do Banco de Dados (esquerda) para nomes amigáveis (direita)
+// MAPA DE "NOMES BONITOS" ATUALIZADO
+// Mapeia os nomes de AMBOS os bancos de dados para nomes amigáveis
 // ========================================================================
 const prettyFocusNames = {
+  // --- Nomes do BANCO NOVO ---
   'Foco_Engenharia': 'Engenharias',
   'Foco_TI': 'Tecnologia da Informação',
   'Foco_Ciencias_Puras': 'Ciências Puras (Química, Física, Bio)',
@@ -18,8 +19,15 @@ const prettyFocusNames = {
   'Foco_Negocios_Gestao': 'Negócios e Gestão',
   'Foco_Negocios_Fin': 'Finanças e Economia',
   'Foco_Comunicacao_Mkt': 'Comunicação e Marketing',
-  'Foco_Artes_Design': 'Artes, Design e Arquitetura'
-  // Certifique-se que as chaves (esquerda) são IDÊNTICAS aos nomes no seu BD
+  'Foco_Artes_Design': 'Artes, Design e Arquitetura',
+  
+  // --- Nomes do BANCO ANTIGO (do seu último script SQL) ---
+  'Áreas Técnicas e Científicas': 'Técnicas e Científicas (Antigo)',
+  'Áreas Criativas': 'Criativas (Antigo)',
+  'Áreas de Saúde e Bem-Estar': 'Saúde e Bem-Estar (Antigo)',
+  'Áreas de Administração e Negócios': 'Administração e Negócios (Antigo)',
+  'Áreas Humanas e Sociais': 'Humanas e Sociais (Antigo)',
+  'Nenhuma Área': 'Nenhuma Área (Antigo)'
 };
 
 
@@ -31,46 +39,45 @@ function App() {
   const [userAnswers, setUserAnswers] = useState([]);
   const [finalResult, setFinalResult] = useState(null); 
   const [pastResults, setPastResults] = useState([]);
-  const [view, setView] = useState('register'); // Começa no registro
+  const [view, setView] = useState('register'); 
 
   // Controle de Acessibilidade (Fonte)
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState(0);
 
   // Estados de Carga e Erro
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([]); // Questões do 'novo' banco para o teste
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [registrationError, setRegistrationError] = useState(null);
 
-  // LÓGICA DE NORMALIZAÇÃO
-  const [maxScores, setMaxScores] = useState({}); // Armazena { 'Foco_TI': 45.0, ... }
-  const [courseMap, setCourseMap] = useState({}); // Armazena { 'Foco_TI': ['Curso A', 'Curso B'], ... }
-
+  // LÓGICA DE NORMALIZAÇÃO (do 'novo' banco)
+  const [maxScores, setMaxScores] = useState({});
+  const [courseMap, setCourseMap] = useState({}); 
 
   // ESTADOS PARA O ADMIN
   const [adminApelido, setAdminApelido] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [adminError, setAdminError] = useState(null);
-  const [allDbResults, setAllDbResults] = useState([]); // Histórico global
+  const [allDbResults, setAllDbResults] = useState([]); 
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showAdminPassword, setShowAdminPassword] = useState(false); 
 
-  // --- NOVOS ESTADOS PARA FLUXO ADMIN (Request 3, 4, 5) ---
+  // ESTADOS PARA FLUXO ADMIN (Request 3, 4, 5)
   const [adminSelectedDb, setAdminSelectedDb] = useState(null); // 'new' ou 'old'
-  const [viewingHistoryDetails, setViewingHistoryDetails] = useState(null); // Guarda o id_u do usuário
-  const [historyDetails, setHistoryDetails] = useState(null); // Guarda as respostas do usuário
+  const [viewingHistoryDetails, setViewingHistoryDetails] = useState(null); 
+  const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
 
 
-  // Efeito para carregar as questões E A LÓGICA DE CÁLCULO
+  // Efeito para carregar as questões DO NOVO BANCO (para fazer o teste)
   useEffect(() => {
     async function getInitialData() {
       setLoading(true);
 
-      // 1. Buscar Questões e Opções (com o 'foco')
+      // 1. Buscar Questões e Opções (com o 'foco') - DO BANCO NOVO
       const { data: questionsData, error: questionsError } = await supabase
-        .from('questoes')
+        .from('questoes') // Padrão: carrega questões do 'novo' banco
         .select(`
           id_q,
           enunciado,
@@ -85,7 +92,7 @@ function App() {
       }
       setQuestions(questionsData);
 
-      // 2. Buscar Pontuações Máximas
+      // 2. Buscar Pontuações Máximas (DO BANCO NOVO)
       const { data: maxScoresData, error: maxScoresError } = await supabase
         .from('foco_pontuacao_maxima')
         .select('foco, valor_maximo');
@@ -103,7 +110,7 @@ function App() {
       }, {});
       setMaxScores(maxScoresMap);
 
-      // 3. Buscar Mapeamento de Cursos
+      // 3. Buscar Mapeamento de Cursos (DO BANCO NOVO)
       const { data: coursesData, error: coursesError } = await supabase
         .from('cursos_por_foco')
         .select('foco, curso_nome');
@@ -136,11 +143,12 @@ function App() {
     getInitialData();
   }, []);
 
-  // Efeito para carregar o histórico do DB se for admin (ATUALIZADO)
+
+  // Efeito para carregar o histórico do DB se for admin
   useEffect(() => {
       async function loadAdminHistory() {
-          if (isMasterAdmin && adminSelectedDb) { // Só carrega se um DB foi selecionado
-              const results = await fetchAllResults(adminSelectedDb); // Passa a seleção
+          if (isMasterAdmin && adminSelectedDb) { 
+              const results = await fetchAllResults(adminSelectedDb); 
               setAllDbResults(results);
           }
       }
@@ -148,11 +156,10 @@ function App() {
       if (view === 'history' && isMasterAdmin && adminSelectedDb) { 
           loadAdminHistory();
       }
-  // Depende da seleção do DB
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
 
-  // Alterna classes no <body> (Inalterado)
+  // Efeito para classes do <body>
   useEffect(() => {
     const bodyClassList = document.body.classList;
     bodyClassList.remove('question-page', 'gif-active', 'nickname-page', 'final-page', 'history-page', 'adminLogin');
@@ -161,7 +168,7 @@ function App() {
       bodyClassList.add('question-page');
     } else {
       bodyClassList.add('gif-active');
-      if (view === 'register' || view === 'adminLogin' || view === 'admin_db_select') { // Adicionado 'admin_db_select'
+      if (view === 'register' || view === 'adminLogin' || view === 'admin_db_select') { 
         bodyClassList.add('nickname-page');
       } else if (view === 'result') {
         bodyClassList.add('final-page');
@@ -175,7 +182,7 @@ function App() {
     };
   }, [view]);
 
-  // Efeito para aplicar o ajuste de fonte (Inalterado)
+  // Efeito para ajuste de fonte
   useEffect(() => {
     const baseFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const newSize = baseFontSize + fontSizeAdjustment;
@@ -186,7 +193,7 @@ function App() {
     };
   }, [fontSizeAdjustment]);
 
-  // Funções de Fonte (Inalterado)
+  // Funções de Fonte
   function increaseFontSize() {
     setFontSizeAdjustment(currentAdjustment => Math.min(currentAdjustment + 2, 8));
   }
@@ -198,7 +205,7 @@ function App() {
 
   // --- FUNÇÕES DE ADMIN ---
   
-  // handleAdminLogin (ATUALIZADO)
+  // Login do Admin (Verifica user_mestre)
   async function handleAdminLogin(e) {
     e.preventDefault();
     setAdminError(null);
@@ -225,58 +232,97 @@ function App() {
 
     const savedPassword = userData.senha_hash;
     
-    // ATENÇÃO: Comparação de texto plano.
-    // Se a senha no DB for um hash (criptografada), isso falhará.
+    // Comparação de texto plano
     if (adminPassword === savedPassword) {
         setIsMasterAdmin(true);
-        setView('admin_db_select'); // NOVO: Vai para a seleção de banco (Request 3)
+        setView('admin_db_select'); // Vai para a seleção de banco
     } else {
         setAdminError('Apelido ou senha mestre incorretos.');
     }
   }
 
-  // fetchAllResults (ATUALIZADO - Request 3, 4, 5)
+  // Busca o histórico (Novo ou Antigo)
   async function fetchAllResults(dbSource) {
       setHistoryLoading(true);
-
-      // NOVO: Lógica stub para o "Antigo Banco" (Request 4)
-      if (dbSource === 'old') {
-        console.warn('Lógica para "Antigo Banco" não implementada.');
-        setError('Ainda não recebi os detalhes de acesso para o "Antigo Banco". Por favor, forneça os detalhes para implementar esta busca.');
-        setHistoryLoading(false);
-        return [];
-      }
+      setError(null); 
       
-      // Lógica do "Novo Banco" (como era antes)
-      const { data, error } = await supabase
-          .from('resultado')
-          .select(`
-              id_u, 
-              foco_principal, 
-              data_criacao:created_at,
-              usuarios(apelido)
-          `)
-          .order('created_at', { ascending: false }); 
+      let data, error;
 
-      setHistoryLoading(false);
+      // --- LÓGICA DO "BANCO ANTIGO" ---
+      if (dbSource === 'old') {
+          // Busca de 'resultado_antigo' e 'usuarios_antigo'
+          ({ data, error } = await supabase
+              .from('resultado_antigo')
+              .select(`
+                  id_u,
+                  area_principal,
+                  usuarios_antigo(apelido, data_criacao)
+              `)
+              .order('id_r', { ascending: false })); 
 
-      if (error) {
-          console.error("Erro ao buscar histórico admin:", error);
-          setError('Erro ao carregar o histórico de testes do banco de dados.');
-          return [];
+          setHistoryLoading(false);
+
+          if (error) {
+              console.error("Erro ao buscar histórico antigo:", error);
+              setError('Erro ao carregar o histórico do BANCO ANTIGO. Verifique se as tabelas "resultado_antigo" e "usuarios_antigo" existem.');
+              return [];
+          }
+
+          // Mapeia os dados do banco antigo
+          return data.map(item => {
+            const userData = item.usuarios_antigo || {};
+            const timestamp = new Date(userData.data_criacao || Date.now()); 
+            
+            return {
+              id_u: item.id_u,
+              nickname: userData.apelido || 'Usuário Deletado',
+              date: timestamp.toLocaleDateString('pt-BR'),
+              time: timestamp.toLocaleTimeString('pt-BR'),
+              // Usa a 'area_principal' e traduz com o mapa
+              foco: prettyFocusNames[item.area_principal] || item.area_principal, 
+            };
+          });
+      } 
+      
+      // --- LÓGICA DO "NOVO BANCO" (Corrigida da última vez) ---
+      else {
+          // Busca de 'resultado' e 'usuarios'
+          ({ data, error } = await supabase
+              .from('resultado')
+              .select(`
+                  id_u, 
+                  foco_principal,
+                  usuarios(apelido, data_criacao)
+              `)
+              .order('id_r', { ascending: false })); // Ordena pelo ID do resultado
+
+          setHistoryLoading(false);
+
+          if (error) {
+              console.error("Erro ao buscar histórico admin (novo):", error);
+              setError('Erro ao carregar o histórico do BANCO NOVO.');
+              return [];
+          }
+
+          // Mapeia os dados do banco novo
+          return data.map(item => {
+            const userData = item.usuarios || {};
+            // Pega a data de criação do usuário
+            const timestamp = new Date(userData.data_criacao || Date.now());
+
+            return {
+              id_u: item.id_u,
+              nickname: userData.apelido || 'Usuário Deletado',
+              date: timestamp.toLocaleDateString('pt-BR'),
+              time: timestamp.toLocaleTimeString('pt-BR'),
+              // Usa o 'foco_principal' e traduz com o mapa
+              foco: prettyFocusNames[item.foco_principal] || item.foco_principal,
+            };
+          });
       }
-
-      // Usa o "Nome Bonito" e passa o id_u (Request 5)
-      return data.map(item => ({
-          id_u: item.id_u, // Passa o ID do usuário para o clique
-          nickname: item.usuarios ? item.usuarios.apelido : 'Usuário Deletado',
-          date: new Date(item.data_criacao).toLocaleDateString('pt-BR'),
-          time: new Date(item.data_criacao).toLocaleTimeString('pt-BR'), // NOVO: Adiciona a hora
-          foco: prettyFocusNames[item.foco_principal] || item.foco_principal, // Traduz o nome
-      }));
   }
 
-  // --- NOVO: handleViewHistoryDetails (Request 5) ---
+  // Busca detalhes (perguntas/respostas) do usuário clicado
   async function handleViewHistoryDetails(userId) {
       if (!userId) {
         console.error('ID do usuário nulo, não é possível buscar detalhes.');
@@ -286,22 +332,37 @@ function App() {
       setHistoryDetailsLoading(true);
       setViewingHistoryDetails(userId); // Abre o modal
       setHistoryDetails(null);
+      setAdminError(null); 
 
+      // --- Lógica de seleção de Banco ---
+      const isOldDb = adminSelectedDb === 'old';
+      const respostasTable = isOldDb ? 'respostas_usuario_antigo' : 'respostas_usuario';
+      const questoesTable = isOldDb ? 'questoes_antigo' : 'questoes';
+      const opcoesTable = isOldDb ? 'opcoes_antigo' : 'opcoes';
+
+      // Busca as respostas, questões e opções correspondentes
       const { data, error } = await supabase
-        .from('respostas_usuario')
+        .from(respostasTable)
         .select(`
-          questoes(enunciado),
-          opcoes(opcao)
+          ${questoesTable}(enunciado),
+          ${opcoesTable}(opcao)
         `)
         .eq('id_u', userId);
 
       if (error) {
         console.error("Erro ao buscar detalhes do histórico:", error);
-        setAdminError('Erro ao buscar as respostas deste usuário.');
-        setHistoryDetails([]); // Define como vazio para parar o loading
+        setAdminError(`Erro ao buscar as respostas. Verifique se as tabelas "${respostasTable}", "${questoesTable}" e "${opcoesTable}" existem e estão relacionadas.`);
+        setHistoryDetails([]); 
       } else {
-        // Filtra dados nulos (caso uma questão ou opção tenha sido deletada)
-        const validData = data.filter(d => d.questoes && d.opcoes);
+        // Mapeia os dados para um formato consistente
+        const validData = data
+          .filter(d => d[questoesTable] && d[opcoesTable]) // Filtra nulos
+          .map(d => ({ 
+            // Padroniza a saída para o JSX
+            questoes: { enunciado: d[questoesTable].enunciado },
+            opcoes: { opcao: d[opcoesTable].opcao }
+          }));
+        
         setHistoryDetails(validData);
       }
       
@@ -311,7 +372,30 @@ function App() {
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
 
-  // handleRegister (Inalterado)
+  // Reseta tudo para a tela de registro
+  function handleGoToRegister() { 
+    setFontSizeAdjustment(0);
+    setUserId(null);
+    setUserNickname('');
+    setUserAnswers([]);
+    setCurrentQuestionIndex(0);
+    setFinalResult(null);
+    setIsMasterAdmin(false); 
+    setAdminApelido('');
+    setAdminPassword('');
+    setAllDbResults([]);
+    
+    // Reseta os novos estados
+    setAdminSelectedDb(null);
+    setViewingHistoryDetails(null);
+    setHistoryDetails(null);
+    setAdminError(null);
+    setError(null); // Limpa o erro global
+
+    setView('register');
+  }
+ 
+  // Registro (salva em 'usuarios' do NOVO banco)
   async function handleRegister(e) { 
     e.preventDefault();
     setRegistrationError(null);
@@ -322,8 +406,9 @@ function App() {
     }
     setLoading(true);
 
+    // Usa o 'usuarios' (novo) para registro
     const { data, error } = await supabase
-      .from('usuarios')
+      .from('usuarios') 
       .insert({ apelido: userNickname.trim() })
       .select();
     
@@ -342,8 +427,8 @@ function App() {
       setView('quiz');
     }
   }
-
-  // handleAnswer (Inalterado)
+ 
+  // Salva a resposta e avança
   function handleAnswer(questionId, optionId) { 
     const filteredAnswers = userAnswers.filter((answer) => answer.id_q !== questionId);
     const newAnswers = [...filteredAnswers, { id_u: userId, id_q: questionId, id_o: optionId }];
@@ -356,44 +441,20 @@ function App() {
     }
   }
 
-  // handleBack (Inalterado)
+  // Volta para a questão anterior
   function handleBack() { 
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   }
 
-  // handleGoToRegister (ATUALIZADO)
-  function handleGoToRegister() { 
-    setFontSizeAdjustment(0);
-    setUserId(null);
-    setUserNickname('');
-    setUserAnswers([]);
-    setCurrentQuestionIndex(0);
-    setFinalResult(null);
-    setIsMasterAdmin(false); 
-    setAdminApelido('');
-    setAdminPassword('');
-    setAllDbResults([]);
-    
-    // Reseta os novos estados
-    setAdminSelectedDb(null);
-    setViewingHistoryDetails(null);
-    setHistoryDetails(null);
-    setAdminError(null);
-    setError(null);
-
-    setView('register');
-  }
-
-  // handleRestartTest (Inalterado)
+  // Reinicia o teste
   function handleRestartTest() {
     handleGoToRegister();
   }
 
-  // handleSaveResult (Inalterado)
+  // Salva o resultado no Histórico Local (localStorage)
   function handleSaveResult(result) { 
-    // NOVO: Salva o nome bonito no histórico local
     const resultToSave = {
       ...result,
       foco: prettyFocusNames[result.foco] || result.foco 
@@ -403,17 +464,17 @@ function App() {
     localStorage.setItem('testHistory', JSON.stringify(newHistory));
   }
 
-  // handleClearHistory (Inalterado)
+  // Limpa o Histórico Local
   function handleClearHistory() { 
     setPastResults([]);
     localStorage.removeItem('testHistory');
   }
 
-  // --- handleSubmitTest (Lógica 3-2-2 Inalterada) ---
+  // Processa e Salva o Teste (NO BANCO NOVO)
   async function handleSubmitTest(answers) { 
     setLoading(true);
 
-    // 1. Salva as Respostas
+    // 1. Salva as Respostas (no 'novo' banco: 'respostas_usuario')
     const { error: answersError } = await supabase
         .from('respostas_usuario')
         .insert(answers);
@@ -423,7 +484,7 @@ function App() {
         setError('Houve um erro ao salvar suas respostas. Tente novamente.');
         setLoading(false);
         return;
-  }
+    }
 
     // 2. Calcula a Pontuação BRUTA
     const scoreMap = {};
@@ -439,7 +500,7 @@ function App() {
       }
     });
 
-    // 3. NORMALIZAÇÃO: Calcula o PERCENTUAL
+    // 3. NORMALIZAÇÃO: Calcula o PERCENTUAL (usa 'maxScores' do 'novo' banco)
     const percentMap = {};
     Object.keys(scoreMap).forEach(foco => {
         const rawScore = scoreMap[foco];
@@ -465,17 +526,12 @@ function App() {
     const suggestedCourses = [];
 
     if (top3Focos.length > 0) {
-      // Pega os 3 primeiros cursos do Foco #1
       const foco1_cursos = courseMap[top3Focos[0].foco] || [];
       suggestedCourses.push(...foco1_cursos.slice(0, 3));
-
-      // Pega os 2 primeiros cursos do Foco #2 (se existir)
       if (top3Focos.length > 1) {
         const foco2_cursos = courseMap[top3Focos[1].foco] || [];
         suggestedCourses.push(...foco2_cursos.slice(0, 2));
       }
-
-      // Pega os 2 primeiros cursos do Foco #3 (se existir)
       if (top3Focos.length > 2) {
         const foco3_cursos = courseMap[top3Focos[2].foco] || [];
         suggestedCourses.push(...foco3_cursos.slice(0, 2));
@@ -485,16 +541,16 @@ function App() {
       const focoPrincipal = top3Focos[0];
       const nomeFocoPrincipal = focoPrincipal.foco; 
 
-      // 6. Estrutura do Resultado Final (ATUALIZADO)
+      // 6. Estrutura do Resultado Final
       const currentResult = {
         nickname: userNickname,
         date: new Date().toLocaleDateString('pt-BR'),
         foco: nomeFocoPrincipal,   
-        topFocosRank: focosOrdenados, // O ranking completo (AGORA SÓ USADO INTERNAMENTE)
-        sugestoes: final7Courses     // A lista 3-2-2
+        topFocosRank: focosOrdenados, // (Não usado na tela, mas salvo)
+        sugestoes: final7Courses
       };
 
-      // 7. Salva o Resultado Principal no Banco
+      // 7. Salva o Resultado Principal no Banco (no 'novo' banco: 'resultado')
       const { error: saveError } = await supabase
         .from('resultado')
         .insert({
@@ -505,11 +561,10 @@ function App() {
         .select();
 
       if (saveError) {
-        if (saveError.code === '23505') {
-            console.warn('Resultado para este usuário já existe no DB.');
-        } else {
-            console.error('Erro ao salvar o resultado final:', saveError.message);
-            setError('Erro ao salvar o resultado final no banco de dados.');
+        // Ignora erro 'unique constraint' (usuário já fez o teste)
+        if (saveError.code !== '23505') {
+          console.error('Erro ao salvar o resultado final:', saveError.message);
+          setError('Erro ao salvar o resultado final no banco de dados.');
         }
       } 
       
@@ -524,6 +579,7 @@ function App() {
     setLoading(false);
   }
 
+
   // --- RENDERIZAÇÃO ---
 
   // Loading
@@ -535,18 +591,22 @@ function App() {
   if (error) {
     return (
       <div className="app-container">
-        <div className="error">{error}</div>
-        <button onClick={handleGoToRegister} className="back-to-test-button">
-            Voltar ao Início
-        </button>
+        <h1>Erro</h1>
+        <div className="error-message" style={{backgroundColor: '#ffdddd', border: '1px solid #ff0000', padding: '15px', borderRadius: '5px'}}>
+          <p style={{color: '#D8000C', margin: 0}}>{error}</p>
+        </div>
+        <div className="extra-buttons" style={{marginTop: '20px'}}>
+          <button onClick={handleGoToRegister} className="back-to-test-button">
+              Voltar ao Início
+          </button>
+        </div>
       </div>
     );
   }
 
-  // Switch (com Renders atualizados)
+  // Switch de Telas
   switch (view) {
     case 'register':
-      // Render 'register' (Inalterado)
       return (
         <div className="app-container">
           <div 
@@ -589,7 +649,6 @@ function App() {
       );
 
     case 'adminLogin':
-      // Render 'adminLogin' (Inalterado)
       return (
         <div className="app-container">
           <div 
@@ -658,7 +717,6 @@ function App() {
         </div>
       );
     
-    // --- NOVO: 'admin_db_select' (Request 3) ---
     case 'admin_db_select':
       return (
         <div className="app-container">
@@ -693,7 +751,6 @@ function App() {
       );
 
     case 'quiz': 
-      // Render 'quiz' (Inalterado)
       const currentQuestion = questions[currentQuestionIndex];
       if (!currentQuestion) {
          return <div className="loading">Carregando questão...</div>;
@@ -736,9 +793,6 @@ function App() {
         </div>
       );
 
-    // ========================================================================
-    // ATUALIZADO: RENDER 'result' (Request 1 - Apenas 7 Cursos)
-    // ========================================================================
     case 'result': 
       if (!finalResult) return <div className="error">Resultado indisponível.</div>;
 
@@ -753,13 +807,13 @@ function App() {
             title="Acesso Administrativo"
           >
           </div>
-          <h1>Seu Resultado</h1>
+    A     <h1>Seu Resultado</h1>
           <p className="result-text">Olá, {userNickname}! Sua área principal de interesse é:</p>
           <div className="main-result">
             <p className="result-area-principal">{focoPrincipalNomeBonito}</p>
           </div>
           
-          {/* A LISTA 3-2-2 (7 CURSOS) */}
+          {/* A LISTA 3-2-2 (7 CURSOS) - SEM PERCENTUAL */}
           {finalResult.sugestoes.length > 0 && (
             <div className="suggestions-courses">
               <h2>Os 7 Cursos Mais Recomendados para seu perfil:</h2>
@@ -772,11 +826,6 @@ function App() {
               </ul>
             </div>
           )}
-
-          {/*             ================================================================
-              Bloco de Ranking de Percentual REMOVIDO (Request 1)
-            ================================================================
-          */}
           
           <div className="extra-buttons">
             <button onClick={() => setView('history')} className="history-button">
@@ -789,9 +838,6 @@ function App() {
         </div>
       );
 
-    // ========================================================================
-    // ATUALIZADO: RENDER 'history' (Request 5)
-    // ========================================================================
     case 'history':
       const displayedResults = isMasterAdmin ? allDbResults : pastResults;
       const historyTitle = isMasterAdmin 
@@ -804,7 +850,7 @@ function App() {
       
       return (
         <>
-          {/* --- NOVO: Modal de Detalhes (Request 5) --- */}
+          {/* --- Modal de Detalhes (Request 5) --- */}
           {viewingHistoryDetails && (
             <div className="history-details-modal-backdrop">
               <div className="history-details-modal">
@@ -817,9 +863,10 @@ function App() {
                 </button>
                 {historyDetailsLoading && <div className="loading">Carregando respostas...</div>}
                 
+                {/* Mostra erro específico do modal */}
                 {adminError && <div className="error-message"><p>{adminError}</p></div>}
 
-                {historyDetails && historyDetails.length > 0 && (
+          A     {historyDetails && historyDetails.length > 0 && (
                   <ul className="history-details-list">
                     {historyDetails.map((detail, index) => (
                       <li key={index} className="history-detail-item">
@@ -851,9 +898,9 @@ function App() {
               <>
                 <ul className="result-list">
                   {displayedResults.map((result, index) => (
-                    <li key={result.id_u || index} className="result-item">
+                    <li key={result.id_u + '-' + index} className="result-item">
                       <div>
-                        {/* NOVO: Botão no apelido (Request 5) */}
+                        {/* Botão no apelido (Request 5) */}
                         {isMasterAdmin ? (
                           <button 
                             className="history-nickname-button" 
@@ -861,12 +908,12 @@ function App() {
                             title="Ver respostas do usuário"
                           >
                             Apelido: <strong>{result.nickname}</strong> 
-A                        </button>
+                          </button>
                         ) : (
                           <div>Apelido: <strong>{result.nickname}</strong></div>
                         )}
                       </div>
-                      {/* NOVO: Exibe data E hora (Request 4) */}
+                      {/* Exibe data E hora (Request 4) */}
                       <div>Data: {result.date} {isMasterAdmin ? `às ${result.time}` : ''}</div>
                       <div>Área Principal: {result.foco}</div>
                     </li>
@@ -878,13 +925,18 @@ A                        </button>
                         Limpar Histórico Local
                       </button>
                   )}
+                  {isMasterAdmin && (
+                    <button onClick={() => { setView('admin_db_select'); setAllDbResults([]); }} className="back-button">
+                      Trocar Banco
+                    </button>
+                  )}
                   <button onClick={handleGoToRegister} className="back-to-test-button">
-                    {isMasterAdmin ? 'Sair do Admin e Voltar' : 'Voltar para Registro'}
+                    {isMasterAdmin ? 'Sair do Admin' : 'Voltar para Registro'}
                   </button>
                 </div>
               </>
             ) : (
-              <>
+             <>
                 <p>Nenhum resultado {isMasterAdmin ? 'encontrado no banco de dados.' : 'anterior encontrado localmente.'}</p>
                 <div className="extra-buttons">
                   <button onClick={handleGoToRegister} className="back-to-test-button">
