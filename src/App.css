@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll Interno no Container - Posição Original Mantida) */
+/* App.css - Tema Wall-E (Scroll INTERNO no Container - Posição Original + Estilo Histórico Novo) */
 
 /* Cores temáticas */
 :root {
@@ -19,7 +19,7 @@
 }
 
 /* === Configurações Globais e de Fundo === */
-
+/* (Mantidas EXATAMENTE como no seu original) */
 html {
   box-sizing: border-box;
 }
@@ -29,17 +29,16 @@ html {
 
 body {
   margin: 0;
-  /* padding removido do body, pois o container é absoluto */
   min-height: 100vh;
-  overflow-x: hidden; /* Previne scroll horizontal acidental */
-  /* overflow-y: hidden; */ /* Desabilitado/Comentado - Não impede o scroll do container */
+  /* overflow-y: auto; */ /* REMOVIDO/Comentado - Scroll será no container */
+  overflow-x: hidden;
   font-family: 'Orbitron', sans-serif;
   background-color: var(--cor-fundo-perguntas);
-  position: relative; /* Pode ser útil para outros elementos posicionados */
+  position: relative; /* Mantido por precaução */
   z-index: 0;
 }
 
-/* Fundo GIF borrado */
+/* Fundo GIF borrado (Mantido igual) */
 body.gif-active::after {
   content: '';
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -69,9 +68,9 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 
   max-width: 650px;
   width: 90%;
-  /* margin removido, pois position: absolute já cuida */
-  /* padding mantido, mas talvez precise ajustar o top/left se o Wall-E sobrepuser */
-  padding: 20px 30px;
+  /* margin: 20px auto; */ /* Removido - não relevante com position absolute */
+  /* --- AJUSTE ESPAÇO WALLE (Mantido da sua versão) --- */
+  padding: 40px 30px 20px 60px; /* Mais espaço esquerdo/superior para o Wall-E */
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -88,8 +87,7 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   overflow-y: auto; /* Adiciona scrollbar vertical SE o conteúdo interno exceder max-height */
   /* --- FIM AJUSTE SCROLL --- */
 
-  /* min-height mantido para dar uma altura mínima inicial */
-  min-height: 400px;
+  min-height: 400px; /* Mantém altura mínima original */
 }
 
 
@@ -115,8 +113,8 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 
 /* Remove efeito hover visual (Mantido) */
 .admin-trigger:hover {
-  transform: rotate(-15deg);
-  opacity: 1;
+  transform: rotate(-15deg); /* Mantém rotação original */
+  opacity: 1; /* Mantém visível */
 }
 
 
@@ -154,47 +152,65 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   justify-content: flex-start; /* Alinha listas no topo */
 }
 
-/* Lista de Resultados (Histórico) */
+/* --- NOVO ESTILO: Lista de Resultados (Histórico) --- */
 .result-list {
   list-style: none;
-  padding: 10px; /* Adicionado padding interno */
-  margin: 15px 0; /* Mantido espaçamento */
-  width: 100%; /* Ocupa largura do container */
-  /* --- AJUSTE SCROLL: Remove limites internos, scroll será no container --- */
-  /* overflow-y: auto; */
-  /* max-height: ... */
-  /* --- FIM AJUSTE SCROLL --- */
-  border: 1px solid #444; /* Mantido para visualização */
+  padding: 10px; /* Espaçamento interno */
+  margin: 15px 0;
+  width: 100%;
+  /* Sem overflow-y ou max-height AQUI, scroll é no .app-container */
+  border: 1px solid #444; /* Borda sutil */
   border-radius: 5px;
-  background-color: rgba(0, 0, 0, 0.2); /* Mantido */
+  background-color: rgba(0, 0, 0, 0.2); /* Fundo levemente escuro */
   text-align: left; /* Alinha o texto dos itens à esquerda */
 }
-/* Estilos .result-item e .history-nickname-button (Mantidos iguais) */
-.result-item { background-color: var(--carvao-wall-e); padding: 12px; border-radius: 8px; color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.3); font-size: 1rem; line-height: 1.6; margin-bottom: 15px; border-left: 5px solid var(--azul-wall-e);}
-.result-item div { margin-bottom: 5px; } /* Espaço entre linhas do item */
-.history-nickname-button { background: none; border: none; padding: 0; margin: 0; color: #87CEFA; text-decoration: underline; cursor: pointer; font-size: inherit; font-weight: bold; }
-.history-nickname-button:hover { color: #ADD8E6; }
+/* Estilo Item do Histórico */
+.result-item {
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo mais escuro para itens */
+  color: var(--eve-branco);
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 5px solid var(--azul-wall-e); /* Barra lateral azul */
+  font-size: 0.9rem; /* Levemente menor */
+  line-height: 1.5;
+}
+.result-item div { margin-bottom: 4px; } /* Menos espaço entre linhas */
+/* Botão clicável no apelido */
+.history-nickname-button {
+  background: none; border: none; padding: 0; margin: 0;
+  color: #87CEFA; /* Azul claro */
+  text-decoration: underline; cursor: pointer; /* Cursor pointer AQUI é intencional */
+  font-size: inherit; font-weight: bold;
+}
+.history-nickname-button:hover { color: #ADD8E6; } /* Efeito hover sutil */
+/* --- FIM NOVO ESTILO HISTÓRICO --- */
 
 
-/* Lista de Detalhes (Respostas) */
+/* --- NOVO ESTILO: Lista de Detalhes (Respostas) --- */
 .history-details-list {
   list-style: none;
   padding: 10px;
   margin: 15px 0;
   width: 100%;
-  /* --- AJUSTE SCROLL: Remove limites internos --- */
-  /* overflow-y: auto; */
-  /* max-height: ... */
-  /* --- FIM AJUSTE SCROLL --- */
+  /* Sem overflow-y ou max-height AQUI */
   border: 1px solid #444;
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2);
   text-align: left;
 }
-/* Estilos .history-detail-item (Mantidos iguais) */
-.history-detail-item { background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco); padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; border-left: 5px solid var(--verde-planta); }
+/* Estilo Item de Detalhe */
+.history-detail-item {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--eve-branco);
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 5px solid var(--verde-planta); /* Verde para diferenciar */
+}
 .history-detail-item p { margin: 5px 0; font-size: 0.9rem; }
-.history-detail-item p strong { color: var(--amarelo-wall-e); }
+.history-detail-item p strong { color: var(--amarelo-wall-e); } /* Destaca "Pergunta:" e "Resposta:" */
+/* --- FIM NOVO ESTILO DETALHES --- */
 
 
 /* Mensagens de Carregamento e Erro (Mantidos iguais) */
@@ -209,30 +225,32 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   body.gif-active::after { background-image: none; filter: none; }
 
   .app-container {
-    /* --- AJUSTE SCROLL: Mantém posição absoluta, mas ajusta width/padding --- */
-    position: absolute; /* Mantido */
-    top: 50%; left: 50%; transform: translate(-50%, -50%); /* Mantido */
-    width: 95%; /* Ocupa mais largura */
-    padding: 30px 15px 15px 35px; /* Ajusta padding para Wall-E mobile */
-    /* --- AJUSTE SCROLL: Define max-height e overflow no mobile --- */
+    /* --- MANTIDO: Posicionamento absoluto mobile --- */
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 95%;
+    /* --- AJUSTE ESPAÇO WALLE Mobile (Mantido) --- */
+    padding: 30px 15px 15px 35px;
+    /* --- AJUSTE SCROLL Mobile --- */
     max-height: 95vh; /* Limita altura */
     overflow-y: auto; /* Scroll INTERNO no mobile */
     /* --- FIM AJUSTE SCROLL --- */
-    margin: 0 auto; /* Remove margem vertical, centraliza com transform */
+    margin: 0 auto;
+    min-height: unset; /* Remove min-height no mobile */
   }
 
   /* --- MANTIDO: Wall-E visível posição original no mobile --- */
   .admin-trigger {
-    width: 100px; /* Tamanho original mobile */
+    width: 100px;
     height: 100px;
-    top: -3px;   /* Posição original mobile */
+    top: -3px;
     left: -10px;
-    transform: rotate(-10deg); /* Rotação original mobile */
-    opacity: 1; /* Visível */
-    cursor: default; /* Sem dica */
+    transform: rotate(-10deg);
+    opacity: 1;
+    cursor: default;
   }
   .admin-trigger:hover {
-     transform: rotate(-10deg); /* Sem scale no hover */
+     transform: rotate(-10deg);
      opacity: 1;
   }
   /* --- FIM MANTIDO --- */
@@ -244,7 +262,8 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   .extra-buttons { gap: 8px; }
   .back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { flex-basis: 48%; font-size: 0.85rem; padding: 8px 10px; }
   .font-toggle-button { width: 45px; padding: 5px; font-size: 0.9rem; }
-  .result-list, .history-details-list { padding: 5px; /* Sem max-height ou overflow */ }
+  /* Ajusta listas no mobile (sem scroll interno nelas) */
+  .result-list, .history-details-list { padding: 5px; }
   .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
 
