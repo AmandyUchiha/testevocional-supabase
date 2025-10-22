@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Completo e com Adições) */
+/* App.css - Tema Wall-E (Scroll Livre da Página) */
 
 /* Cores temáticas */
 :root {
@@ -18,60 +18,62 @@
   --cor-fundo-gif: #4e342e;
 }
 
-/* * CORREÇÃO #1: Fundo e Rolagem */
-body {
-  margin: 0;
-  /* Garante que o corpo sempre cubra a tela, mas permite rolagem se o conteúdo for maior */
-  min-height: 100vh; 
-  /* Permite rolagem vertical para conteúdo grande (mobile) */
-  overflow-y: auto; 
-  /* Bloqueia rolagem horizontal */
-  overflow-x: hidden; 
-  font-family: 'Orbitron', sans-serif;
-  /* Define a cor de fundo padrão */
-  background-color: var(--cor-fundo-perguntas); 
+/* === Configurações Globais e de Fundo === */
+
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 
-/* Fundo com GIF borrado - Apenas para telas de apelido, final e histórico */
-body.nickname-page.gif-active::after,
-body.final-page.gif-active::after,
-body.history-page.gif-active::after,
-body.adminLogin.gif-active::after { /* Adicionado adminLogin */
+body {
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Alinha container no topo */
+  align-items: center;
+  font-family: 'Orbitron', sans-serif;
+  background-color: var(--cor-fundo-perguntas);
+  position: relative;
+  z-index: 0;
+  overflow-y: auto; /* Garante scroll no body */
+}
+
+/* Fundo GIF borrado */
+body.gif-active::after {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0; width: 100%; height: 100%;
   z-index: -1;
   background-image: url('./assets/fundo.gif');
   background-repeat: no-repeat;
-  /* Garante que o GIF preencha sempre, mesmo em mobile */
   background-size: cover;
-  background-attachment: fixed; 
+  background-position: center;
+  background-attachment: fixed;
   filter: blur(5px);
 }
-
-/* Fundo fixo para tela de perguntas */
-body.question-page {
-  background-color: var(--cor-fundo-perguntas);
-  overflow-y: auto; 
-  min-height: 100vh;
+/* Remove GIF na tela de perguntas */
+body.question-page.gif-active::after { background-image: none; filter: none; }
+body.question-page { background-color: var(--cor-fundo-perguntas); }
+/* Adiciona GIF na tela de detalhes */
+body.detail-page.gif-active::after {
+  /* Regra duplicada para garantir que se aplique */
+  content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+  background-image: url('./assets/fundo.gif'); background-repeat: no-repeat; background-size: cover;
+  background-position: center; background-attachment: fixed; filter: blur(5px);
 }
 
 
-/* * CORREÇÃO #2: Contêiner Principal */
+/* === Contêiner Principal === */
 .app-container {
-  /* Altera de 'fixed' para 'absolute' para melhor fluxo em telas menores */
-  position: absolute; 
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   max-width: 650px;
-  width: 90%; /* Ajusta para porcentagem para melhor responsividade */
-  /* Adiciona margem superior/inferior para garantir que o conteúdo não seja cortado */
-  margin: 20px auto; 
-  padding: 10px 30px;
+  width: 100%;
+  margin: 20px 0; /* Margem vertical apenas */
+  padding: 20px 30px;
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -79,330 +81,185 @@ body.question-page {
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 400px;
-  box-sizing: border-box;
+  position: relative;
+  /* Sem min-height ou max-height */
 }
 
-/* ** MODIFICAÇÃO PARA O CLIQUE ** */
 
-/* 1. Remove a imagem Wall-E do pseudo-elemento (agora será um elemento real) */
-.app-container::before {
-  content: none;
-}
-
-/* 2. NOVO: Estilo para a Imagem/Gatilho de Admin Clicável */
+/* === Gatilho Admin (Wall-E) === */
 .admin-trigger {
   position: absolute;
-  top: -6px; 
-  left: -30px; 
-  width: 150px;
-  height: 150px;
-  background-image: url('./assets/walle.png'); 
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  top: -15px; left: -40px;
+  width: 150px; height: 150px;
+  background-image: url('./assets/walle.png');
+  background-size: contain; background-repeat: no-repeat; background-position: center;
   transform: rotate(-15deg);
   z-index: 2;
-  /* REMOVIDO: cursor: pointer; */ 
-  /* REMOVIDO: transition: transform 0.3s ease-in-out; */
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
 }
-
-/* REMOVIDO: Efeito de hover */
-.admin-trigger:hover {
-  /* REMOVIDO: transform: rotate(-15deg) scale(1.05); */
-  transform: rotate(-15deg); /* Mantém a rotação original */
-}
-
-/* REMOVIDO: Estilo para o subtítulo/mensagem na área de histórico */
-/* Remova esta regra ou certifique-se de que ela não existe mais. */
-.sub-title {
-  /* ... remover esta regra ... */
-  display: none; /* Adicione display: none se o código ainda estiver lá */
-}
-/* ** FIM DA MODIFICAÇÃO CSS ** */
-
-/* ... (Mantenha todas as outras regras do App.css) ... */
-
-/* Ajuste no Media Query para manter a discrição no mobile */
-@media (max-width: 650px) {
-    /* ... (outras regras mobile) ... */
-
-    /* Ajusta o gatilho de login em mobile */
-    .admin-trigger {
-      width: 100px;
-      height: 100px;
-      top: -3px;
-      left: -10px;
-      transform: rotate(-10deg);
-      /* REMOVIDO: o hover e o cursor pointer */
-    }
-}
-
-/* Estilo para o subtítulo/mensagem na área de histórico */
-.sub-title {
-  font-size: 0.8rem;
-  color: var(--cinza-claro);
-  margin-top: -10px;
-  margin-bottom: 20px;
-}
-/* ** FIM DA MODIFICAÇÃO ** */
+.admin-trigger:hover { transform: rotate(-15deg) scale(1.05); }
 
 
-/* Títulos */
+/* === Estilos Comuns (Títulos, Botões, etc.) === */
+
 h1 {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
   margin-bottom: 20px;
   color: var(--amarelo-wall-e);
   text-shadow: 1px 1px 2px #000;
 }
 
-/* Botão "Começar o Teste" */
-.start-button {
-  padding: 10px 20px;
-  background-color: var(--dourado-claro);
-  border: 2px solid var(--bordo-marrom);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--cinza-escuro);
-  font-weight: bold;
-  margin: 20px auto 0;
-  display: block;
-  transition: all 0.3s;
-}
-
-.start-button:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 10px var(--amarelo-wall-e);
-}
-
-
-/* Container para os botões de resposta */
-.option-buttons-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-/* Botões de resposta */
-.option-button {
-  padding: 12px;
-  background-color: var(--marrom-claro);
-  border: 2px solid var(--bordo-marrom-escuro);
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--cinza-escuro);
-  font-weight: bold;
-  margin: 8px 0;
-  width: 80%;
-  text-align: center;
-  transition: all 0.3s;
-}
-
-.option-button:hover {
-  background-color: var(--dourado-claro);
-}
-
-/* Estado de botão selecionado */
-.option-button.selected {
-  background-color: var(--azul-wall-e);
-  color: var(--eve-branco);
-  border-color: var(--eve-branco);
-  box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
-}
-
-
-/* Container para botões extras */
-.extra-buttons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 25px;
-}
-
-/* Botões extras */
-.back-button,
-.history-button,
-.clear-history-button,
-.back-to-test-button,
-.restart-button {
-  padding: 10px 20px;
-  background-color: var(--dourado-claro);
-  color: var(--cinza-escuro);
-  border: 2px solid var(--bordo-marrom);
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  flex: 1;
-  min-width: 120px;
-  max-width: 200px;
-  transition: all 0.3s;
-}
-
-.back-button:hover,
-.history-button:hover,
-.clear-history-button:hover,
-.back-to-test-button:hover,
-.restart-button:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 0 8px var(--dourado-claro);
-}
-
-/* --- ESTILOS PARA OS BOTÕES DE FONTE --- */
-
-/* Container para alinhar os botões de controle de fonte */
-.font-controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px; /* Espaço entre os botões */
-  margin-top: 25px;
-  width: 100%;
-}
-
-/* Estilo dos botões A- e A+ */
-.font-toggle-button {
-  width: 60px;
-  padding: 8px 10px;
-  font-size: 1.2rem;
-  background-color: var(--dourado-claro); 
-  color: var(--cinza-escuro); 
-  border: 2px solid var(--bordo-marrom); 
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+button {
   font-family: 'Orbitron', sans-serif;
-  transition: all 0.3s ease;
-}
-
-.font-toggle-button:hover {
-  filter: brightness(1.1); 
-  box-shadow: 0 0 8px var(--dourado-claro); 
-}
-
-/* Resultado */
-.result-text {
-  margin-bottom: 10px;
-}
-
-.main-result {
-  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
   font-weight: bold;
-  margin: 20px 0;
-  color: var(--amarelo-wall-e);
+}
+button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+.start-button {
+  padding: 10px 20px; background-color: var(--dourado-claro);
+  border: 2px solid var(--bordo-marrom); color: var(--cinza-escuro);
+  margin: 20px auto 0; display: block;
+}
+.start-button:hover { filter: brightness(1.1); box-shadow: 0 0 10px var(--amarelo-wall-e); }
+
+.option-buttons-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 15px; }
+.option-button {
+  padding: 12px; background-color: var(--marrom-claro);
+  border: 2px solid var(--bordo-marrom-escuro); color: var(--cinza-escuro);
+  margin: 6px 0; width: 90%; max-width: 400px; text-align: center;
+}
+.option-button:hover { background-color: var(--dourado-claro); }
+.option-button.selected {
+  background-color: var(--azul-wall-e); color: var(--eve-branco);
+  border-color: var(--eve-branco); box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
 }
 
+.extra-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 25px; width: 100%; }
+.back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button {
+  padding: 10px 15px; background-color: var(--dourado-claro);
+  color: var(--cinza-escuro); border: 2px solid var(--bordo-marrom);
+  flex: 1 1 130px; max-width: 200px;
+}
+.back-button:hover, .history-button:hover, .clear-history-button:hover, .back-to-test-button:hover, .restart-button:hover {
+  filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro);
+}
+
+.font-controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; width: 100%; }
+.font-toggle-button {
+  width: 50px; padding: 6px 8px; font-size: 1rem;
+  background-color: var(--dourado-claro); color: var(--cinza-escuro);
+  border: 2px solid var(--bordo-marrom);
+}
+.font-toggle-button:hover { filter: brightness(1.1); box-shadow: 0 0 8px var(--dourado-claro); }
+
+
+/* === Estilos Específicos de Telas === */
+
+/* Tela de Resultado */
+.result-text { margin-bottom: 10px; }
+.main-result { font-size: clamp(1.3rem, 4vw, 1.5rem); font-weight: bold; margin: 15px 0; color: var(--amarelo-wall-e); }
+.suggestions-courses h2 { font-size: clamp(1rem, 3vw, 1.2rem); color: var(--dourado-claro); margin-bottom: 10px; }
+.suggestions ul { list-style: none; padding: 0; }
+.suggestions li { margin: 5px 0; font-size: 0.95rem; }
+
+/* Tela de Histórico e Detalhes - Layout */
+.history-page .app-container,
+.detail-page .app-container {
+  height: auto; /* Altura baseada no conteúdo */
+  justify-content: flex-start; /* Alinha conteúdo no topo */
+}
+
+/* Lista de Resultados (Histórico) */
 .result-list {
   list-style: none;
-  padding: 0;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.result-item {
-  margin-bottom: 15px;
-  background-color: var(--carvao-wall-e);
-  padding: 12px;
-  border-radius: 8px;
-  color: var(--eve-branco);
-  box-shadow: 0 0 10px rgba(0, 119, 190, 0.3);
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-/* Sugestões */
-.suggestions ul {
-  list-style: none;
-  padding: 0;
-}
-
-.suggestions li {
-  margin: 5px 0;
-}
-
-/* Mensagens de erro e carregamento */
-.loading,
-.error,
-.error-message {
-  color: #ffcccb;
-  font-weight: bold;
-  margin-top: 20px;
-}
-
-.error-message {
-  background-color: #ff4c4c;
   padding: 10px;
-  border-radius: 8px;
-  margin: 10px 0;
+  margin: 15px 0;
+  width: 100%;
+  /* REMOVIDO: overflow-y e max-height */
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
 }
+.result-item {
+  background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco);
+  padding: 10px 15px; margin-bottom: 8px; border-radius: 4px;
+  border-left: 5px solid var(--azul-wall-e); font-size: 0.9rem;
+  line-height: 1.5; text-align: left;
+}
+.result-item div { margin-bottom: 4px; }
+.history-nickname-button {
+  background: none; border: none; padding: 0; margin: 0;
+  color: #87CEFA; text-decoration: underline; cursor: pointer;
+  font-size: inherit; font-weight: bold;
+}
+.history-nickname-button:hover { color: #ADD8E6; }
 
-/* * CORREÇÃO #3: Media Query para Dispositivos Móveis */
-@media (max-width: 650px) {
-  /* Remove o GIF de fundo em telas pequenas */
-  body.nickname-page.gif-active::after,
-  body.final-page.gif-active::after,
-  body.history-page.gif-active::after,
-  body.adminLogin.gif-active::after { /* Adicionado adminLogin */
-    background-image: none; 
-    filter: none;
-  }
+/* Lista de Detalhes (Respostas) */
+.history-details-list {
+  list-style: none;
+  padding: 10px;
+  margin: 15px 0;
+  width: 100%;
+  /* REMOVIDO: overflow-y e max-height */
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.history-detail-item {
+  background-color: rgba(0, 0, 0, 0.6); color: var(--eve-branco);
+  padding: 10px 15px; margin-bottom: 8px; border-radius: 4px;
+  border-left: 5px solid var(--verde-planta); text-align: left;
+}
+.history-detail-item p { margin: 5px 0; font-size: 0.9rem; }
+.history-detail-item p strong { color: var(--amarelo-wall-e); }
 
-  /* Ajusta o contêiner principal para melhor visualização em telas pequenas */
+
+/* Mensagens de Carregamento e Erro */
+.loading { color: var(--amarelo-wall-e); font-weight: bold; margin: 20px 0; font-size: 1.1rem; }
+.error-message {
+  width: 100%; background-color: rgba(255, 76, 76, 0.7);
+  color: white; border: 1px solid #ff4c4c; padding: 10px;
+  border-radius: 8px; margin: 15px 0; text-align: center;
+}
+.error-message p { margin: 0; font-weight: bold; }
+
+/* === Responsividade (Telas Pequenas) === */
+@media (max-width: 700px) {
+  body { padding: 10px; }
+  body.gif-active::after { background-image: none; filter: none; }
+
   .app-container {
-    position: relative; 
-    top: auto;
-    left: auto;
-    transform: none;
-    margin: 20px auto;
-    padding: 15px;
-    width: 95%;
-    min-width: unset;
+    margin: 10px 0; padding: 15px; width: 95%;
+    /* REMOVIDO: max-height */
   }
 
-  /* Reduz o tamanho da imagem do Wall-E e posiciona melhor para não cortar */
   .admin-trigger {
-    width: 100px;
-    height: 100px;
-    top: -3px;
-    left: -10px;
+    width: 80px; height: 80px; top: -10px; left: -15px;
     transform: rotate(-10deg);
   }
+  .admin-trigger:hover { transform: rotate(-10deg); }
 
-  /* Reduz o tamanho da fonte para melhor leitura em telas pequenas */
-  h1 {
-    font-size: 1.5rem;
+  h1 { font-size: 1.4rem; }
+  .option-button { width: 95%; font-size: 0.9rem; }
+  .main-result { font-size: 1.2rem; }
+  .extra-buttons { gap: 8px; }
+  .back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button {
+    flex-basis: 48%; font-size: 0.85rem; padding: 8px 10px;
   }
+  .font-toggle-button { width: 45px; padding: 5px; font-size: 0.9rem; }
 
-  /* Garante que os botões de resposta usem mais largura */
-  .option-button {
-    width: 95%;
-    font-size: 0.95rem;
+  /* Ajusta listas no mobile */
+  .result-list, .history-details-list {
+    padding: 5px;
+    /* REMOVIDO: max-height */
   }
-  
-  /* Garante que o resultado principal seja legível */
-  .main-result {
-    font-size: 1.3rem;
-  }
-  
-  /* Aumenta o espaçamento entre botões extras para facilitar o toque */
-  .extra-buttons {
-    gap: 8px;
-  }
-
-  .back-button,
-  .history-button,
-  .clear-history-button,
-  .back-to-test-button,
-  .restart-button {
-      flex-basis: 48%;
-      min-width: unset;
-  }
-
-  /* Ajuste dos botões de fonte para mobile */
-  .font-toggle-button {
-    width: 70px; 
-    padding: 10px;
-  }
+  .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
+
+/* Garante que regra antiga foi removida */
+.sub-title { display: none !important; }
