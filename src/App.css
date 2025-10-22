@@ -95,7 +95,7 @@ body.detail-page.gif-active::after {
 /* === Gatilho Admin (Wall-E) === */
 .admin-trigger {
   position: absolute; /* Continua absoluto em relação ao app-container */
-  top: -2px; left: -40px; /* Ajustado */
+  top: 3px; left: -40px; /* Ajustado */
   width: 150px; height: 150px;
   background-image: url('./assets/walle.png');
   background-size: contain; background-repeat: no-repeat; background-position: center;
