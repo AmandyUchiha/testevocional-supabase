@@ -38,7 +38,7 @@ function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   const [finalResult, setFinalResult] = useState(null); 
-  const [pastResults, setPastResults] = useState([]); // Mantém o estado para carregar/salvar
+  const [pastResults, setPastResults] = useState([]); 
   const [view, setView] = useState('register'); 
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState(0);
   const [questions, setQuestions] = useState([]); 
@@ -59,84 +59,62 @@ function App() {
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
   const [historyRanking, setHistoryRanking] = useState(null); 
+  // Estados para o acesso admin secreto REINSERIDOS
   const [adminClickCount, setAdminClickCount] = useState(0); 
   const [adminClickTimer, setAdminClickTimer] = useState(null);
 
-  // Efeitos
-  useEffect(() => { // Carrega dados iniciais e histórico local
+  // Efeitos (sem alterações significativas, apenas limpeza)
+  useEffect(() => { 
     async function getInitialData() {
         setLoading(true); setError(null);
         try {
           const { data: qData, error: qError } = await supabase.from('questoes').select(`id_q, enunciado, opcoes(id_o, opcao, pontuacao(foco, valor))`);
-          if (qError) throw qError; if (!qData || qData.length === 0) throw new Error("Nenhuma questão.");
-          setQuestions(qData);
-
+          if (qError) throw qError; if (!qData || qData.length === 0) throw new Error("Nenhuma questão."); setQuestions(qData);
           const { data: mData, error: mError } = await supabase.from('foco_pontuacao_maxima').select('foco, valor_maximo');
-          if (mError) throw mError; if (!mData) throw new Error("Nenhuma pont. máxima.");
-          const mScoresMap = mData.reduce((acc, i) => { if (i.foco && typeof i.valor_maximo === 'number') acc[i.foco] = i.valor_maximo; return acc; }, {});
-          if (Object.keys(mScoresMap).length === 0) throw new Error("Nenhuma pont. máxima válida."); setMaxScores(mScoresMap);
-
+          if (mError) throw mError; if (!mData) throw new Error("Nenhuma pont. máxima."); const mScoresMap = mData.reduce((acc, i)=>{if(i.foco&&typeof i.valor_maximo==='number')acc[i.foco]=i.valor_maximo;return acc;},{}); if(Object.keys(mScoresMap).length===0)throw new Error("Nenhuma pont. máxima válida."); setMaxScores(mScoresMap);
           const { data: cData, error: cError } = await supabase.from('cursos_por_foco').select('foco, curso_nome');
-          if (cError) throw cError; if (!cData) throw new Error("Nenhum curso.");
-          const cMapObj = cData.reduce((acc, i) => { if (i.foco && i.curso_nome) { if (!acc[i.foco]) acc[i.foco] = []; acc[i.foco].push(i.curso_nome); } return acc; }, {});
-          setCourseMap(cMapObj);
-
-          // Carrega histórico local AQUI
-          const savedResults = localStorage.getItem('testHistory');
-          if (savedResults) {
-              try { setPastResults(JSON.parse(savedResults)); } 
-              catch (parseError) { console.error("Erro histórico local:", parseError); localStorage.removeItem('testHistory'); }
-          }
-        } catch (err) { console.error('Erro dados iniciais:', err); setError(`Falha: ${err.message}. Verifique RLS.`); } 
-        finally { setLoading(false); }
-      }
-      getInitialData();
+          if (cError) throw cError; if (!cData) throw new Error("Nenhum curso."); const cMapObj = cData.reduce((acc, i)=>{if(i.foco&&i.curso_nome){if(!acc[i.foco])acc[i.foco]=[];acc[i.foco].push(i.curso_nome);}return acc;},{}); setCourseMap(cMapObj);
+          const savedResults = localStorage.getItem('testHistory'); if(savedResults){try{setPastResults(JSON.parse(savedResults));}catch(e){console.error("Erro hist local:",e);localStorage.removeItem('testHistory');}}
+        } catch (err){console.error('Erro dados:',err);setError(`Falha:${err.message}.`);} 
+        finally {setLoading(false);}
+      } getInitialData();
   }, []); 
 
   useEffect(() => { /* Carrega histórico admin */
-    async function loadAdminHistory() { /* ... */ } loadAdminHistory(); 
-    return () => { /* ... */ }; 
+    async function loadAdminHistory() { if(view==='history'&&isMasterAdmin&&adminSelectedDb){setHistoryLoading(true);setError(null);setAdminError(null);const r=await fetchAllResults(adminSelectedDb);setAllDbResults(r);console.log(`Hist admin:${r.length}`);}} loadAdminHistory(); 
+    return () => { if(view!=='history'&&isMasterAdmin&&adminSelectedDb){setAllDbResults([]);}}; 
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
   useEffect(() => { /* Classes do body */
-    const bodyClassList = document.body.classList;
-      const classMap = { quiz: 'question-page', register: 'nickname-page', adminLogin: 'nickname-page', admin_db_select: 'nickname-page', result: 'final-page', history: 'history-page', localHistory: 'history-page', detailView: 'detail-page' };
-      Object.values(classMap).forEach(cls => bodyClassList.remove(cls)); bodyClassList.remove('gif-active'); 
-      const currentClass = classMap[view];
-      if (currentClass) { bodyClassList.add(currentClass); if (view !== 'quiz') { bodyClassList.add('gif-active'); } } 
-      else if (view !== 'quiz') { bodyClassList.add('gif-active'); }
-      return () => { Object.values(classMap).forEach(cls => bodyClassList.remove(cls)); bodyClassList.remove('gif-active'); };
+    const bCL=document.body.classList; const cM={quiz:'question-page',register:'nickname-page',adminLogin:'nickname-page',admin_db_select:'nickname-page',result:'final-page',history:'history-page',localHistory:'history-page',detailView:'detail-page'}; Object.values(cM).forEach(c=>bCL.remove(c)); bCL.remove('gif-active'); const cC=cM[view]; if(cC){bCL.add(cC);if(view!=='quiz'){bCL.add('gif-active');}}else if(view!=='quiz'){bCL.add('gif-active');} return()=>{Object.values(cM).forEach(c=>bCL.remove(c));bCL.remove('gif-active');};
   }, [view]);
 
   useEffect(() => { /* Ajuste de fonte */
-      const initialSizeStr = document.documentElement.getAttribute('data-initial-font-size'); let initialSize = 16; 
-      if (initialSizeStr) { initialSize = parseFloat(initialSizeStr); } 
-      else { const computed = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16; initialSize = computed; document.documentElement.setAttribute('data-initial-font-size', initialSize.toString()); }
-      const newSize = initialSize + fontSizeAdjustment; document.documentElement.style.fontSize = `${newSize}px`;
+      const iSS=document.documentElement.getAttribute('data-initial-font-size'); let iS=16; if(iSS){iS=parseFloat(iSS);}else{const cS=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;iS=cS;document.documentElement.setAttribute('data-initial-font-size',iS.toString());} const nS=iS+fontSizeAdjustment; document.documentElement.style.fontSize=`${nS}px`;
   }, [fontSizeAdjustment]);
 
   // Funções de Fonte
   function increaseFontSize() { setFontSizeAdjustment(adj => Math.min(adj + 2, 8)); }
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
-  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO ---
-  function handleSecretAdminTrigger() { /* ... (sem alterações) ... */ 
-    const newClickCount = adminClickCount + 1; setAdminClickCount(newClickCount);
+  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO REINSERIDA ---
+  function handleSecretAdminTrigger() {
+    const newClickCount = adminClickCount + 1;
+    setAdminClickCount(newClickCount);
     if (adminClickTimer) clearTimeout(adminClickTimer); 
-    if (newClickCount >= 5) { console.log("Acesso admin!"); setAdminClickCount(0); setView('adminLogin'); } 
-    else { const timer = setTimeout(() => { setAdminClickCount(0); setAdminClickTimer(null); }, 1000); setAdminClickTimer(timer); }
+    if (newClickCount >= 5) { 
+      console.log("Acesso admin!"); 
+      setAdminClickCount(0); setView('adminLogin'); 
+    } else { 
+      const timer = setTimeout(() => { setAdminClickCount(0); setAdminClickTimer(null); }, 1000); 
+      setAdminClickTimer(timer);
+    }
   }
 
   // --- FUNÇÕES DE ADMIN --- (sem alterações)
-  async function handleAdminLogin(e) { /* ... */ 
-    e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); }
-  }
-  async function fetchAllResults(dbSource) { /* ... */ 
-    let d, e; let r = []; try { if (dbSource === 'old') { ({ d, e } = await supabase.from('resultado_antigo').select(`id_u,area_principal,usuarios_antigo(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Antigo:${e.message}`); if(!d) throw new Error("Antigo:vazio."); r = d.map(i=>{ const ud=i.usuarios_antigo||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.area_principal]||i.area_principal,}; }); } else { ({ d, e } = await supabase.from('resultado').select(`id_u,foco_principal,usuarios(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Novo:${e.message}`); if(!d) throw new Error("Novo:vazio."); r = d.map(i=>{ const ud=i.usuarios||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.foco_principal]||i.foco_principal,}; }); } } catch (err) { console.error("Erro fetch:", err); setAdminError(`Falha:${err.message}. RLS?`); r=[]; } finally { setHistoryLoading(false); } return r; 
-  }
-  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ 
-    if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD.length>0&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);}
-  }
+  async function handleAdminLogin(e) { /* ... */ e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); } }
+  async function fetchAllResults(dbSource) { /* ... */ let d, e; let r = []; try { if (dbSource === 'old') { ({ d, e } = await supabase.from('resultado_antigo').select(`id_u,area_principal,usuarios_antigo(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Antigo:${e.message}`); if(!d) throw new Error("Antigo:vazio."); r = d.map(i=>{ const ud=i.usuarios_antigo||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.area_principal]||i.area_principal,}; }); } else { ({ d, e } = await supabase.from('resultado').select(`id_u,foco_principal,usuarios(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Novo:${e.message}`); if(!d) throw new Error("Novo:vazio."); r = d.map(i=>{ const ud=i.usuarios||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.foco_principal]||i.foco_principal,}; }); } } catch (err) { console.error("Erro fetch:", err); setAdminError(`Falha:${err.message}. RLS?`); r=[]; } finally { setHistoryLoading(false); } return r; }
+  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD.length>0&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);} }
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
   function handleGoToRegister() { 
@@ -144,8 +122,11 @@ function App() {
       setCurrentQuestionIndex(0); setFinalResult(null); setIsMasterAdmin(false); 
       setAdminApelido(''); setAdminPassword(''); setAllDbResults([]); setAdminSelectedDb(null);
       setDetailedUser(null); setHistoryDetails(null); setHistoryRanking(null); 
-      setAdminError(null); setError(null); setAdminClickCount(0); 
-      if (adminClickTimer) clearTimeout(adminClickTimer); setAdminClickTimer(null);
+      setAdminError(null); setError(null); 
+      // Reset do acesso secreto REINSERIDO
+      setAdminClickCount(0); 
+      if (adminClickTimer) clearTimeout(adminClickTimer); 
+      setAdminClickTimer(null);
       document.documentElement.removeAttribute('data-initial-font-size'); 
       document.documentElement.style.fontSize = ''; 
       setView('register');
@@ -171,9 +152,9 @@ function App() {
       const newAnswers = [...userAnswers.filter(a => a.id_q !== questionId), { id_u: userId, id_q: questionId, id_o: optionId }];
       setUserAnswers(newAnswers);
       if (currentQuestionIndex === questions.length - 1) {
-        handleSubmitTest(newAnswers); // Finaliza
+        handleSubmitTest(newAnswers); 
       } else {
-        setCurrentQuestionIndex(currentQuestionIndex + 1); // Avança
+        setCurrentQuestionIndex(currentQuestionIndex + 1); 
       }
   }
 
@@ -185,34 +166,25 @@ function App() {
 
   function handleSaveResult(result) { 
       try {
-        // Salva SEM o ranking detalhado no localStorage
-        const resultToSave = { 
-          nickname: result.nickname, 
-          date: result.date, 
-          foco: prettyFocusNames[result.foco] || result.foco || '?', 
-          sugestoes: result.sugestoes // Mantém sugestões se quiser
-        };
+        const resultToSave = { nickname: result.nickname, date: result.date, foco: prettyFocusNames[result.foco] || result.foco || '?', sugestoes: result.sugestoes };
         const currentHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
-        // Verifica duplicidade básica (pode refinar se necessário)
         if (!currentHistory.some(r => r.nickname === resultToSave.nickname && r.date === resultToSave.date && r.foco === resultToSave.foco)) {
           const newHistory = [...currentHistory, resultToSave];
           setPastResults(newHistory); localStorage.setItem('testHistory', JSON.stringify(newHistory));
-        } else { console.log("Resultado duplicado no local."); }
-      } catch (e) { console.error("Erro ao salvar local:", e); }
+        } else { console.log("Duplicado local."); }
+      } catch (e) { console.error("Erro save local:", e); }
   }
 
   function handleClearHistory() { 
       try { setPastResults([]); localStorage.removeItem('testHistory'); } 
-      catch (e) { console.error("Erro ao limpar:", e); setError("Não foi possível limpar."); }
+      catch (e) { console.error("Erro limpar:", e); setError("Não foi possível limpar."); }
   }
 
   async function handleSubmitTest(answersToSubmit) { 
     setLoading(true); setError(null); 
     const currentAnswers = answersToSubmit || userAnswers; 
     if (!currentAnswers || currentAnswers.length === 0) { setError("Nenhuma resposta."); setLoading(false); setView('quiz'); return; }
-    // Validação implícita pelo fluxo de handleAnswer
-    // if (currentAnswers.length !== questions.length) { ... } 
-
+    
     try {
       console.log("Submetendo:", currentAnswers);
       const { error: answersError } = await supabase.from('respostas_usuario').insert(currentAnswers);
@@ -223,7 +195,7 @@ function App() {
       
       const percentMap = {}; let hasValidScore = false;
       Object.keys(maxScores).forEach(foco => { const raw = scoreMap[foco] || 0; const max = maxScores[foco]; if (typeof max === 'number' && max > 0) { percentMap[foco] = (raw / max) * 100; hasValidScore = true; } else { percentMap[foco] = 0; } });
-      if (!hasValidScore && Object.keys(scoreMap).length > 0) throw new Error("Não normalizar."); else if (!hasValidScore) throw new Error("Não calcular pontuação.");
+      if (!hasValidScore && Object.keys(scoreMap).length > 0) throw new Error("Não normalizar."); else if (!hasValidScore) throw new Error("Não calcular.");
 
       let focosOrdenados = Object.keys(percentMap).map(f => ({ foco: f, percentual: parseFloat(percentMap[f].toFixed(2)) })).sort((a, b) => b.percentual - a.percentual);
       
@@ -232,19 +204,14 @@ function App() {
       if (search[0]) pool.push(...(courseMap[search[0]] || [])); if (search[1]) pool.push(...(courseMap[search[1]] || [])); if (search[2]) pool.push(...(courseMap[search[2]] || []));
       const suggestions = [...new Set(pool)].slice(0, 7); const mainFocus = top3[0];
       
-      // Dados para o ESTADO e LOCALSTORAGE (sem ranking detalhado)
       const resultData = { nickname: userNickname, date: new Date().toLocaleDateString('pt-BR'), foco: mainFocus.foco, sugestoes: suggestions };
-      // Dados COMPLETOS para o BANCO DE DADOS
       const dbResultData = { id_u: userId, foco_principal: mainFocus.foco, percentual_principal: mainFocus.percentual, ranking_completo: focosOrdenados };
 
-      console.log("Salvando resultado...");
+      console.log("Salvando...");
       const { error: resultError } = await supabase.from('resultado').insert(dbResultData);
-      if (resultError) throw new Error(`salvar resultado: ${resultError.message}`);
+      if (resultError) throw new Error(`salvar res: ${resultError.message}`);
 
-      handleSaveResult(resultData); // Salva versão simplificada localmente
-      setFinalResult(resultData);   // Atualiza estado com versão simplificada
-      setView('result');
-
+      handleSaveResult(resultData); setFinalResult(resultData); setView('result');
     } catch (err) { console.error('Erro submit:', err); setError(`Erro: ${err.message}.`); setCurrentQuestionIndex(questions.length - 1); setView('quiz'); } 
     finally { setLoading(false); }
   } 
@@ -258,7 +225,7 @@ function App() {
     </div>
   );
 
-  // Tela 1: Registro (LIMPA - Sem histórico local)
+  // Tela 1: Registro (LIMPA - Sem histórico local, com botões de fonte)
   const renderRegister = () => (
     <div className="container register-container">
       <h1>Teste Vocacional</h1>
@@ -270,7 +237,6 @@ function App() {
             placeholder="Seu apelido" maxLength="50"
             style={{ width: '80%', padding: '10px', margin: '10px 0', borderRadius: '5px', border: '1px solid #555', background: '#333', color: '#fff' }}
         />
-        {/* Usando botão genérico */}
         <button type="submit" disabled={loading || !userNickname.trim()}>
             {loading ? 'Carregando...' : 'Iniciar Teste'}
         </button>
@@ -281,7 +247,7 @@ function App() {
     </div>
   );
 
-  // Tela 2: Quiz (Sem alterações)
+  // Tela 2: Quiz (sem alterações)
   const renderQuiz = () => {
     if (loading && questions.length === 0) { return <div className="loading">Carregando...</div>; }
     if (error && questions.length === 0) { return <div className="error-message"><p>{error}</p></div>; }
@@ -323,7 +289,6 @@ function App() {
               <ul> {finalResult.sugestoes.map((c, i) => ( <li key={i}>{c}</li> ))} </ul>
             </div>
         )}
-        {/* Ranking removido */}
         <div className="extra-buttons">
             <button onClick={handleRestartTest} className="restart-button"> Reiniciar </button>
             <button onClick={() => setView('localHistory')} className="history-button"> Histórico </button>
@@ -391,7 +356,13 @@ function App() {
   // Retorno final
   return (
     <div className="app-container">
-      <div className="admin-trigger" onClick={handleSecretAdminTrigger} title=""></div> 
+      {/* Gatilho admin secreto REINSERIDO */}
+      <div 
+        className="admin-trigger" 
+        onClick={handleSecretAdminTrigger} 
+        title=""
+      ></div> 
+      
       {renderCurrentView()}
     </div>
   );
