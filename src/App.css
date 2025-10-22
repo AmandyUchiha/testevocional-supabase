@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll Livre + Wall-E Visível no Canto da Caixa) */
+/* App.css - Tema Wall-E (Scroll Livre + Wall-E Visível Agarrado à Borda) */
 
 /* Cores temáticas */
 :root {
@@ -67,9 +67,9 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   position: relative; /* Necessário para o .admin-trigger absoluto */
   max-width: 650px;
   width: 100%;
-  margin: 20px 0;
-  /* --- AJUSTE: Adiciona padding no topo/esquerda para o Wall-E não sobrepor conteúdo --- */
-  padding: 40px 30px 20px 50px; /* Aumentado padding top/left */
+  margin: 40px 0 20px 0; /* Aumentada margem SUPERIOR para compensar Wall-E */
+  /* --- AJUSTE ESPAÇO: Aumenta padding ESQUERDO e SUPERIOR --- */
+  padding: 30px 30px 20px 80px; /* Mais espaço à esquerda (80px) e topo (30px) */
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -79,36 +79,34 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
+  /* Sem min-height ou max-height */
 }
 
 
-/* === Gatilho Admin (Wall-E) - Visível no Canto da Caixa === */
+/* === Gatilho Admin (Wall-E) - Visível Agarrado à Borda === */
 .admin-trigger {
-  /* --- ALTERAÇÃO: Posicionamento Absoluto na Caixa --- */
   position: absolute; /* Relativo ao .app-container */
-  top: -15px;       /* Posição no canto superior esquerdo da caixa */
-  left: -40px;      /* (Ajuste fino conforme necessário) */
-  width: 100px;     /* Tamanho um pouco menor */
-  height: 100px;
+  /* --- AJUSTE POSIÇÃO: Coloca exatamente no canto superior esquerdo --- */
+  top: 0;
+  left: 0;
+  /* --- FIM AJUSTE POSIÇÃO --- */
+  width: 80px;     /* Tamanho um pouco menor para caber melhor */
+  height: 80px;
   background-image: url('./assets/walle.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  transform: rotate(-15deg); /* Mantém a rotação */
+  /* transform: rotate(-15deg); */ /* Removida rotação para "agarrar" melhor */
   z-index: 2;        /* Acima do container */
-  /* --- ALTERAÇÃO: Visível, sem dicas de clique --- */
   opacity: 1;        /* VISÍVEL */
   cursor: default;   /* Sem cursor de link */
-  /* --- FIM ALTERAÇÃO --- */
-
-  /* Transição removida, pois não haverá efeito hover visual */
-  /* transition: transform 0.2s ease-in-out; */
 }
 
 /* Remove qualquer efeito visual no hover */
 .admin-trigger:hover {
   /* Mantém a aparência original */
-  transform: rotate(-15deg); /* Garante que a rotação não mude */
+  /* transform: rotate(-15deg); */ /* Sem rotação */
+  transform: none; /* Garante nenhuma transformação */
   opacity: 1; /* Garante que continue visível */
 }
 
@@ -195,24 +193,24 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   body.gif-active::after { background-image: none; filter: none; }
 
   .app-container {
-    margin: 10px 0;
+    margin: 30px 0 10px 0; /* Mais margem superior mobile */
     width: 95%;
-    /* --- AJUSTE: Padding mobile para Wall-E --- */
-    padding: 30px 15px 15px 35px; /* Ajustado padding top/left */
+    /* --- AJUSTE ESPAÇO MOBILE: Padding para Wall-E --- */
+    padding: 25px 15px 15px 45px; /* Ajustado padding top/left */
   }
 
-  /* --- ALTERAÇÃO: Ajusta Wall-E visível no mobile --- */
+  /* --- ALTERAÇÃO: Wall-E visível agarrado no mobile --- */
   .admin-trigger {
-    width: 60px; /* Menor */
-    height: 60px;
-    top: -5px;   /* Ajusta posição */
-    left: -10px;
-    transform: rotate(-10deg); /* Mantém rotação leve */
-    opacity: 1; /* Garante visibilidade */
-    cursor: default; /* Garante sem cursor especial */
+    width: 50px; /* Menor ainda */
+    height: 50px;
+    top: 0;   /* Agarrado */
+    left: 0;
+    /* transform: rotate(-10deg); */ /* Sem rotação */
+    opacity: 1;
+    cursor: default;
   }
   .admin-trigger:hover {
-     transform: rotate(-10deg); /* Sem scale no hover */
+     transform: none;
      opacity: 1;
   }
   /* --- FIM ALTERAÇÃO --- */
