@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient.js';
 import './App.css';
 
-// Mapa de Nomes Bonitos (limpo, sem caracteres invisíveis)
+// Mapa de Nomes Bonitos
 const prettyFocusNames = {
   // --- Nomes do BANCO NOVO ---
   'Foco_Engenharia': 'Engenharias',
@@ -18,7 +18,7 @@ const prettyFocusNames = {
   'Foco_Comunicacao_Mkt': 'Comunicação e Marketing',
   'Foco_Artes_Design': 'Artes, Design e Arquitetura',
   
-  // --- Nomes do BANCO ANTIGO (do seu último script SQL) ---
+  // --- Nomes do BANCO ANTIGO ---
   'Áreas Técnicas e Científicas': 'Técnicas e Científicas (Antigo)',
   'Áreas Criativas': 'Criativas (Antigo)',
   'Áreas de Saúde e Bem-Estar': 'Saúde e Bem-Estar (Antigo)',
@@ -65,9 +65,10 @@ function App() {
   const [detailedUser, setDetailedUser] = useState(null); 
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
-  
-  // --- NOVO ESTADO ---
-  const [historyRanking, setHistoryRanking] = useState(null); // Armazena o ranking de porcentagens
+  const [historyRanking, setHistoryRanking] = useState(null); 
+  // Estados para o acesso admin secreto
+  const [adminClickCount, setAdminClickCount] = useState(0);
+  const [adminClickTimer, setAdminClickTimer] = useState(null); 
 
   // Efeitos
   useEffect(() => { // Carrega dados iniciais
@@ -75,7 +76,6 @@ function App() {
         setLoading(true);
         setError(null);
         try {
-          // Busca Questões/Opções/Pontuação
           const { data: questionsData, error: questionsError } = await supabase
             .from('questoes')
             .select(`id_q, enunciado, opcoes(id_o, opcao, pontuacao(foco, valor))`);
@@ -83,7 +83,6 @@ function App() {
           if (!questionsData || questionsData.length === 0) throw new Error("Nenhuma questão encontrada.");
           setQuestions(questionsData);
 
-          // Busca Pontuações Máximas
           const { data: maxScoresData, error: maxScoresError } = await supabase
             .from('foco_pontuacao_maxima')
             .select('foco, valor_maximo');
@@ -100,7 +99,6 @@ function App() {
           if (Object.keys(maxScoresMap).length === 0) throw new Error("Nenhuma pontuação máxima válida encontrada.");
           setMaxScores(maxScoresMap);
 
-          // Busca Mapeamento de Cursos
           const { data: coursesData, error: coursesError } = await supabase
             .from('cursos_por_foco')
             .select('foco, curso_nome');
@@ -118,7 +116,6 @@ function App() {
           if (Object.keys(courseMapObject).length === 0) console.warn("Nenhum curso por foco encontrado.");
           setCourseMap(courseMapObject);
 
-          // Carrega histórico local
           const savedResults = localStorage.getItem('testHistory');
           if (savedResults) {
               try {
@@ -206,6 +203,31 @@ function App() {
   // Funções de Fonte
   function increaseFontSize() { setFontSizeAdjustment(adj => Math.min(adj + 2, 8)); }
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
+
+  // --- FUNÇÃO PARA ACESSO ADMIN SECRETO ---
+  function handleSecretAdminTrigger() {
+    const newClickCount = adminClickCount + 1;
+    setAdminClickCount(newClickCount);
+
+    // Limpa o timer anterior se houver
+    if (adminClickTimer) {
+      clearTimeout(adminClickTimer);
+    }
+
+    if (newClickCount >= 5) { // Define o número de cliques necessários (ex: 5)
+      console.log("Acesso admin secreto ativado!");
+      setAdminClickCount(0); // Reseta o contador
+      setView('adminLogin'); // Vai para a tela de login admin
+    } else {
+      // Define um timer para resetar o contador se não houver cliques rápidos
+      const timer = setTimeout(() => {
+        console.log("Timer do clique admin expirou, resetando contador.");
+        setAdminClickCount(0);
+        setAdminClickTimer(null); // Limpa a referência do timer
+      }, 1000); // Tempo em milissegundos (1000ms = 1 segundo)
+      setAdminClickTimer(timer);
+    }
+  }
 
   // --- FUNÇÕES DE ADMIN ---
   
@@ -309,7 +331,7 @@ function App() {
     setView('detailView'); 
     setHistoryDetailsLoading(true);
     setHistoryDetails(null);
-    setHistoryRanking(null); // --- ADICIONADO: Limpa o ranking anterior
+    setHistoryRanking(null);
     setAdminError(null); 
 
     const isOldDb = adminSelectedDb === 'old';
@@ -319,10 +341,8 @@ function App() {
     console.log(`[handleViewHistoryDetails] Usando tabelas: ${respostasTable}, ${questoesTable}, ${opcoesTable}`);
 
     try {
-      // --- INÍCIO DA MODIFICAÇÃO: Buscar o Ranking ---
       if (!isOldDb) {
         console.log(`[handleViewHistoryDetails] Buscando ranking da tabela 'resultado' para id_u = ${userId}`);
-        // Busca o resultado MAIS RECENTE do usuário
         const { data: rankingData, error: rankingError } = await supabase
             .from('resultado')
             .select('ranking_completo')
@@ -334,7 +354,6 @@ function App() {
         
         if (rankingData && rankingData.length > 0 && rankingData[0].ranking_completo) {
           console.log("[handleViewHistoryDetails] Ranking encontrado:", rankingData[0].ranking_completo);
-          // Ordena o ranking por percentual (descendente) antes de salvar no estado
           const sortedRanking = [...rankingData[0].ranking_completo].sort((a, b) => b.percentual - a.percentual);
           setHistoryRanking(sortedRanking);
         } else {
@@ -343,12 +362,9 @@ function App() {
         }
       } else {
           console.log("[handleViewHistoryDetails] Banco antigo selecionado, pulando busca por ranking.");
-          setHistoryRanking(null); // Banco antigo não tem ranking
+          setHistoryRanking(null); 
       }
-      // --- FIM DA MODIFICAÇÃO: Buscar o Ranking ---
 
-
-      // 1. Buscar Respostas (Q&A)
       console.log(`[handleViewHistoryDetails] Buscando respostas da tabela ${respostasTable} para id_u = ${userId}`);
       const { data: respostasData, error: respostasError } = await supabase
         .from(respostasTable)
@@ -362,7 +378,6 @@ function App() {
         console.log(`[handleViewHistoryDetails] Nenhuma resposta encontrada para este usuário.`);
         setHistoryDetails([]); 
       } else {
-        // 2. Coletar IDs
         const questionIds = [...new Set(respostasData.map(r => r.id_q))].filter(id => id != null); 
         const optionIds = [...new Set(respostasData.map(r => r.id_o))].filter(id => id != null);     
         console.log(`[handleViewHistoryDetails] IDs de Questões válidos:`, questionIds);
@@ -374,7 +389,6 @@ function App() {
             setAdminError(prev => prev ? `${prev} ${missingIdsMsg}` : missingIdsMsg);
               setHistoryDetails([]);
           } else {
-            // 3. Buscar Textos
             console.log(`[handleViewHistoryDetails] Buscando textos da tabela ${questoesTable}`);
             const { data: questoesData, error: questoesError } = await supabase
                 .from(questoesTable)
@@ -391,12 +405,10 @@ function App() {
             if (opcoesError) throw new Error(`ao buscar ${opcoesTable}: ${opcoesError.message}`);
             if (!opcoesData || opcoesData.length === 0) throw new Error(`Nenhuma opção encontrada em ${opcoesTable}.`);
 
-            // 4. Mapear Textos
             const questoesMap = new Map((questoesData || []).map(q => [q.id_q, q.enunciado]));
             const opcoesMap = new Map((opcoesData || []).map(o => [o.id_o, o.opcao]));
             console.log(`[handleViewHistoryDetails] Mapa de questões: ${questoesMap.size}, Mapa de opções: ${opcoesMap.size}`);
 
-            // 5. Combinar
             const combinedDetails = respostasData
                 .filter(resposta => questoesMap.has(resposta.id_q) && opcoesMap.has(resposta.id_o)) 
                 .map(resposta => ({
@@ -415,7 +427,7 @@ function App() {
       console.error("[handleViewHistoryDetails] Erro durante a busca:", err);
       setAdminError(`Erro ${err.message}. Verifique o RLS e a consistência dos dados.`);
       setHistoryDetails([]); 
-      setHistoryRanking(null); // Limpa ranking em caso de erro
+      setHistoryRanking(null);
     } finally {
       console.log(`[handleViewHistoryDetails] Finalizando busca.`);
       setHistoryDetailsLoading(false);
@@ -442,6 +454,9 @@ function App() {
       setHistoryRanking(null);
       setAdminError(null);
       setError(null); 
+      setAdminClickCount(0); // Reseta contador de clique secreto
+      if (adminClickTimer) clearTimeout(adminClickTimer); // Limpa timer
+      setAdminClickTimer(null);
       document.documentElement.removeAttribute('data-initial-font-size'); 
       document.documentElement.style.fontSize = ''; 
       setView('register');
@@ -488,9 +503,8 @@ function App() {
       const newAnswers = [...userAnswers.filter(a => a.id_q !== questionId), { id_u: userId, id_q: questionId, id_o: optionId }];
       setUserAnswers(newAnswers);
 
-      if (currentQuestionIndex === questions.length - 1) {
-        handleSubmitTest(newAnswers); 
-      } else {
+      // Não chama mais handleSubmitTest automaticamente aqui, espera o botão Finalizar
+      if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
   }
@@ -545,8 +559,16 @@ function App() {
       setView('quiz'); 
       return;
     }
+      // Validação se TODAS as questões foram respondidas
       if (answers.length !== questions.length) {
-        console.warn(`Número de respostas (${answers.length}) diferente do número de questões (${questions.length}). Processando mesmo assim.`);
+         console.warn(`Número de respostas (${answers.length}) diferente do número de questões (${questions.length}).`);
+         setError("Por favor, responda todas as questões antes de finalizar.");
+         setLoading(false);
+         // Não muda de view, permanece no quiz
+         setView('quiz'); 
+         // Garante que o usuário veja a última questão onde parou
+         setCurrentQuestionIndex(questions.length - 1); 
+         return; 
       }
 
 
@@ -704,7 +726,7 @@ function App() {
     </div>
   );
 
-  // Tela 1: Registro (RESTAURADA AO ORIGINAL + BOTÕES DE FONTE)
+  // Tela 1: Registro (RESTAURADA AO ORIGINAL + BOTÕES DE FONTE + SEM BOTÃO ADMIN)
   const renderRegister = () => (
     <div className="container register-container">
       <h1>Teste Vocacional</h1>
@@ -718,22 +740,18 @@ function App() {
             maxLength="50"
             style={{ width: '80%', padding: '10px', margin: '10px 0', borderRadius: '5px', border: '1px solid #555', background: '#333', color: '#fff' }}
         />
-        {/* Mantendo o botão original que você tinha, que usa CSS global e não uma classe específica */}
+        {/* Mantendo o botão original que você tinha */}
         <button type="submit" disabled={loading || !userNickname.trim()}>
             {loading ? 'Carregando...' : 'Iniciar Teste'}
         </button>
       </form>
       {registrationError && <div className="error-message"><p>{registrationError}</p></div>}
       
-      {/* Mantendo o botão de admin original que você tinha */}
-      <div className="admin-login-link" style={{ marginTop: '15px' }}>
-        <button onClick={() => setView('adminLogin')}>Acesso Admin</button>
-      </div>
+      {/* Botão admin foi removido */}
       
       {pastResults.length > 0 && (
         <div className="past-results" style={{ marginTop: '20px', width: '100%' }}>
             <h3>Resultados Locais</h3>
-            {/* O histórico local não usava as classes do CSS, mantendo original */}
             <ul style={{ listStyle: 'none', padding: '0' }}>
               {pastResults.map((result, index) => (
                 <li key={index} style={{ margin: '5px 0' }}>
@@ -741,7 +759,6 @@ function App() {
                 </li>
               ))}
             </ul>
-            {/* Mantendo a classe original que você tinha */ }
             <button onClick={handleClearHistory} className="clear-history-button" style={{ marginTop: '10px' }}>
                 Limpar Histórico Local
             </button>
@@ -758,16 +775,19 @@ function App() {
     if (loading && questions.length === 0) {
       return <div className="loading">Carregando questões...</div>;
     }
+    // Mostra erro GERAL se houver e as questões não carregaram
     if (error && questions.length === 0) {
       return <div className="error-message"><p>{error}</p></div>;
     }
-    if (!questions || questions.length === 0) {
+    // Mensagem específica se não houver questões
+    if (!loading && questions.length === 0 && !error) {
       return <div className="error-message"><p>Nenhuma questão encontrada.</p></div>;
     }
 
     const currentQuestion = questions[currentQuestionIndex];
     if (!currentQuestion) {
-      return <div className="error-message"><p>Erro ao carregar a questão atual.</p></div>;
+      // Evita erro se o índice estiver fora do range momentaneamente
+      return <div className="loading">Carregando questão...</div>; 
     }
 
     const selectedAnswer = userAnswers.find(a => a.id_q === currentQuestion.id_q);
@@ -777,7 +797,9 @@ function App() {
         <h2>Questão {currentQuestionIndex + 1} de {questions.length}</h2>
         <p className="question-enunciado" style={{ fontSize: '1.1rem', color: 'var(--eve-branco)', margin: '20px 0' }}>{currentQuestion.enunciado}</p>
         
-        {/* --- CORREÇÃO DE CLASSE (de 'options-grid' para 'option-buttons-container') --- */}
+        {/* Mostra erro específico do handleSubmit aqui */}
+        {error && view === 'quiz' && <div className="error-message"><p>{error}</p></div>}
+
         <div className="option-buttons-container">
             {(currentQuestion.opcoes || []).map(option => (
               <button
@@ -790,32 +812,39 @@ function App() {
             ))}
         </div>
         
-        {/* --- CORREÇÃO DE CLASSE (de 'navigation-buttons' para 'extra-buttons') --- */}
         <div className="extra-buttons">
             {currentQuestionIndex > 0 && (
               <button onClick={handleBack} className="back-button">
                 Voltar
               </button>
             )}
-            {currentQuestionIndex === questions.length - 1 && selectedAnswer && (
-              <button onClick={() => handleSubmitTest(userAnswers)} className="restart-button" disabled={loading}>
+            {/* Botão Finalizar aparece apenas na última questão */}
+            {currentQuestionIndex === questions.length - 1 && (
+              <button 
+                onClick={() => handleSubmitTest(userAnswers)} 
+                className="restart-button" // Usando a classe que você já tinha estilizado
+                disabled={loading || userAnswers.length !== questions.length} // Desabilita se não respondeu tudo
+                title={userAnswers.length !== questions.length ? "Responda todas as questões para finalizar" : ""}
+              >
                 {loading ? 'Processando...' : 'Finalizar Teste'}
               </button>
             )}
         </div>
         
-        {/* === REQUISITO: Botões de fonte removidos daqui === */}
+        {/* Botões de fonte removidos daqui */}
       </div>
     );
   };
 
   // Tela 3: Resultado (REMOÇÃO DOS BOTÕES DE FONTE)
   const renderResult = () => {
-    if (loading) {
+    if (loading && !finalResult) { // Mostra loading só se ainda não tiver resultado
       return <div className="loading">Processando seu resultado...</div>;
     }
     if (!finalResult) {
-      return <div className="error-message"><p>Erro ao exibir resultado. {error}</p></div>;
+      // Se houve erro no handleSubmitTest, ele será exibido aqui ao voltar pra tela de quiz
+      // Se chegou aqui sem resultado e sem loading, é um erro inesperado
+      return <div className="error-message"><p>Erro ao exibir resultado.</p></div>;
     }
 
     const prettyFoco = prettyFocusNames[finalResult.foco] || finalResult.foco;
@@ -862,7 +891,7 @@ function App() {
             </button>
         </div>
         
-        {/* === REQUISITO: Botões de fonte removidos daqui === */}
+        {/* Botões de fonte removidos daqui */}
       </div>
     );
   };
@@ -933,16 +962,14 @@ function App() {
     </div>
   );
 
-// Tela 6: Histórico Admin (CORRIGIDA - ESTA ERA A CAUSA DO BUG)
-const renderHistory = () => (
+  // Tela 6: Histórico Admin (CORRIGIDA)
+  const renderHistory = () => (
     <div className="container history-container">
       <h1>Histórico - Banco {adminSelectedDb === 'old' ? 'Antigo' : 'Novo'}</h1>
       {historyLoading && <div className="loading">Carregando histórico...</div>}
       {adminError && <div className="error-message"><p>{adminError}</p></div>}
       
       {!historyLoading && allDbResults.length > 0 && (
-          
-          /* --- CORREÇÃO DE CLASSE --- */
           <ul className="result-list">
             {allDbResults.map((result) => (
               <li key={`${result.id_u}-${result.date}-${result.time}`} className="result-item">
@@ -961,7 +988,6 @@ const renderHistory = () => (
               </li>
             ))}
           </ul>
-          
       )}
 
       {!historyLoading && allDbResults.length === 0 && !adminError && (
@@ -977,10 +1003,10 @@ const renderHistory = () => (
         </button>
       </div>
     </div>
-);
+  );
 
-// Tela 7: Detalhes do Histórico (CORRIGIDA - ESTA ERA A CAUSA DO BUG)
-const renderDetailView = () => {
+  // Tela 7: Detalhes do Histórico (CORRIGIDA)
+  const renderDetailView = () => {
     if (!detailedUser) {
       setView('history'); 
       return null;
@@ -1011,7 +1037,6 @@ const renderDetailView = () => {
             <div style={{ width: '100%' }}>
               <h3 style={{ color: 'var(--amarelo-wall-e)' }}>Respostas Dadas</h3>
               
-              {/* --- CORREÇÃO DE CLASSE --- */}
               <ul className="history-details-list">
                 {historyDetails.map((item, index) => (
                     <li key={index} className="history-detail-item">
@@ -1044,12 +1069,14 @@ const renderDetailView = () => {
         </div>
       </div>
     );
-};
+  };
 
 
   // --- RENDERIZAÇÃO PRINCIPAL ---
   
   const renderCurrentView = () => {
+    // Mostra erro GERAL apenas se não for um erro específico de login/registro
+    // E se não estivermos no quiz (onde o erro é mostrado dentro de renderQuiz)
     if (error && view !== 'adminLogin' && view !== 'register' && view !== 'quiz') {
       return (
           <div className="container error-container">
@@ -1064,6 +1091,7 @@ const renderDetailView = () => {
       );
     }
 
+    // Mostra loading inicial apenas nas telas de registro ou quiz, ANTES das questões carregarem
     if (loading && questions.length === 0 && (view === 'register' || view === 'quiz')) {
       return <div className="loading">Carregando dados iniciais...</div>;
     }
@@ -1079,7 +1107,7 @@ const renderDetailView = () => {
         return renderAdminDbSelect();
       case 'history':
         return renderHistory();
-      case 'detailView':
+      case 'detailView': 
         return renderDetailView();
       case 'register':
       default:
@@ -1090,8 +1118,12 @@ const renderDetailView = () => {
   // O retorno final do componente App
   return (
     <div className="app-container">
-      {/* === REQUISITO: Imagem do Wall-E não clicável === */}
-      <div className="admin-trigger"></div>
+      {/* === Adicionado onClick para o trigger secreto === */}
+      <div 
+        className="admin-trigger" 
+        onClick={handleSecretAdminTrigger} 
+        title="" /* Remove tooltip */
+      ></div> 
       
       {renderCurrentView()}
     </div>
