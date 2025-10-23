@@ -66,8 +66,8 @@ body.question-page {
   width: 90%;
   margin: 20px auto;
   /* CORREÇÃO DE PADDING (DESKTOP): 
-     Aumenta o padding da esquerda de 30px para 130px 
-     para compensar o Wall-E (120px) em todas as telas.
+      Aumenta o padding da esquerda de 30px para 130px 
+      para compensar o Wall-E (120px) em todas as telas.
   */
   padding: 10px 30px 10px 130px;
   background-color: var(--cinza-escuro);
@@ -263,6 +263,7 @@ h1 {
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%; /* Garante que ocupe o espaço */
+  box-sizing: border-box;
 }
 
 /* Item da Lista de Histórico (Re-estilizado) */
@@ -495,8 +496,8 @@ h1 {
 }
 
 /* *** NOVA REGRA PARA CORRIGIR O SCROLL NO DESKTOP ***
-   Tira o .app-container do 'position: absolute' nas páginas
-   de histórico, que são muito longas.
+    Tira o .app-container do 'position: absolute' nas páginas
+    de histórico, que são muito longas.
 */
 body.history-page .app-container,
 body.detail-page .app-container {
@@ -532,9 +533,9 @@ body.detail-page .app-container {
     width: 95%;
     min-width: unset;
     /* CORREÇÃO DE PADDING (MOBILE):
-       O Wall-E mobile invade 90px (width 100px, left -10px).
-       Aumentamos o padding-left para 95px (80px + 15px) 
-       para compensar em todas as telas mobile.
+        O Wall-E mobile invade 90px (width 100px, left -10px).
+        Aumentamos o padding-left para 95px (80px + 15px) 
+        para compensar em todas as telas mobile.
     */
     padding: 15px 15px 15px 95px;
   }
