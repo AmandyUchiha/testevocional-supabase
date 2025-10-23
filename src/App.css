@@ -254,14 +254,16 @@ h1 {
 }
 
 /* Lista de Resultados (com Scroll) */
+/* ESTA É A REGRA QUE FAZ O SCROLL DENTRO DA CAIXA */
 .result-list {
   list-style: none;
   padding: 0 10px;
   margin-top: 20px;
   text-align: center;
-  max-height: 450px;
-  overflow-y: auto;
+  max-height: 450px; /* Altura máxima da lista */
+  overflow-y: auto;  /* Adiciona o scroll */
   overflow-x: hidden;
+  width: 100%; /* Garante que ocupe o espaço */
 }
 
 /* Item da Lista de Histórico (Re-estilizado) */
@@ -522,6 +524,16 @@ h1 {
     */
     padding: 15px 15px 15px 95px;
   }
+  
+  /* Na tela de histórico, o container não deve ser 'absolute' */
+  body.history-page .app-container {
+      position: relative;
+      top: auto;
+      left: auto;
+      transform: none;
+      margin-top: 20px;
+  }
+
 
   /* Ajusta gatilho Wall-E */
   .admin-trigger {
