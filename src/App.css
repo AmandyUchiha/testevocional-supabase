@@ -293,10 +293,6 @@ h1 {
 }
 
 /* Sugestões */
-/* NOTA: O estilo da lista de sugestões agora é controlado 
-  dentro do .suggestions-container (ver seção ADIÇÕES App.jsx)
-  para que funcione dentro da nova caixa.
-*/
 .suggestions ul {
   list-style: none;
   padding: 0;
@@ -325,6 +321,7 @@ h1 {
 /* Inputs (Registro e Admin) */
 .register-container input[type="text"],
 .admin-login-container input[type="text"],
+/* *** ESTA LINHA FOI CORRIGIDA (adicionado '=') *** */
 .admin-login-container input[type="password"] {
   width: 80%;
   padding: 12px;
@@ -436,8 +433,7 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
-/* NOVO: Estilo para a caixa de Sugestões (Top 7) */
-/* Instrução: Veja a Correção 1. Você DEVE mudar seu JSX. */
+/* Estilo para a caixa de Sugestões (Top 7) */
 .suggestions-container {
   width: 100%;
   margin-top: 20px;
@@ -473,9 +469,7 @@ h1 {
 }
 
 
-/* NOVO: Estilos para Ranking e Cursos no Histórico Admin 
-   Usado na Parte 2 (JSX)
-*/
+/* Estilos para Ranking e Cursos no Histórico Admin */
 .result-item-details {
   margin-top: 10px;
   padding-top: 10px;
@@ -557,16 +551,15 @@ h1 {
     line-height: 1.4; /* Ajusta a altura da linha para fontes menores */
   }
 
-  /* *** ESTA É A CORREÇÃO PARA O BANCO ANTIGO CORTADO ***
-    Muda o layout do item do banco antigo para mobile.
-    - 'display: block' faz o label (<strong>) ir para a linha de cima.
-    - 'min-width: unset' remove a largura mínima do desktop.
-    O resultado é um layout empilhado (Label / Valor) que cabe na caixa.
+  /* *** CORREÇÃO AGRESSIVA PARA BANCO ANTIGO CORTADO (MOBILE) ***
+    Usamos '!important' para forçar o navegador (mesmo com cache)
+    a aplicar o layout de bloco, impedindo o corte do texto.
+    (Agora o navegador vai conseguir ler esta regra!)
   */
   .result-item div strong {
-    display: block;
-    min-width: unset;
-    margin-bottom: 3px; /* Pequeno espaço entre o label e o valor */
+    display: block !important;
+    min-width: unset !important;
+    margin-bottom: 3px; 
   }
 
   /* Ajusta o padding de cada linha (div) para o novo layout empilhado */
