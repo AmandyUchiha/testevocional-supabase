@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Scroll INTERNO no Container - Posição Original + Estilo Histórico Novo) */
+/* App.css - Tema Wall-E (Scroll INTERNO no Container - Posição Corrigida) */
 
 /* Cores temáticas */
 :root {
@@ -19,7 +19,6 @@
 }
 
 /* === Configurações Globais e de Fundo === */
-/* (Mantidas EXATAMENTE como no seu original) */
 html {
   box-sizing: border-box;
 }
@@ -30,15 +29,14 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  /* overflow-y: auto; */ /* REMOVIDO/Comentado - Scroll será no container */
   overflow-x: hidden;
   font-family: 'Orbitron', sans-serif;
   background-color: var(--cor-fundo-perguntas);
-  position: relative; /* Mantido por precaução */
+  position: relative;
   z-index: 0;
 }
 
-/* Fundo GIF borrado (Mantido igual) */
+/* Fundo GIF borrado base */
 body.gif-active::after {
   content: '';
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -48,28 +46,36 @@ body.gif-active::after {
   background-position: center; background-attachment: fixed;
   filter: blur(5px);
 }
-body.question-page.gif-active::after { background-image: none; filter: none; }
-body.question-page { background-color: var(--cor-fundo-perguntas); }
-body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
-  content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-  background-image: url('./assets/fundo.gif'); background-repeat: no-repeat; background-size: cover;
-  background-position: center; background-attachment: fixed; filter: blur(5px);
+
+/* CORREÇÃO/OTIMIZAÇÃO:
+   - Remove o fundo GIF e o blur na 'question-page'
+   - Garante que 'detail-page' use a regra base de 'gif-active'
+*/
+body.question-page.gif-active::after {
+    background-image: none;
+    filter: none;
+}
+/* Garante a cor de fundo primária para a página de perguntas */
+body.question-page {
+    background-color: var(--cor-fundo-perguntas);
 }
 
+/* A regra 'body.detail-page.gif-active::after' estava redundante
+   e foi removida, pois a regra 'body.gif-active::after' já a cobre.
+   Se a intenção for SEMPRE ter o GIF na detail-page (mesmo que a
+   question-page não tenha), a regra base é suficiente.
+*/
 
 /* === Contêiner Principal === */
 .app-container {
-  /* --- MANTIDO: Posicionamento original --- */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* --- FIM MANTIDO --- */
 
   max-width: 650px;
   width: 90%;
-  /* margin: 20px auto; */ /* Removido - não relevante com position absolute */
-  /* --- AJUSTE ESPAÇO WALLE (Mantido da sua versão) --- */
+  /* AJUSTE ESPAÇO WALLE (Mantido da sua versão) */
   padding: 40px 30px 20px 60px; /* Mais espaço esquerdo/superior para o Wall-E */
   background-color: var(--cinza-escuro);
   border-radius: 12px;
@@ -78,37 +84,35 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
   text-align: center;
   display: flex;
   flex-direction: column;
-  /* justify-content: center; */ /* Removido para conteúdo começar do topo */
   align-items: center;
   box-sizing: border-box;
 
-  /* --- AJUSTE SCROLL: Permite scroll DENTRO do container --- */
+  /* AJUSTE SCROLL: Permite scroll DENTRO do container */
   max-height: 90vh; /* Limita a altura máxima do container */
   overflow-y: auto; /* Adiciona scrollbar vertical SE o conteúdo interno exceder max-height */
-  /* --- FIM AJUSTE SCROLL --- */
 
-  min-height: 400px; /* Mantém altura mínima original */
+  min-height: 400px;
 }
 
 
 /* === Gatilho Admin (Wall-E) === */
 .admin-trigger {
-  /* --- MANTIDO: Posição original relativa ao .app-container --- */
   position: absolute;
-  top: -6px;
-  left: -30px;
+  /* --- CORRIGIDO: Posição DENTRO do padding do container --- */
+  top: 10px;    /* Estava -6px (Fora) */
+  left: 10px;    /* Estava -30px (Fora) */
+  /* --- FIM CORREÇÃO --- */
   width: 150px;
   height: 150px;
   background-image: url('./assets/walle.png');
   background-size: contain; background-repeat: no-repeat; background-position: center;
   transform: rotate(-15deg);
   z-index: 2;
-  /* --- FIM MANTIDO --- */
 
-  /* --- MANTIDO: Visível, sem dicas de clique --- */
+  /* --- CORRIGIDO: Visível, COM dica de clique --- */
   opacity: 1;
-  cursor: default;
-  /* --- FIM MANTIDO --- */
+  cursor: pointer; /* Estava 'default' */
+  /* --- FIM CORREÇÃO --- */
 }
 
 /* Remove efeito hover visual (Mantido) */
@@ -119,7 +123,6 @@ body.detail-page.gif-active::after { /* Garante GIF na tela de detalhes */
 
 
 /* === Estilos Comuns (Títulos, Botões, etc.) === */
-/* (Mantidos EXATAMENTE iguais ao que você forneceu) */
 h1 { font-size: 2rem; margin-bottom: 20px; color: var(--amarelo-wall-e); text-shadow: 1px 1px 2px #000; }
 button { font-family: 'Orbitron', sans-serif; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; font-weight: bold; }
 button:disabled { cursor: not-allowed; opacity: 0.6; }
@@ -139,7 +142,7 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 
 /* === Estilos Específicos de Telas === */
 
-/* Tela de Resultado (Mantido igual) */
+/* Tela de Resultado */
 .result-text { margin-bottom: 10px; }
 .main-result { font-size: 1.5rem; font-weight: bold; margin: 20px 0; color: var(--amarelo-wall-e); }
 .suggestions ul { list-style: none; padding: 0; }
@@ -148,7 +151,6 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 /* Tela de Histórico e Detalhes - Layout */
 .history-page .app-container,
 .detail-page .app-container {
-  /* height: auto; */ /* Não necessário com max-height */
   justify-content: flex-start; /* Alinha listas no topo */
 }
 
@@ -158,7 +160,6 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   padding: 10px; /* Espaçamento interno */
   margin: 15px 0;
   width: 100%;
-  /* Sem overflow-y ou max-height AQUI, scroll é no .app-container */
   border: 1px solid #444; /* Borda sutil */
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2); /* Fundo levemente escuro */
@@ -180,10 +181,10 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 .history-nickname-button {
   background: none; border: none; padding: 0; margin: 0;
   color: #87CEFA; /* Azul claro */
-  text-decoration: underline; cursor: pointer; /* Cursor pointer AQUI é intencional */
+  text-decoration: underline; cursor: pointer;
   font-size: inherit; font-weight: bold;
 }
-.history-nickname-button:hover { color: #ADD8E6; } /* Efeito hover sutil */
+.history-nickname-button:hover { color: #ADD8E6; }
 /* --- FIM NOVO ESTILO HISTÓRICO --- */
 
 
@@ -193,7 +194,6 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   padding: 10px;
   margin: 15px 0;
   width: 100%;
-  /* Sem overflow-y ou max-height AQUI */
   border: 1px solid #444;
   border-radius: 5px;
   background-color: rgba(0, 0, 0, 0.2);
@@ -209,60 +209,59 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
   border-left: 5px solid var(--verde-planta); /* Verde para diferenciar */
 }
 .history-detail-item p { margin: 5px 0; font-size: 0.9rem; }
-.history-detail-item p strong { color: var(--amarelo-wall-e); } /* Destaca "Pergunta:" e "Resposta:" */
+.history-detail-item p strong { color: var(--amarelo-wall-e); }
 /* --- FIM NOVO ESTILO DETALHES --- */
 
 
-/* Mensagens de Carregamento e Erro (Mantidos iguais) */
+/* Mensagens de Carregamento e Erro */
 .loading { color: var(--amarelo-wall-e); font-weight: bold; margin: 20px 0; font-size: 1.1rem; }
 .error-message { width: 100%; background-color: rgba(255, 76, 76, 0.7); color: white; border: 1px solid #ff4c4c; padding: 10px; border-radius: 8px; margin: 15px 0; text-align: center; }
 .error-message p { margin: 0; font-weight: bold; }
 
 
 /* === Responsividade (Telas Pequenas) === */
-@media (max-width: 700px) { /* Aumentado breakpoint */
+@media (max-width: 700px) {
   body { padding: 10px; }
+  /* Opcional: Manter o fundo GIF ativo no mobile ou não,
+     dependendo da performance. Você removeu aqui: */
   body.gif-active::after { background-image: none; filter: none; }
 
   .app-container {
-    /* --- MANTIDO: Posicionamento absoluto mobile --- */
     position: absolute;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 95%;
-    /* --- AJUSTE ESPAÇO WALLE Mobile (Mantido) --- */
     padding: 30px 15px 15px 35px;
-    /* --- AJUSTE SCROLL Mobile --- */
-    max-height: 95vh; /* Limita altura */
-    overflow-y: auto; /* Scroll INTERNO no mobile */
-    /* --- FIM AJUSTE SCROLL --- */
+    max-height: 95vh;
+    overflow-y: auto;
     margin: 0 auto;
-    min-height: unset; /* Remove min-height no mobile */
+    min-height: unset;
   }
 
-  /* --- MANTIDO: Wall-E visível posição original no mobile --- */
+  /* --- CORRIGIDO: Wall-E visível posição DENTRO no mobile --- */
   .admin-trigger {
     width: 100px;
     height: 100px;
-    top: -3px;
-    left: -10px;
+    /* --- CORRIGIDO: Posição DENTRO do padding mobile --- */
+    top: 5px;
+    left: 5px;
+    /* --- FIM CORREÇÃO --- */
     transform: rotate(-10deg);
     opacity: 1;
-    cursor: default;
+    cursor: pointer;
   }
   .admin-trigger:hover {
-     transform: rotate(-10deg);
-     opacity: 1;
+       transform: rotate(-10deg);
+       opacity: 1;
   }
-  /* --- FIM MANTIDO --- */
+  /* --- FIM CORREÇÃO --- */
 
-  /* Outros ajustes (Mantidos iguais) */
+  /* Outros ajustes */
   h1 { font-size: 1.4rem; }
   .option-button { width: 95%; font-size: 0.9rem; }
   .main-result { font-size: 1.2rem; }
   .extra-buttons { gap: 8px; }
   .back-button, .history-button, .clear-history-button, .back-to-test-button, .restart-button { flex-basis: 48%; font-size: 0.85rem; padding: 8px 10px; }
   .font-toggle-button { width: 45px; padding: 5px; font-size: 0.9rem; }
-  /* Ajusta listas no mobile (sem scroll interno nelas) */
   .result-list, .history-details-list { padding: 5px; }
   .result-item, .history-detail-item { padding: 8px 10px; font-size: 0.85rem; }
 }
