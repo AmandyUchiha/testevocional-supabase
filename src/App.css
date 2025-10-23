@@ -321,7 +321,7 @@ h1 {
 /* Inputs (Registro e Admin) */
 .register-container input[type="text"],
 .admin-login-container input[type="text"],
-/* *** ESTA LINHA FOI CORRIGIDA (adicionado '=') *** */
+/* *** A LINHA COM ERRO FOI CORRIGIDA *** */
 .admin-login-container input[type="password"] {
   width: 80%;
   padding: 12px;
@@ -552,9 +552,8 @@ h1 {
   }
 
   /* *** CORREÇÃO AGRESSIVA PARA BANCO ANTIGO CORTADO (MOBILE) ***
-    Usamos '!important' para forçar o navegador (mesmo com cache)
-    a aplicar o layout de bloco, impedindo o corte do texto.
-    (Agora o navegador vai conseguir ler esta regra!)
+    Agora que o erro de sintaxe foi corrigido, o navegador vai
+    finalmente ler esta regra.
   */
   .result-item div strong {
     display: block !important;
