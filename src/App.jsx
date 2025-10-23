@@ -58,10 +58,10 @@ function App() {
   const [detailedUser, setDetailedUser] = useState(null); 
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
-  const [historyRanking, setHistoryRanking] = useState(null);
+  const [historyRanking, setHistoryRanking] = useState(null); 
   const [historySuggestions, setHistorySuggestions] = useState(null); // NOVO: Estado para as sugestões
 
-  // Efeitos (sem alterações)
+  // Efeitos
   useEffect(() => { 
     async function getInitialData() {
         setLoading(true); setError(null);
@@ -73,9 +73,7 @@ function App() {
           const { data: cData, error: cError } = await supabase.from('cursos_por_foco').select('foco, curso_nome');
           if (cError) throw cError; if (!cData) throw new Error("Nenhum curso."); const cMapObj = cData.reduce((acc, i) => { if (i.foco && i.curso_nome) { if (!acc[i.foco]) acc[i.foco] = []; acc[i.foco].push(i.curso_nome); } return acc; }, {}); 
           
-          // --- DEBUG ADICIONADO ---
-          console.log("MAPA DE CURSOS CARREGADO:", cMapObj); 
-          // --------------------------
+          console.log("MAPA DE CURSOS CARREGADO:", cMapObj); // DEBUG
 
           setCourseMap(cMapObj);
           const savedResults = localStorage.getItem('testHistory'); if(savedResults){try{setPastResults(JSON.parse(savedResults));}catch(e){console.error("Erro hist local:",e);localStorage.removeItem('testHistory');}}
@@ -89,7 +87,6 @@ function App() {
     return () => { if(view!=='history'&&isMasterAdmin&&adminSelectedDb){setAllDbResults([]);}}; 
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
-  // ✅ CORRIGIDO: Este useEffect aplica as classes CSS que você pediu
   useEffect(() => { /* Classes do body */
     const bCL=document.body.classList; const cM={quiz:'question-page',register:'nickname-page',adminLogin:'nickname-page',admin_db_select:'nickname-page',result:'final-page',history:'history-page',localHistory:'history-page',detailView:'detail-page'}; Object.values(cM).forEach(c=>bCL.remove(c)); bCL.remove('gif-active'); const cC=cM[view]; if(cC){bCL.add(cC);if(view!=='quiz'){bCL.add('gif-active');}}else if(view!=='quiz'){bCL.add('gif-active');} return()=>{Object.values(cM).forEach(c=>bCL.remove(c));bCL.remove('gif-active');};
   }, [view]);
@@ -103,7 +100,7 @@ function App() {
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
   // --- FUNÇÕES DE ADMIN ---
-  async function handleAdminLogin(e) { /* ... */ e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); } }
+  async function handleAdminLogin(e) { e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); } }
   
   async function fetchAllResults(dbSource) {
     let d, e;
@@ -147,14 +144,13 @@ function App() {
         setHistoryLoading(false);
     }
     return r;
-}
+  }
 
-  // ATUALIZADO: com console.log para depuração
   async function handleViewHistoryDetails(userId, userNickname) { 
     if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } 
     setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); 
     setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); 
-    setHistorySuggestions(null); // NOVO: Reseta o estado
+    setHistorySuggestions(null); 
     setAdminError(null); 
     const isOld = adminSelectedDb === 'old'; 
     const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; 
@@ -173,7 +169,7 @@ function App() {
           console.log("ADMIN DETALHES: Ranking (sR) obtido:", sR); // DEBUG
           setHistoryRanking(sR);
           
-          // --- NOVO: Lógica para calcular as 7 sugestões ---
+          // --- Lógica para calcular as 7 sugestões ---
           try {
             const top3 = sR.slice(0, 3);
             console.log("ADMIN DETALHES: Top 3 focos:", top3); // DEBUG
@@ -185,7 +181,6 @@ function App() {
               console.log("ADMIN DETALHES: Focos a pesquisar:", search); // DEBUG
               console.log("ADMIN DETALHES: Usando courseMap:", courseMap); // DEBUG (CRUCIAL!)
 
-              // Usa o 'courseMap' do estado
               if (search[0]) pool.push(...(courseMap[search[0]] || [])); 
               if (search[1]) pool.push(...(courseMap[search[1]] || [])); 
               if (search[2]) pool.push(...(courseMap[search[2]] || []));
@@ -199,19 +194,19 @@ function App() {
             }
           } catch (calcErr) {
             console.error("Erro ao calcular sugestões do histórico:", calcErr);
-            setHistorySuggestions(null); // Falha no cálculo
+            setHistorySuggestions(null); 
           }
-          // --- FIM DA NOVA LÓGICA ---
+          // --- FIM DA LÓGICA ---
 
         }else{
           console.log("ADMIN DETALHES: Nenhum ranking encontrado no DB para este usuário."); // DEBUG
           setHistoryRanking(null);
-          setHistorySuggestions(null); // NOVO: Reseta se não houver ranking
+          setHistorySuggestions(null); 
         }
       }else{
         console.log("ADMIN DETALHES: Banco antigo, pulando sugestões."); // DEBUG
         setHistoryRanking(null);
-        setHistorySuggestions(null); // NOVO: Reseta se for banco antigo
+        setHistorySuggestions(null); 
       } 
       
       const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); 
@@ -237,7 +232,7 @@ function App() {
       setAdminError(`Erro ${err.message}. RLS.`); 
       setHistoryDetails([]); 
       setHistoryRanking(null);
-      setHistorySuggestions(null); // NOVO: Reseta em caso de erro
+      setHistorySuggestions(null); 
     } finally {
       setHistoryDetailsLoading(false);
     } 
@@ -249,14 +244,14 @@ function App() {
       setCurrentQuestionIndex(0); setFinalResult(null); setIsMasterAdmin(false); 
       setAdminApelido(''); setAdminPassword(''); setAllDbResults([]); setAdminSelectedDb(null);
       setDetailedUser(null); setHistoryDetails(null); setHistoryRanking(null); 
-      setHistorySuggestions(null); // NOVO: Reseta o estado
+      setHistorySuggestions(null); 
       setAdminError(null); setError(null); 
       document.documentElement.removeAttribute('data-initial-font-size'); 
       document.documentElement.style.fontSize = ''; 
       setView('register');
   }
   
-  async function handleRegister(e) { /* ... */ 
+  async function handleRegister(e) { 
       e.preventDefault(); setRegistrationError(null); setError(null);
       if (!userNickname.trim()) { setRegistrationError('Por favor, digite um apelido.'); return; }
       setLoading(true);
@@ -281,16 +276,15 @@ function App() {
       }
   }
 
-  function handleBack() { /* ... */ 
+  function handleBack() { 
       if (currentQuestionIndex > 0) { setCurrentQuestionIndex(currentQuestionIndex - 1); }
   }
 
   function handleRestartTest() { 
-    // Volta para a tela de registro (que é a tela inicial)
     handleGoToRegister(); 
   }
 
-  function handleSaveResult(result) { /* ... */ 
+  function handleSaveResult(result) { 
       try {
         const resultToSave = { nickname: result.nickname, date: result.date, foco: prettyFocusNames[result.foco] || result.foco || '?', sugestoes: result.sugestoes };
         const currentHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
@@ -301,12 +295,12 @@ function App() {
       } catch (e) { console.error("Erro save local:", e); }
   }
 
-  function handleClearHistory() { /* ... */ 
+  function handleClearHistory() { 
       try { setPastResults([]); localStorage.removeItem('testHistory'); } 
       catch (e) { console.error("Erro limpar:", e); setError("Não foi possível limpar."); }
   }
 
-  async function handleSubmitTest(answersToSubmit) { /* ... */ 
+  async function handleSubmitTest(answersToSubmit) { 
     setLoading(true); setError(null); 
     const currentAnswers = answersToSubmit || userAnswers; 
     if (!currentAnswers || currentAnswers.length === 0) { setError("Nenhuma resposta."); setLoading(false); setView('quiz'); return; }
@@ -351,7 +345,6 @@ function App() {
     </div>
   );
 
-  // ✅ CORRIGIDO: Removido estilo inline do input
   const renderRegister = () => (
     <div className="container register-container">
       <h1>Teste Vocacional</h1>
@@ -361,7 +354,6 @@ function App() {
             type="text" value={userNickname}
             onChange={(e) => setUserNickname(e.target.value)}
             placeholder="Seu apelido" maxLength="50"
-            // O estilo agora vem do App.css (classe .register-container input)
         />
         <button type="submit" disabled={loading || !userNickname.trim()} className="start-button">
             {loading ? 'Carregando...' : 'Iniciar Teste'}
@@ -372,7 +364,6 @@ function App() {
     </div>
   );
 
-  // ✅ CORRIGIDO: Removido estilo inline do <p> e ADICIONADO botão de Reiniciar
   const renderQuiz = () => {
     if (loading && questions.length === 0) { return <div className="loading">Carregando...</div>; }
     if (error && questions.length === 0) { return <div className="error-message"><p>{error}</p></div>; }
@@ -383,7 +374,6 @@ function App() {
     return (
         <div className="container question-container">
           <h2>Questão {currentQuestionIndex + 1} / {questions.length}</h2>
-          {/* O estilo agora vem do App.css (classe .question-enunciado) */}
           <p className="question-enunciado">{currentQuestion.enunciado}</p> 
           {error && view === 'quiz' && <div className="error-message"><p>{error}</p></div>} 
           <div className="option-buttons-container"> 
@@ -393,7 +383,6 @@ function App() {
           </div>
           <div className="extra-buttons"> 
               {currentQuestionIndex > 0 && ( <button onClick={handleBack} className="back-button"> Voltar </button> )}
-              {/* REQUISITO ADICIONADO: Botão de Reiniciar Teste */}
               <button onClick={handleRestartTest} className="restart-button"> Reiniciar Teste </button>
           </div>
         </div>
@@ -425,7 +414,6 @@ function App() {
     );
   };
 
-  // ✅ CORRIGIDO: Removido estilos inline
   const renderAdminLogin = () => ( 
     <div className="container admin-login-container">
       <h1>Acesso Mestre</h1>
@@ -435,7 +423,7 @@ function App() {
           onChange={(e)=>setAdminApelido(e.target.value)} 
           placeholder="Apelido Mestre" 
         />
-        <div className="password-wrapper"> {/* Use uma classe para o wrapper, se necessário */}
+        <div className="password-wrapper">
           <input 
             type={showAdminPassword?'text':'password'} 
             value={adminPassword} 
@@ -461,7 +449,9 @@ function App() {
   
   const renderHistory = () => ( <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p className="no-results-message">Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   
-  // ATUALIZADO: Renderiza sugestões e fallback
+  // =================================================================
+  // ATUALIZADO: Renderiza sugestões para "casar" com o CSS
+  // =================================================================
   const renderDetailView = () => { 
     if (!detailedUser) { setView('history'); return null; } 
     return ( 
@@ -473,7 +463,7 @@ function App() {
         
         {/* Ranking (Porcentagens) */}
         {historyRanking&&historyRanking.length>0&&( 
-          <div className="ranking-container"> {/* Use classes */}
+          <div className="ranking-container"> 
             <h3 className="ranking-title">Ranking (DB)</h3>
             <ul className="ranking-list">{historyRanking.map((item,i)=>(
               <li key={i} className="ranking-list-item">
@@ -483,29 +473,34 @@ function App() {
           </div> 
         )}
 
-        {/* NOVO: Bloco para renderizar as 7 sugestões */}
-        {/* SÓ MOSTRA SE FOR BANCO NOVO E NÃO ESTIVER CARREGANDO */}
+        {/* Bloco para renderizar as 7 sugestões (AGORA CORRIGIDO) */}
         {adminSelectedDb === 'new' && !historyDetailsLoading && (
-          <div className="suggestions-container"> {/* Pode usar a classe 'ranking-container' ou criar 'suggestions-container' no CSS */}
-            <h3 className="suggestions-title">Sugestões (Top 7)</h3> {/* Pode usar 'ranking-title' ou 'suggestions-title' */}
-            {historySuggestions && historySuggestions.length > 0 ? (
-              <ul className="suggestions-list"> {/* Pode usar 'ranking-list' ou 'suggestions-list' */}
-                {historySuggestions.map((curso, i) => (
-                  <li key={i} className="suggestion-list-item"> {/* Pode usar 'ranking-list-item' ou 'suggestion-list-item' */}
-                    {curso}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              // --- MENSAGEM ADICIONADA ---
-              <p className="no-results-message">Nenhuma sugestão calculada.</p>
-            )}
+          // 1. Usa o wrapper principal que o CSS espera
+          <div className="suggestions-container"> 
+            {/* 2. Usa o título que o CSS espera */}
+            <h3 className="suggestions-title">Sugestões (Top 7)</h3>
+            
+            {/* 3. Adiciona o wrapper .suggestions que o CSS espera */}
+            <div className="suggestions">
+              {historySuggestions && historySuggestions.length > 0 ? (
+                // 4. Usa um UL/LI simples, pois o CSS cuida da estilização
+                <ul>
+                  {historySuggestions.map((curso, i) => (
+                    <li key={i}>
+                      {curso}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="no-results-message">Nenhuma sugestão calculada.</p>
+              )}
+            </div>
           </div>
         )}
         
         {/* Respostas */}
         {historyDetails&&historyDetails.length>0&&( 
-          <div className="responses-container"> {/* Use classes */}
+          <div className="responses-container"> 
             <h3 className="responses-title">Respostas</h3>
             <ul className="history-details-list">{historyDetails.map((item,i)=>( 
               <li key={i} className="history-detail-item">
@@ -521,7 +516,6 @@ function App() {
         }
         
         <div className="extra-buttons">
-          {/* ATUALIZADO: Limpa o novo estado ao voltar */}
           <button onClick={()=>{setView('history');setHistoryDetails(null);setDetailedUser(null);setHistoryRanking(null);setHistorySuggestions(null);setAdminError(null);}} className="back-button">
             Voltar
           </button>
@@ -529,6 +523,9 @@ function App() {
       </div> 
     ); 
   };
+  // =================================================================
+  // FIM DA ATUALIZAÇÃO
+  // =================================================================
 
   // === TELA: Histórico Local (sem alterações) ===
   const renderLocalHistory = () => (
