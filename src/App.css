@@ -124,8 +124,6 @@ body.question-page {
 }
 /* ** FIM DA MODIFICAÇÃO CSS ** */
 
-/* ... (Mantenha todas as outras regras do App.css) ... */
-
 /* Ajuste no Media Query para manter a discrição no mobile */
 @media (max-width: 650px) {
     /* ... (outras regras mobile) ... */
@@ -283,6 +281,24 @@ h1 {
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
+/* --- ADIÇÃO: Estilização da Barra de Rolagem (Tema Wall-E) --- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--carvao-wall-e);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--amarelo-wall-e);
+  border-radius: 10px;
+  border: 2px solid var(--carvao-wall-e);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dourado-claro);
+}
+
 /* Resultado */
 .result-text {
   margin-bottom: 10px;
@@ -295,22 +311,49 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
+/* MODIFICADO: Lista de Resultados (com Scroll) */
 .result-list {
   list-style: none;
-  padding: 0;
+  padding: 0 10px; /* Adiciona padding para a barra de rolagem */
   margin-top: 20px;
   text-align: center;
+  /* --- Adições de Scroll --- */
+  max-height: 450px; /* Altura máxima antes de rolar */
+  overflow-y: auto;  /* Habilita o scroll vertical */
+  overflow-x: hidden;/* Previne scroll horizontal */
 }
 
+/* RE-ESTILIZADO: Item da Lista de Histórico */
 .result-item {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   background-color: var(--carvao-wall-e);
-  padding: 12px;
+  padding: 12px 15px;
   border-radius: 8px;
   color: var(--eve-branco);
-  box-shadow: 0 0 10px rgba(0, 119, 190, 0.3);
-  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 0.95rem;
   line-height: 1.6;
+  text-align: left; /* Alinha o texto à esquerda */
+  border-left: 5px solid var(--amarelo-wall-e); /* Destaque temático */
+  transition: all 0.2s ease-in-out;
+}
+
+.result-item:hover {
+  background-color: var(--cinza-escuro);
+  border-left-color: var(--dourado-claro);
+  transform: translateX(5px); /* Efeito sutil de hover */
+}
+
+/* NOVO: Adicionado para organizar os 'divs' dentro do .result-item */
+.result-item div {
+   padding: 2px 0;
+}
+
+/* NOVO: Adicionado para destacar os rótulos (Data, Apelido, Foco) */
+.result-item div strong {
+   color: var(--amarelo-wall-e);
+   min-width: 70px; /* Alinha os valores */
+   display: inline-block;
 }
 
 /* Sugestões */
@@ -434,11 +477,16 @@ h1 {
   text-align: left;
 }
 
+/* MODIFICADO: Listas de Detalhes (com Scroll) */
 .ranking-list,
 .history-details-list {
   list-style: none;
   padding: 0;
   text-align: left;
+  /* --- Adições de Scroll --- */
+  max-height: 250px; /* Altura menor, pois podem haver duas caixas */
+  overflow-y: auto;  /* Habilita o scroll vertical */
+  padding-right: 10px; /* Espaço para a barra de rolagem */
 }
 
 .ranking-list-item {
