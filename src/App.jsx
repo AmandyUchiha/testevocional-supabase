@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient.js';
-// A LINHA 'import ./App.css' FOI REMOVIDA DAQUI
+import './App.css'; // Mantenha esta linha!
 
 // Mapa de Nomes Bonitos
 const prettyFocusNames = {
@@ -82,7 +82,7 @@ function App() {
     return () => { if(view!=='history'&&isMasterAdmin&&adminSelectedDb){setAllDbResults([]);}}; 
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
-  // Este useEffect aplica as classes CSS (do index.css)
+  // Este useEffect aplica as classes CSS
   useEffect(() => { /* Classes do body */
     const bCL=document.body.classList; const cM={quiz:'question-page',register:'nickname-page',adminLogin:'nickname-page',admin_db_select:'nickname-page',result:'final-page',history:'history-page',localHistory:'history-page',detailView:'detail-page'}; Object.values(cM).forEach(c=>bCL.remove(c)); bCL.remove('gif-active'); const cC=cM[view]; if(cC){bCL.add(cC);if(view!=='quiz'){bCL.add('gif-active');}}else if(view!=='quiz'){bCL.add('gif-active');} return()=>{Object.values(cM).forEach(c=>bCL.remove(c));bCL.remove('gif-active');};
   }, [view]);
@@ -345,7 +345,8 @@ function App() {
         </button>
       </form>
       {adminError&&<div className="error-message"><p>{adminError}</p></div>}
-  f      <div className="extra-buttons">
+      {/* ERRO CORRIGIDO: Removido 'f' daqui */}
+      <div className="extra-buttons">
         <button onClick={handleGoToRegister} className="back-button">Voltar</button>
       </div>
     </div> 
@@ -401,7 +402,8 @@ function App() {
     <div className="container local-history-container"> 
         <h1>Histórico Local</h1>
         {error && view === 'localHistory' && <div className="error-message"><p>{error}</p></div>} 
-s      {pastResults.length === 0 && !error && (
+        {/* ERRO CORRIGIDO: Removido 's' daqui */}
+        {pastResults.length === 0 && !error && (
             <p className="no-results-message">Nenhum resultado salvo localmente.</p>
         )}
         {pastResults.length > 0 && (
@@ -420,7 +422,8 @@ s      {pastResults.length === 0 && !error && (
                 Limpar Histórico
             </button>
             <button onClick={handleGoToRegister} className="back-to-test-button"> 
-s                Voltar ao Início
+                {/* ERRO CORRIGIDO: Removido 's' daqui */}
+                Voltar ao Início
             </button>
         </div>
     </div>
