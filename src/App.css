@@ -36,7 +36,7 @@ body {
     justify-content: center;
     align-items: flex-start; /* Alinha o conteúdo ao topo */
     padding-top: 20px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100" fill="%231a1a1a"/><path fill="%232e2e2e" d="M0 0h50v50H0zM50 50h50v50H50z"/></svg>');
+    background-image: url('assets/walle.png');
     background-size: 100px 100px;
 }
 
@@ -127,7 +127,7 @@ p {
     left: 20px;
     width: 150px;
     height: 150px;
-    background-image: url('https://raw.githubusercontent.com/sua_conta/seu_repo/main/walle-gif.gif'); /* Substitua pelo seu GIF */
+    background-image: url('assets/fundo.gif'); /* Substitua pelo seu GIF */
     background-size: contain;
     background-repeat: no-repeat;
     z-index: 5;
