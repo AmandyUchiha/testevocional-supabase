@@ -18,9 +18,7 @@
 html {
     font-size: 16px;
     transition: font-size 0.2s ease-in-out;
-    /* REQUISITO: REMOVIDO 'overflow-y: hidden'. 
-       É necessário permitir o scroll da página 
-       para ver a lista de cursos inteira. */
+    /* A página PRECISA rolar para a lista de cursos caber */
 }
 
 * {
@@ -43,13 +41,12 @@ body {
     background-image: url('assets/fundo.gif'); 
     background-repeat: no-repeat;
     background-size: cover; 
-    /* O 'fixed' garante que o GIF não role com a página */
-    background-attachment: fixed; 
+    background-attachment: fixed; /* Fixo no lugar */
     background-position: center; 
     transition: background-image 0.3s ease;
 }
 
-/* REQUISITO: Muda o fundo durante as perguntas (precisa de JS) */
+/* REQUISITO: Muda o fundo durante as perguntas (via JS) */
 body.question-page {
     background-image: none;
     background-color: var(--eve-fundo-escuro);
@@ -81,24 +78,24 @@ body.question-page {
     z-index: 10; 
     min-height: 450px;
     
+    /* REQUISITO: Centraliza todos os elementos */
     display: flex;
     flex-direction: column;
     align-items: center;
     transition: background-color 0.3s ease;
 }
 
-/* REQUISITO: Remove a transparência durante as perguntas (precisa de JS) */
+/* REQUISITO: Remove a transparência durante as perguntas (via JS) */
 body.question-page .container {
     background-color: var(--eve-fundo-escuro); /* Fica sólido */
 }
 
 
 /* Regra para telas que precisam ser mais largas */
-.question-page .container,
-.history-page .container,
-.detail-page .container,
-.admin-panel-container {
-    /* REQUISITO: Aumentado */
+body.question-page .container,
+body.history-page .container,
+body.detail-page .container,
+body.admin-panel-container .container {
     max-width: 950px; 
 }
 
@@ -143,8 +140,17 @@ p {
 /* ==================================== */
 /* 3. Estilos de Formulário/Registro/Login */
 /* ==================================== */
+.register-container form,
+.admin-login-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .register-container input,
 .admin-login-container input {
+    /* REQUISITO: Largura alinhada com o botão */
     width: 90%;
     max-width: 500px; 
     
@@ -158,6 +164,29 @@ p {
     display: block;
     text-align: center;
 }
+
+/* Wrapper para o ícone de senha */
+.password-wrapper {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    margin: 0;
+}
+.password-wrapper input {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+.password-toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 1.2rem;
+}
+
 
 .admin-login-container .extra-buttons {
     margin-top: 30px;
@@ -185,6 +214,7 @@ button {
     background-color: var(--amarelo-wall-e);
     color: var(--eve-fundo-escuro);
     border: 2px solid var(--amarelo-wall-e);
+    /* REQUISITO: Largura alinhada com o input */
     width: 90%;
     max-width: 500px; 
 }
@@ -290,11 +320,7 @@ button {
     font-weight: bold;
 }
 
-/* REQUISITO: Botão de Reiniciar
-   Lembre-se: Adicione o <button class="restart-button"> no seu HTML 
-   dentro desta div, ao lado do botão "Voltar". 
-   O CSS abaixo já vai alinhá-los.
-*/
+/* Botões (Voltar, Reiniciar) alinhados */
 .extra-buttons {
     margin-top: 30px;
     display: flex;
@@ -325,8 +351,8 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* REMOVIDO: 'max-height' e 'overflow-y' foram removidos 
-       para listar tudo sem scroll. */
+    width: 90%;
+    /* REMOVIDO: 'max-height' e 'overflow-y' */
 }
 
 .suggestions h3 {
@@ -359,7 +385,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO (Mantido para o histórico) */
+    /* SCROLL INTERNO (Onde necessário) */
     max-height: 350px; 
     overflow-y: auto;
     width: 100%;
@@ -405,7 +431,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO (Mantido) */
+    /* SCROLL INTERNO (Onde necessário) */
     max-height: 250px; 
     overflow-y: auto;
     padding-right: 10px;
@@ -423,6 +449,40 @@ button {
 .history-detail-item strong {
     color: var(--amarelo-wall-e);
 }
+
+/* Estilos para o Ranking em Detalhes */
+.ranking-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+.ranking-title {
+    color: var(--amarelo-wall-e);
+}
+.ranking-list {
+    list-style: none;
+    padding: 10px;
+    margin: 15px 0;
+    width: 100%;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.2);
+    text-align: left;
+}
+.ranking-list-item {
+    background-color: rgba(0,0,0,0.6);
+    color: var(--eve-branco);
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 5px solid var(--amarelo-wall-e);
+}
+.responses-container {
+    width: 100%;
+}
+.responses-title {
+    color: var(--amarelo-wall-e);
+}
+
 
 /* ==================================== */
 /* 9. Estilos de Mensagens de Status */
@@ -448,6 +508,12 @@ button {
 .error-message p {
     margin: 0;
 }
+
+.no-results-message {
+    margin: 20px 0;
+    color: var(--amarelo-wall-e);
+}
+
 
 /* ==================================== */
 /* 10. Controles de Acessibilidade (Fonte) */
@@ -493,12 +559,13 @@ button {
         padding: 20px;
         min-height: 300px;
         margin-top: 80px; 
+        max-width: 90%; /* Ocupa mais tela */
     }
 
-    .question-page .container,
-    .history-page .container,
-    .detail-page .container,
-    .admin-panel-container {
+    body.question-page .container,
+    body.history-page .container,
+    body.detail-page .container,
+    body.admin-panel-container .container {
         max-width: 90%; 
     }
     
@@ -540,7 +607,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO (Mantido) */
+    /* SCROLL INTERNO (Onde necessário) */
     max-height: 400px; 
     overflow-y: auto;
     padding-right: 10px;
