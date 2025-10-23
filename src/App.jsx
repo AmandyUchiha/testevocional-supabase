@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient.js';
-import './App.css';
+// A LINHA 'import ./App.css' FOI REMOVIDA DAQUI
 
 // Mapa de Nomes Bonitos
 const prettyFocusNames = {
@@ -82,7 +82,7 @@ function App() {
     return () => { if(view!=='history'&&isMasterAdmin&&adminSelectedDb){setAllDbResults([]);}}; 
   }, [view, isMasterAdmin, adminSelectedDb]); 
 
-  // ✅ CORRIGIDO: Este useEffect aplica as classes CSS que você pediu
+  // Este useEffect aplica as classes CSS (do index.css)
   useEffect(() => { /* Classes do body */
     const bCL=document.body.classList; const cM={quiz:'question-page',register:'nickname-page',adminLogin:'nickname-page',admin_db_select:'nickname-page',result:'final-page',history:'history-page',localHistory:'history-page',detailView:'detail-page'}; Object.values(cM).forEach(c=>bCL.remove(c)); bCL.remove('gif-active'); const cC=cM[view]; if(cC){bCL.add(cC);if(view!=='quiz'){bCL.add('gif-active');}}else if(view!=='quiz'){bCL.add('gif-active');} return()=>{Object.values(cM).forEach(c=>bCL.remove(c));bCL.remove('gif-active');};
   }, [view]);
@@ -142,7 +142,7 @@ function App() {
     return r;
 }
 
-  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD.length>0&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);} }
+  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);} }
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
   function handleGoToRegister() { 
@@ -251,7 +251,6 @@ function App() {
     </div>
   );
 
-  // ✅ CORRIGIDO: Removido estilo inline do input
   const renderRegister = () => (
     <div className="container register-container">
       <h1>Teste Vocacional</h1>
@@ -261,7 +260,6 @@ function App() {
             type="text" value={userNickname}
             onChange={(e) => setUserNickname(e.target.value)}
             placeholder="Seu apelido" maxLength="50"
-            // O estilo agora vem do App.css (classe .register-container input)
         />
         <button type="submit" disabled={loading || !userNickname.trim()} className="start-button">
             {loading ? 'Carregando...' : 'Iniciar Teste'}
@@ -272,7 +270,6 @@ function App() {
     </div>
   );
 
-  // ✅ CORRIGIDO: Removido estilo inline do <p> e ADICIONADO botão de Reiniciar
   const renderQuiz = () => {
     if (loading && questions.length === 0) { return <div className="loading">Carregando...</div>; }
     if (error && questions.length === 0) { return <div className="error-message"><p>{error}</p></div>; }
@@ -283,7 +280,6 @@ function App() {
     return (
         <div className="container question-container">
           <h2>Questão {currentQuestionIndex + 1} / {questions.length}</h2>
-          {/* O estilo agora vem do App.css (classe .question-enunciado) */}
           <p className="question-enunciado">{currentQuestion.enunciado}</p> 
           {error && view === 'quiz' && <div className="error-message"><p>{error}</p></div>} 
           <div className="option-buttons-container"> 
@@ -293,7 +289,6 @@ function App() {
           </div>
           <div className="extra-buttons"> 
               {currentQuestionIndex > 0 && ( <button onClick={handleBack} className="back-button"> Voltar </button> )}
-              {/* REQUISITO ADICIONADO: Botão de Reiniciar Teste */}
               <button onClick={handleRestartTest} className="restart-button"> Reiniciar Teste </button>
           </div>
         </div>
@@ -325,7 +320,6 @@ function App() {
     );
   };
 
-  // ✅ CORRIGIDO: Removido estilos inline
   const renderAdminLogin = () => ( 
     <div className="container admin-login-container">
       <h1>Acesso Mestre</h1>
@@ -335,7 +329,7 @@ function App() {
           onChange={(e)=>setAdminApelido(e.target.value)} 
           placeholder="Apelido Mestre" 
         />
-        <div className="password-wrapper"> {/* Use uma classe para o wrapper, se necessário */}
+        <div className="password-wrapper"> 
           <input 
             type={showAdminPassword?'text':'password'} 
             value={adminPassword} 
@@ -351,7 +345,7 @@ function App() {
         </button>
       </form>
       {adminError&&<div className="error-message"><p>{adminError}</p></div>}
-      <div className="extra-buttons">
+  f      <div className="extra-buttons">
         <button onClick={handleGoToRegister} className="back-button">Voltar</button>
       </div>
     </div> 
@@ -361,7 +355,6 @@ function App() {
   
   const renderHistory = () => ( <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p className="no-results-message">Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   
-  // ✅ CORRIGIDO: Removido estilos inline
   const renderDetailView = () => { 
     if (!detailedUser) { setView('history'); return null; } 
     return ( 
@@ -371,7 +364,7 @@ function App() {
         {historyDetailsLoading&&<div className="loading">Carregando...</div>}
         {adminError&&<div className="error-message"><p>{adminError}</p></div>}
         {historyRanking&&historyRanking.length>0&&( 
-          <div className="ranking-container"> {/* Use classes */}
+          <div className="ranking-container"> 
             <h3 className="ranking-title">Ranking (DB)</h3>
             <ul className="ranking-list">{historyRanking.map((item,i)=>(
               <li key={i} className="ranking-list-item">
@@ -381,7 +374,7 @@ function App() {
           </div> 
         )}
         {historyDetails&&historyDetails.length>0&&( 
-          <div className="responses-container"> {/* Use classes */}
+          <div className="responses-container"> 
             <h3 className="responses-title">Respostas</h3>
             <ul className="history-details-list">{historyDetails.map((item,i)=>( 
               <li key={i} className="history-detail-item">
@@ -408,7 +401,7 @@ function App() {
     <div className="container local-history-container"> 
         <h1>Histórico Local</h1>
         {error && view === 'localHistory' && <div className="error-message"><p>{error}</p></div>} 
-        {pastResults.length === 0 && !error && (
+s      {pastResults.length === 0 && !error && (
             <p className="no-results-message">Nenhum resultado salvo localmente.</p>
         )}
         {pastResults.length > 0 && (
@@ -427,7 +420,7 @@ function App() {
                 Limpar Histórico
             </button>
             <button onClick={handleGoToRegister} className="back-to-test-button"> 
-                Voltar ao Início
+s                Voltar ao Início
             </button>
         </div>
     </div>
