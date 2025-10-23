@@ -36,7 +36,8 @@ body {
     justify-content: center;
     align-items: flex-start; /* Alinha o conteúdo ao topo */
     padding-top: 20px;
-    background-image: url('assets/walle.png');
+    /* RESTAURADO: Usando seu URL original para a imagem de fundo */
+    background-image: url('assets/walle.png'); 
     background-size: 100px 100px;
 }
 
@@ -51,7 +52,7 @@ body {
 /* 2. Estilos do Container Principal e Wall-E */
 /* ==================================== */
 
-/* A CAIXA DE CONTEÚDO PRINCIPAL (COM CORREÇÃO DE POSICIONAMENTO) */
+/* A CAIXA DE CONTEÚDO PRINCIPAL (COM CORREÇÃO DE POSICIONAMENTO E FLEXBOX) */
 .container {
     width: 90%; 
     max-width: 750px;
@@ -65,7 +66,7 @@ body {
     position: relative;
     z-index: 10; 
     min-height: 350px;
-    /* Adicionado flexbox para gerenciar o scroll interno se necessário */
+    /* Adicionado flexbox para gerenciar o scroll interno */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -89,17 +90,14 @@ p {
 
 
 /* ------------------------------------- */
-/* CORREÇÃO DO POSICIONAMENTO PARA O WALL-E */
-/* Esta regra garante que a caixa desça o suficiente para a imagem */
+/* CORREÇÃO DE POSICIONAMENTO PARA O WALL-E */
+/* Aplica margem superior para afastar do Wall-E */
 /* ------------------------------------- */
-
-/* Aplica em TODAS as páginas (incluindo quiz, que estava sobrepondo) */
-.question-page .container, /* <-- ADICIONADO AQUI! */
+.question-page .container, /* ESSENCIAL para afastar o texto do quiz */
 .nickname-page .container, 
 .history-page .container,
 .detail-page .container,
 .final-page .container {
-    /* Define uma margem superior grande para evitar sobreposição */
     margin-top: 180px; 
     min-height: 500px; 
     max-width: 850px; 
@@ -127,7 +125,8 @@ p {
     left: 20px;
     width: 150px;
     height: 150px;
-    background-image: url('assets/fundo.gif'); /* Substitua pelo seu GIF */
+    /* RESTAURADO: Usando seu URL original para o GIF do Wall-E */
+    background-image: url('assets/fundo.gif'); 
     background-size: contain;
     background-repeat: no-repeat;
     z-index: 5;
@@ -235,7 +234,6 @@ button {
 /* ==================================== */
 .question-container {
     max-width: 900px;
-    /* Margem já ajustada na regra geral .question-page .container */
 }
 
 .question-enunciado {
@@ -303,7 +301,7 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* Ajuste de scroll */
+    /* ADICIONADO SCROLL */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -330,7 +328,6 @@ button {
 /* ==================================== */
 .history-container, .local-history-container {
     text-align: center;
-    /* Permite que o conteúdo interno (a lista) tenha mais espaço vertical */
     flex-grow: 1; 
 }
 
@@ -338,7 +335,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* ADICIONADO: Scroll interno dentro do container de histórico */
+    /* ADICIONADO SCROLL */
     max-height: 350px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
     width: 100%;
@@ -383,7 +380,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* ADICIONADO: Scroll interno para a lista de detalhes */
+    /* ADICIONADO SCROLL */
     max-height: 250px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
     padding-right: 10px;
