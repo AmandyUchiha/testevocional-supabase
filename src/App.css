@@ -556,11 +556,28 @@ h1 {
     font-size: 1.3rem;
   }
   
-  /* NOVO: Ajustes para o Histórico (Banco Antigo) em mobile */
+  /* Ajustes para o Histórico (Banco Antigo) em mobile */
   .result-item {
     padding: 10px 12px; /* Reduz o padding interno */
     font-size: 0.85rem; /* Diminui o tamanho da fonte */
     line-height: 1.4; /* Ajusta a altura da linha para fontes menores */
+  }
+
+  /* CORREÇÃO LAYOUT BANCO ANTIGO (MOBILE):
+    Muda o layout do item do banco antigo para mobile.
+    - 'display: block' faz o label (<strong>) ir para a linha de cima.
+    - 'min-width: unset' remove a largura mínima do desktop.
+    O resultado é um layout empilhado (Label / Valor) que cabe na caixa.
+  */
+  .result-item div strong {
+    display: block;
+    min-width: unset;
+    margin-bottom: 3px; /* Pequeno espaço entre o label e o valor */
+  }
+
+  /* Ajusta o padding de cada linha (div) para o novo layout empilhado */
+  .result-item div {
+    padding: 4px 0; 
   }
 
   /* Ajustes de Botões */
