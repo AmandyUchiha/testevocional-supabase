@@ -66,8 +66,8 @@ body.question-page {
   width: 90%;
   margin: 20px auto;
   /* CORREÇÃO DE PADDING (DESKTOP): 
-    Aumenta o padding da esquerda de 30px para 130px 
-    para compensar o Wall-E (120px) em todas as telas.
+     Aumenta o padding da esquerda de 30px para 130px 
+     para compensar o Wall-E (120px) em todas as telas.
   */
   padding: 10px 30px 10px 130px;
   background-color: var(--cinza-escuro);
@@ -284,15 +284,19 @@ h1 {
   transform: translateX(5px);
 }
 .result-item div {
-   padding: 2px 0;
+  padding: 2px 0;
 }
 .result-item div strong {
-   color: var(--amarelo-wall-e);
-   min-width: 70px;
-   display: inline-block;
+  color: var(--amarelo-wall-e);
+  min-width: 70px;
+  display: inline-block;
 }
 
 /* Sugestões */
+/* NOTA: O estilo da lista de sugestões agora é controlado 
+  dentro do .suggestions-container (ver seção ADIÇÕES App.jsx)
+  para que funcione dentro da nova caixa.
+*/
 .suggestions ul {
   list-style: none;
   padding: 0;
@@ -432,8 +436,51 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
+/* NOVO: Estilo para a caixa de Sugestões (Top 7) */
+/* Instrução: No seu HTML/JSX, envolva o título "Sugestões (Top 7)" 
+  e o <div> ou <ul> de sugestões com um 
+  <div class="suggestions-container">
+*/
+.suggestions-container {
+  width: 100%;
+  margin-top: 20px;
+  background-color: var(--carvao-wall-e);
+  border-radius: 8px;
+  padding: 15px;
+  box-sizing: border-box;
+  border: 1px solid var(--bordo-marrom-escuro);
+  text-align: left; 
+}
+
+/* Instrução: Dê ao seu título "Sugestões (Top 7)" (seja h2, h3, etc.) 
+  a classe "suggestions-title"
+*/
+.suggestions-container .suggestions-title {
+  color: var(--amarelo-wall-e);
+  margin-top: 0;
+  margin-bottom: 15px; /* Espaço antes da lista */
+  border-bottom: 1px solid var(--azul-wall-e);
+  padding-bottom: 10px;
+  text-align: left;
+  font-size: 1.1rem; 
+}
+
+/* Ajusta a lista de sugestões DENTRO da caixa */
+.suggestions-container .suggestions ul {
+  list-style: disc; /* Adiciona marcadores (bolinhas) */
+  padding: 0 0 0 25px; /* Adiciona padding à esquerda para os marcadores */
+  margin: 0;
+}
+
+.suggestions-container .suggestions li {
+  margin: 8px 0; /* Aumenta espaçamento */
+  color: var(--eve-branco);
+  font-size: 0.95rem;
+}
+
+
 /* NOVO: Estilos para Ranking e Cursos no Histórico Admin 
-  Usado na Parte 2 (JSX)
+   Usado na Parte 2 (JSX)
 */
 .result-item-details {
   margin-top: 10px;
@@ -481,9 +528,9 @@ h1 {
     width: 95%;
     min-width: unset;
     /* CORREÇÃO DE PADDING (MOBILE):
-      O Wall-E mobile invade 90px (width 100px, left -10px).
-      Aumentamos o padding-left para 95px (80px + 15px) 
-      para compensar em todas as telas mobile.
+       O Wall-E mobile invade 90px (width 100px, left -10px).
+       Aumentamos o padding-left para 95px (80px + 15px) 
+       para compensar em todas as telas mobile.
     */
     padding: 15px 15px 15px 95px;
   }
@@ -509,6 +556,13 @@ h1 {
     font-size: 1.3rem;
   }
   
+  /* NOVO: Ajustes para o Histórico (Banco Antigo) em mobile */
+  .result-item {
+    padding: 10px 12px; /* Reduz o padding interno */
+    font-size: 0.85rem; /* Diminui o tamanho da fonte */
+    line-height: 1.4; /* Ajusta a altura da linha para fontes menores */
+  }
+
   /* Ajustes de Botões */
   .extra-buttons {
     gap: 8px;
@@ -518,8 +572,8 @@ h1 {
   .clear-history-button,
   .back-to-test-button,
   .restart-button {
-      flex-basis: 48%;
-      min-width: unset;
+    flex-basis: 48%;
+    min-width: unset;
   }
   .font-toggle-button {
     width: 70px;
