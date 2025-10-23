@@ -34,15 +34,14 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Alinha o app-container ao topo */
+    align-items: flex-start; 
     padding-top: 20px;
     
-    /* REQUISITO: GIF de fundo não repete e cobre a tela */
     background-image: url('assets/fundo.gif'); 
     background-repeat: no-repeat;
-    background-size: cover; /* Faz o GIF cobrir toda a área */
-    background-attachment: fixed; /* Mantém o GIF fixo no lugar durante o scroll */
-    background-position: center; /* Centraliza o GIF */
+    background-size: cover; 
+    background-attachment: fixed; 
+    background-position: center; 
 }
 
 .app-container {
@@ -56,12 +55,9 @@ body {
 /* 2. Estilos do Container Principal e Wall-E */
 /* ==================================== */
 
-/* REQUISITO: Caixa centralizada */
 .container {
     width: 90%; 
-    /* REQUISITO: Largura padrão menor (para login, como na imagem) */
     max-width: 550px; 
-    /* REQUISITO: Margem ajustada para o WALL-E "sentado" */
     margin: 100px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
@@ -69,17 +65,16 @@ body {
     border: 1px solid var(--cinza-claro);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     text-align: center;
-    position: relative; /* ESSENCIAL para o posicionamento do WALL-E */
+    position: relative; 
     z-index: 10; 
     min-height: 450px;
     
-    /* REQUISITO: Centraliza todo o conteúdo interno */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* REQUISITO: Regra para telas que precisam ser mais largas (quiz, histórico) */
+/* Regra para telas que precisam ser mais largas (quiz, histórico) */
 .question-page .container,
 .history-page .container,
 .detail-page .container,
@@ -106,14 +101,13 @@ p {
 
 /* ------------------------------------- */
 /* ADMIN TRIGGER (WALL-E) */
-/* REQUISITO: WALL-E "agarrado" na borda e maior */
+/* REQUISITO: WALL-E "sentado" e CENTRALIZADO */
 /* ------------------------------------- */
 .admin-trigger {
-    position: absolute; /* Preso ao .container */
-    /* REQUISITO: WALL-E "sentado" na borda (2px) */
-    top: 2px;
-    left: 20px;
-    /* REQUISITO: Tamanho aumentado (180px) */
+    position: absolute; 
+    top: 2px; /* "Sentado" na borda */
+    left: 50%; /* REQUISITO: Centralizado */
+    transform: translateX(-50%); /* REQUISITO: Ajuste de centralização */
     width: 180px; 
     height: 180px;
     cursor: pointer;
@@ -131,7 +125,10 @@ p {
 /* ==================================== */
 .register-container input,
 .admin-login-container input {
-    width: 80%;
+    /* REQUISITO: Largura alinhada com o botão */
+    width: 90%;
+    max-width: 500px; 
+    
     padding: 12px;
     margin: 10px auto;
     border-radius: 6px;
@@ -140,9 +137,7 @@ p {
     color: var(--eve-branco);
     font-size: 1rem;
     display: block;
-    max-width: 400px;
-    /* REQUISITO: Centraliza o placeholder e o texto digitado */
-    text-align: center;
+    text-align: center; /* Centraliza o placeholder */
 }
 
 .admin-login-container .extra-buttons {
@@ -171,6 +166,10 @@ button {
     background-color: var(--amarelo-wall-e);
     color: var(--eve-fundo-escuro);
     border: 2px solid var(--amarelo-wall-e);
+
+    /* REQUISITO: Largura alinhada com o input */
+    width: 90%;
+    max-width: 500px; 
 }
 .start-button:hover,
 [type="submit"]:not(.option-button):hover {
@@ -240,11 +239,10 @@ button {
     max-width: 800px;
 }
 
-/* REQUISITO: Opções uma abaixo da outra e centralizadas */
 .option-buttons-container {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centraliza os botões */
+    align-items: center; 
     margin-top: 20px;
     width: 100%;
 }
@@ -275,14 +273,13 @@ button {
     font-weight: bold;
 }
 
-/* REQUISITO: Botões extras de lado (lado a lado) e centralizados */
 .extra-buttons {
     margin-top: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
-    gap: 10px; /* Espaçamento entre os botões */
+    flex-wrap: wrap; 
+    gap: 10px; 
 }
 
 /* ==================================== */
@@ -305,7 +302,7 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -340,7 +337,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO */
     max-height: 350px; 
     overflow-y: auto;
     width: 100%;
@@ -386,7 +383,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO */
     max-height: 250px; 
     overflow-y: auto;
     padding-right: 10px;
@@ -464,7 +461,7 @@ button {
 
 @media (max-width: 768px) {
     
-    /* REQUISITO: Em mobile, remove o GIF e usa a cor de fundo sólida */
+    /* Em mobile, usa a cor de fundo sólida */
     body {
         background-image: none;
         background-color: var(--eve-fundo-escuro);
@@ -473,16 +470,14 @@ button {
     .container {
         padding: 20px;
         min-height: 300px;
-        /* REQUISITO: Margem ajustada para o WALL-E menor */
         margin-top: 80px; 
     }
 
-    /* REQUISITO: Em mobile, telas maiores continuam com largura total */
     .question-page .container,
     .history-page .container,
     .detail-page .container,
     .admin-panel-container {
-        max-width: 90%; /* Ocupa a largura toda */
+        max-width: 90%; 
     }
     
     .question-enunciado {
@@ -498,24 +493,23 @@ button {
         font-size: 1.8rem;
     }
     
-    /* Ajusta o WALL-E para mobile */
+    /* Ajusta o WALL-E para mobile (também centralizado) */
     .admin-trigger {
         width: 120px; 
         height: 120px;
-        /* REQUISITO: WALL-E "sentado" na borda (mobile) */
         top: 2px;
-        left: 10px;
+        left: 50%; /* REQUISITO: Centralizado */
+        transform: translateX(-50%); /* REQUISITO: Ajuste de centralização */
     }
 }
 
 /* ==================================== */
-/* 12. Estilos da Tela Admin (NOVO) */
-/* REQUISITO: Scroll interno para tela admin */
+/* 12. Estilos da Tela Admin */
 /* ==================================== */
 
 .admin-panel-container {
     text-align: left;
-    flex-grow: 1; /* Faz o container crescer para preencher o espaço */
+    flex-grow: 1; 
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -525,11 +519,11 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO para a lista de admin */
-    max-height: 400px; /* Defina a altura máxima desejada */
+    /* SCROLL INTERNO */
+    max-height: 400px; 
     overflow-y: auto;
     padding-right: 10px;
-    flex-grow: 1; /* Faz a lista crescer */
+    flex-grow: 1; 
 }
 
 .admin-list-item {
