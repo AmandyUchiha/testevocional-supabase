@@ -38,6 +38,7 @@ body {
     padding-top: 20px;
     /* CORRIGIDO: O GIF é o Fundo */
     background-image: url('assets/fundo.gif'); 
+    background-repeat: no-repeat;
     background-size: 100px 100px;
 }
 
