@@ -54,8 +54,8 @@ body {
 /* A CAIXA DE CONTEÚDO PRINCIPAL (COM CORREÇÃO DE POSICIONAMENTO) */
 .container {
     width: 90%; 
-    max-width: 750px; /* Aumentado para melhor visualização */
-    margin: 50px auto 30px auto; /* Margem superior padrão */
+    max-width: 750px;
+    margin: 50px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
     background-color: var(--eve-fundo-transp);
@@ -63,8 +63,12 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     text-align: center;
     position: relative;
-    z-index: 10; /* Sempre acima do Wall-E */
+    z-index: 10; 
     min-height: 350px;
+    /* Adicionado flexbox para gerenciar o scroll interno se necessário */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 h1 {
@@ -83,20 +87,22 @@ p {
     margin-bottom: 15px;
 }
 
+
 /* ------------------------------------- */
 /* CORREÇÃO DO POSICIONAMENTO PARA O WALL-E */
 /* Esta regra garante que a caixa desça o suficiente para a imagem */
 /* ------------------------------------- */
 
-/* Aplica em todas as páginas que o Wall-E aparece (exceto quiz) */
+/* Aplica em TODAS as páginas (incluindo quiz, que estava sobrepondo) */
+.question-page .container, /* <-- ADICIONADO AQUI! */
 .nickname-page .container, 
 .history-page .container,
 .detail-page .container,
 .final-page .container {
     /* Define uma margem superior grande para evitar sobreposição */
     margin-top: 180px; 
-    min-height: 500px; /* Aumenta o tamanho mínimo da caixa para o histórico */
-    max-width: 850px; /* Mais espaço horizontal para listas de histórico/detalhes */
+    min-height: 500px; 
+    max-width: 850px; 
 }
 
 
@@ -110,7 +116,7 @@ p {
     width: 150px; 
     height: 150px;
     cursor: pointer;
-    z-index: 5; /* Fica por baixo do container principal */
+    z-index: 5; 
     background: transparent;
 }
 
@@ -125,7 +131,7 @@ p {
     background-size: contain;
     background-repeat: no-repeat;
     z-index: 5;
-    pointer-events: none; /* Não interfere no clique do admin-trigger */
+    pointer-events: none; 
 }
 
 /* ==================================== */
@@ -229,7 +235,7 @@ button {
 /* ==================================== */
 .question-container {
     max-width: 900px;
-    margin-top: 50px; /* Sem o Wall-E, pode ficar mais em cima */
+    /* Margem já ajustada na regra geral .question-page .container */
 }
 
 .question-enunciado {
@@ -297,6 +303,9 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
+    /* Ajuste de scroll */
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .suggestions h3 {
@@ -321,15 +330,20 @@ button {
 /* ==================================== */
 .history-container, .local-history-container {
     text-align: center;
+    /* Permite que o conteúdo interno (a lista) tenha mais espaço vertical */
+    flex-grow: 1; 
 }
 
 .result-list {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    max-height: 60vh;
+    /* ADICIONADO: Scroll interno dentro do container de histórico */
+    max-height: 350px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
+    width: 100%;
     padding-right: 10px;
+    flex-grow: 1;
 }
 
 .result-item {
@@ -362,15 +376,18 @@ button {
 
 .detail-view-container {
     text-align: left;
+    flex-grow: 1;
 }
 
 .history-details-list {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    max-height: 40vh;
+    /* ADICIONADO: Scroll interno para a lista de detalhes */
+    max-height: 250px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
     padding-right: 10px;
+    flex-grow: 1;
 }
 
 .history-detail-item {
@@ -448,11 +465,12 @@ button {
         min-height: 300px;
     }
 
+    .question-page .container, 
     .nickname-page .container, 
     .history-page .container,
     .detail-page .container,
     .final-page .container {
-        margin-top: 150px; /* Reduz um pouco no mobile */
+        margin-top: 130px; /* Reduz um pouco no mobile */
         min-height: 400px;
     }
     
