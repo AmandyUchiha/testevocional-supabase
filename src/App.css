@@ -99,7 +99,7 @@ body.question-page {
 .admin-trigger {
   position: absolute;
   /* --- CORRIGIDO: Posição DENTRO do padding do container --- */
-  top: -3px;    /* Estava -6px (Fora) */
+  top: -5px;    /* Estava -6px (Fora) */
   left: 10px;    /* Estava -30px (Fora) */
   /* --- FIM CORREÇÃO --- */
   width: 150px;
