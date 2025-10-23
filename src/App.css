@@ -581,3 +581,18 @@ h1 {
     padding: 10px;
   }
 }
+
+/* CORREÇÃO: Sobreposição do Wall-E na Tela de Questões
+  
+  O .admin-trigger (Wall-E) está em 'left: -30px' e 'width: 150px'.
+  Ele "invade" 120px do espaço do contêiner.
+  O padding-left padrão do contêiner é 30px.
+  Precisamos de ~90-100px a mais de espaço à esquerda, APENAS na tela de quiz,
+  para "empurrar" o texto e os botões para a direita.
+*/
+body.question-page .app-container {
+  /* Define o espaçamento (top, right, bottom, left) */
+  /* Mantém 10px em cima, 30px na direita, 10px embaixo */
+  /* e AUMENTA para 130px na esquerda */
+  padding: 10px 30px 10px 130px;
+}
