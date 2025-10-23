@@ -453,7 +453,7 @@ function App() {
     }
   };
 
-  // Retorno final com onClick no admin-trigger
+  // Retorno final com onClick no admin-trigger 
   return (
     <div className="app-container">
       <div 
