@@ -59,7 +59,7 @@ function App() {
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
   const [historyRanking, setHistoryRanking] = useState(null); 
-  const [historySuggestions, setHistorySuggestions] = useState(null); // NOVO: Estado para as sugestões
+  const [historySuggestions, setHistorySuggestions] = useState(null);
 
   // Efeitos
   useEffect(() => { 
@@ -449,9 +449,6 @@ function App() {
   
   const renderHistory = () => ( <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p className="no-results-message">Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   
-  // =================================================================
-  // ATUALIZADO: Renderiza sugestões para "casar" com o CSS
-  // =================================================================
   const renderDetailView = () => { 
     if (!detailedUser) { setView('history'); return null; } 
     return ( 
@@ -473,17 +470,12 @@ function App() {
           </div> 
         )}
 
-        {/* Bloco para renderizar as 7 sugestões (AGORA CORRIGIDO) */}
+        {/* Bloco para renderizar as 7 sugestões (Estrutura do CSS aplicada) */}
         {adminSelectedDb === 'new' && !historyDetailsLoading && (
-          // 1. Usa o wrapper principal que o CSS espera
           <div className="suggestions-container"> 
-            {/* 2. Usa o título que o CSS espera */}
             <h3 className="suggestions-title">Sugestões (Top 7)</h3>
-            
-            {/* 3. Adiciona o wrapper .suggestions que o CSS espera */}
             <div className="suggestions">
               {historySuggestions && historySuggestions.length > 0 ? (
-                // 4. Usa um UL/LI simples, pois o CSS cuida da estilização
                 <ul>
                   {historySuggestions.map((curso, i) => (
                     <li key={i}>
@@ -492,7 +484,7 @@ function App() {
                   ))}
                 </ul>
               ) : (
-                <p className="no-results-message">Nenhuma sugestão calculada.</p>
+                <p className="no-results-message" style={{margin: 0, fontStyle: 'normal'}}>Nenhuma sugestão calculada.</p>
               )}
             </div>
           </div>
@@ -523,11 +515,7 @@ function App() {
       </div> 
     ); 
   };
-  // =================================================================
-  // FIM DA ATUALIZAÇÃO
-  // =================================================================
 
-  // === TELA: Histórico Local (sem alterações) ===
   const renderLocalHistory = () => (
     <div className="container local-history-container"> 
         <h1>Histórico Local</h1>
@@ -577,7 +565,9 @@ function App() {
     }
   };
 
-  // Retorno final com onClick no admin-trigger
+  // =================================================================
+  // ATUALIZADO: Adicionado Footer de Copyright
+  // =================================================================
   return (
     <div className="app-container">
       <div 
@@ -587,6 +577,22 @@ function App() {
       ></div> 
       
       {renderCurrentView()}
+
+      {/* NOVO: Footer de Copyright Adicionado */}
+      <footer 
+        style={{
+          width: '100%',
+          textAlign: 'center',
+          marginTop: '25px', // Dando um espaço acima
+          paddingTop: '15px', // Dando um espaço e linha acima
+          borderTop: '1px solid var(--bordo-marrom-escuro)', // Linha sutil (usando var do seu CSS)
+          fontSize: '0.8rem',
+          color: 'var(--cinza-claro)', // Usando var do seu CSS
+          opacity: 0.8 
+        }}
+      >
+        Todos os direitos reservados &copy; 2025 - Amandy Uchiha
+      </footer>
     </div>
   );
 }
