@@ -36,10 +36,13 @@ body {
     justify-content: center;
     align-items: flex-start; /* Alinha o conteúdo ao topo */
     padding-top: 20px;
-    /* CORRIGIDO: O GIF é o Fundo */
+    
+    /* REQUISITO: GIF de fundo não repete e cobre a tela */
     background-image: url('assets/fundo.gif'); 
     background-repeat: no-repeat;
-    background-size: 100px 100px;
+    background-size: cover; /* Faz o GIF cobrir toda a área */
+    background-attachment: fixed; /* Mantém o GIF fixo no lugar durante o scroll */
+    background-position: center; /* Centraliza o GIF */
 }
 
 .app-container {
@@ -56,18 +59,20 @@ body {
 /* A CAIXA DE CONTEÚDO PRINCIPAL (COM CORREÇÃO DE POSICIONAMENTO E FLEXBOX) */
 .container {
     width: 90%; 
-    max-width: 750px;
-    margin: 50px auto 30px auto; 
+    max-width: 850px; /* Aumentado para acomodar o quiz */
+    /* REQUISITO: Margem superior para dar espaço ao WALL-E absoluto */
+    margin: 100px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
     background-color: var(--eve-fundo-transp);
     border: 1px solid var(--cinza-claro);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     text-align: center;
-    position: relative;
+    position: relative; /* ESSENCIAL para o posicionamento do WALL-E */
     z-index: 10; 
-    min-height: 350px;
-    /* Adicionado flexbox para gerenciar o scroll interno */
+    min-height: 450px;
+    
+    /* REQUISITO: Centraliza todo o conteúdo interno verticalmente */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -92,47 +97,37 @@ p {
 
 /* ------------------------------------- */
 /* CORREÇÃO DE POSICIONAMENTO PARA O WALL-E */
-/* Aplica margem superior para afastar do Wall-E */
+/* REMOVIDO: As regras de margin-top: 180px foram removidas.
+   O WALL-E agora é 'position: absolute' e está preso ao '.container',
+   então não precisamos mais "empurrar" o container para baixo.
+   A margem superior padrão do .container (100px) já cria o espaço.
+*/
 /* ------------------------------------- */
-.question-page .container, /* ESSENCIAL para afastar o texto do quiz */
-.nickname-page .container, 
-.history-page .container,
-.detail-page .container,
-.final-page .container {
-    margin-top: 180px; 
-    min-height: 500px; 
-    max-width: 850px; 
-}
 
 
 /* ------------------------------------- */
-/* ADMIN TRIGGER e GIF (WALL-E) */
+/* ADMIN TRIGGER (WALL-E) */
+/* REQUISITO: WALL-E "agarrado" na borda da caixa */
 /* ------------------------------------- */
 .admin-trigger {
-    position: fixed;
-    top: 20px;
-    left: 20px;
+    position: absolute; /* Preso ao .container (que é position: relative) */
+    top: -75px;         /* Metade da altura (150px) para cima, "pendurado" */
+    left: 20px;         /* Distância da borda esquerda do container */
     width: 150px; 
     height: 150px;
     cursor: pointer;
-    z-index: 5; 
-    background: transparent;
-}
-
-.gif-active:before {
-    content: "";
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 150px;
-    height: 150px;
-    /* CORRIGIDO: O PNG é o Wall-E clicável */
+    z-index: 20;        /* Fica na frente do container (z-index: 10) */
+    
+    /* A imagem PNG vai direto no trigger */
     background-image: url('assets/walle.png'); 
     background-size: contain;
     background-repeat: no-repeat;
-    z-index: 5;
-    pointer-events: none; 
+    background-position: center;
 }
+
+/* REMOVIDO: .gif-active:before não é mais necessário, 
+   a imagem está direto no .admin-trigger */
+
 
 /* ==================================== */
 /* 3. Estilos de Formulário/Registro/Login */
@@ -235,6 +230,7 @@ button {
 /* ==================================== */
 .question-container {
     max-width: 900px;
+    width: 100%; /* Garante que ocupe o espaço no flex */
 }
 
 .question-enunciado {
@@ -245,11 +241,13 @@ button {
     max-width: 800px;
 }
 
+/* REQUISITO: Opções uma abaixo da outra e centralizadas */
 .option-buttons-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center; /* Centraliza os botões */
     margin-top: 20px;
+    width: 100%;
 }
 
 .option-button {
@@ -278,8 +276,14 @@ button {
     font-weight: bold;
 }
 
+/* REQUISITO: Botões extras de lado (lado a lado) */
 .extra-buttons {
     margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
+    gap: 10px; /* Espaçamento entre os botões */
 }
 
 /* ==================================== */
@@ -302,7 +306,7 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -330,13 +334,14 @@ button {
 .history-container, .local-history-container {
     text-align: center;
     flex-grow: 1; 
+    width: 100%;
 }
 
 .result-list {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO */
     max-height: 350px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
     width: 100%;
@@ -375,13 +380,14 @@ button {
 .detail-view-container {
     text-align: left;
     flex-grow: 1;
+    width: 100%;
 }
 
 .history-details-list {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO */
     max-height: 250px; /* Altura máxima para ativar o scroll */
     overflow-y: auto;
     padding-right: 10px;
@@ -461,16 +467,11 @@ button {
     .container {
         padding: 20px;
         min-height: 300px;
+        /* Ajusta a margem para o WALL-E menor */
+        margin-top: 70px; 
     }
 
-    .question-page .container, 
-    .nickname-page .container, 
-    .history-page .container,
-    .detail-page .container,
-    .final-page .container {
-        margin-top: 130px; /* Reduz um pouco no mobile */
-        min-height: 400px;
-    }
+    /* REMOVIDO: Regras de margin-top: 130px não são mais necessárias */
     
     .question-enunciado {
         font-size: 1.1rem !important;
@@ -485,10 +486,13 @@ button {
         font-size: 1.8rem;
     }
     
-    .admin-trigger, .gif-active:before {
+    /* Ajusta o WALL-E para mobile */
+    .admin-trigger {
         width: 100px; 
         height: 100px;
-        top: 10px;
+        top: -50px; /* Metade da nova altura */
         left: 10px;
     }
+    
+    /* REMOVIDO: Regra antiga do .gif-active:before */
 }
