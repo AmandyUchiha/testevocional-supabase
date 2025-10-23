@@ -1,4 +1,4 @@
-/* App.css - Tema Wall-E (Completo e com Adições) */
+/* App.css - Tema Wall-E (Completo, com Correção de Padding e Adições) */
 
 /* Cores temáticas */
 :root {
@@ -21,23 +21,19 @@
 /* * CORREÇÃO #1: Fundo e Rolagem */
 body {
   margin: 0;
-  /* Garante que o corpo sempre cubra a tela, mas permite rolagem se o conteúdo for maior */
   min-height: 100vh;
-  /* Permite rolagem vertical para conteúdo grande (mobile) */
   overflow-y: auto;
-  /* Bloqueia rolagem horizontal */
   overflow-x: hidden;
   font-family: 'Orbitron', sans-serif;
-  /* Define a cor de fundo padrão */
   background-color: var(--cor-fundo-perguntas);
 }
 
-/* Fundo com GIF borrado - Apenas para telas de apelido, final e histórico */
+/* Fundo com GIF borrado */
 body.nickname-page.gif-active::after,
 body.final-page.gif-active::after,
 body.history-page.gif-active::after,
-body.adminLogin.gif-active::after, /* Adicionado adminLogin */
-body.detail-page.gif-active::after { /* ADICIONADO P/ JSX */
+body.adminLogin.gif-active::after,
+body.detail-page.gif-active::after {
   content: '';
   position: fixed;
   top: 0;
@@ -47,7 +43,6 @@ body.detail-page.gif-active::after { /* ADICIONADO P/ JSX */
   z-index: -1;
   background-image: url('./assets/fundo.gif');
   background-repeat: no-repeat;
-  /* Garante que o GIF preencha sempre, mesmo em mobile */
   background-size: cover;
   background-attachment: fixed;
   filter: blur(5px);
@@ -63,16 +58,18 @@ body.question-page {
 
 /* * CORREÇÃO #2: Contêiner Principal */
 .app-container {
-  /* Altera de 'fixed' para 'absolute' para melhor fluxo em telas menores */
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   max-width: 650px;
-  width: 90%; /* Ajusta para porcentagem para melhor responsividade */
-  /* Adiciona margem superior/inferior para garantir que o conteúdo não seja cortado */
+  width: 90%;
   margin: 20px auto;
-  padding: 10px 30px;
+  /* CORREÇÃO DE PADDING (DESKTOP): 
+    Aumenta o padding da esquerda de 30px para 130px 
+    para compensar o Wall-E (120px) em todas as telas.
+  */
+  padding: 10px 30px 10px 130px;
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -86,14 +83,10 @@ body.question-page {
   box-sizing: border-box;
 }
 
-/* ** MODIFICAÇÃO PARA O CLIQUE ** */
-
-/* 1. Remove a imagem Wall-E do pseudo-elemento (agora será um elemento real) */
+/* Wall-E Clicável */
 .app-container::before {
   content: none;
 }
-
-/* 2. NOVO: Estilo para a Imagem/Gatilho de Admin Clicável */
 .admin-trigger {
   position: absolute;
   top: -6px;
@@ -106,48 +99,14 @@ body.question-page {
   background-position: center;
   transform: rotate(-15deg);
   z-index: 2;
-  /* REMOVIDO: cursor: pointer; */
-  /* REMOVIDO: transition: transform 0.3s ease-in-out; */
 }
-
-/* REMOVIDO: Efeito de hover */
 .admin-trigger:hover {
-  /* REMOVIDO: transform: rotate(-15deg) scale(1.05); */
-  transform: rotate(-15deg); /* Mantém a rotação original */
+  transform: rotate(-15deg);
 }
 
-/* REMOVIDO: Estilo para o subtítulo/mensagem na área de histórico */
-/* Remova esta regra ou certifique-se de que ela não existe mais. */
 .sub-title {
-  /* ... remover esta regra ... */
-  display: none; /* Adicione display: none se o código ainda estiver lá */
+  display: none;
 }
-/* ** FIM DA MODIFICAÇÃO CSS ** */
-
-/* Ajuste no Media Query para manter a discrição no mobile */
-@media (max-width: 650px) {
-    /* ... (outras regras mobile) ... */
-
-    /* Ajusta o gatilho de login em mobile */
-    .admin-trigger {
-      width: 100px;
-      height: 100px;
-      top: -3px;
-      left: -10px;
-      transform: rotate(-10deg);
-      /* REMOVIDO: o hover e o cursor pointer */
-    }
-}
-
-/* Estilo para o subtítulo/mensagem na área de histórico */
-.sub-title {
-  font-size: 0.8rem;
-  color: var(--cinza-claro);
-  margin-top: -10px;
-  margin-bottom: 20px;
-}
-/* ** FIM DA MODIFICAÇÃO ** */
-
 
 /* Títulos */
 h1 {
@@ -157,7 +116,7 @@ h1 {
   text-shadow: 1px 1px 2px #000;
 }
 
-/* Botão "Começar o Teste" */
+/* Botões */
 .start-button {
   padding: 10px 20px;
   background-color: var(--dourado-claro);
@@ -170,22 +129,18 @@ h1 {
   display: block;
   transition: all 0.3s;
 }
-
 .start-button:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 10px var(--amarelo-wall-e);
 }
 
-
-/* Container para os botões de resposta */
+/* Opções de Resposta */
 .option-buttons-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
 }
-
-/* Botões de resposta */
 .option-button {
   padding: 12px;
   background-color: var(--marrom-claro);
@@ -199,12 +154,9 @@ h1 {
   text-align: center;
   transition: all 0.3s;
 }
-
 .option-button:hover {
   background-color: var(--dourado-claro);
 }
-
-/* Estado de botão selecionado */
 .option-button.selected {
   background-color: var(--azul-wall-e);
   color: var(--eve-branco);
@@ -212,8 +164,7 @@ h1 {
   box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
 }
 
-
-/* Container para botões extras */
+/* Botões Extras */
 .extra-buttons {
   display: flex;
   justify-content: center;
@@ -221,8 +172,6 @@ h1 {
   gap: 12px;
   margin-top: 25px;
 }
-
-/* Botões extras */
 .back-button,
 .history-button,
 .clear-history-button,
@@ -240,7 +189,6 @@ h1 {
   max-width: 200px;
   transition: all 0.3s;
 }
-
 .back-button:hover,
 .history-button:hover,
 .clear-history-button:hover,
@@ -250,18 +198,14 @@ h1 {
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
-/* --- ESTILOS PARA OS BOTÕES DE FONTE --- */
-
-/* Container para alinhar os botões de controle de fonte */
+/* Controles de Fonte */
 .font-controls {
   display: flex;
   justify-content: center;
-  gap: 10px; /* Espaço entre os botões */
+  gap: 10px;
   margin-top: 25px;
   width: 100%;
 }
-
-/* Estilo dos botões A- e A+ */
 .font-toggle-button {
   width: 60px;
   padding: 8px 10px;
@@ -275,13 +219,12 @@ h1 {
   font-family: 'Orbitron', sans-serif;
   transition: all 0.3s ease;
 }
-
 .font-toggle-button:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 8px var(--dourado-claro);
 }
 
-/* --- ADIÇÃO: Estilização da Barra de Rolagem (Tema Wall-E) --- */
+/* --- Barra de Rolagem --- */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -299,11 +242,10 @@ h1 {
   background: var(--dourado-claro);
 }
 
-/* Resultado */
+/* --- Resultados e Histórico --- */
 .result-text {
   margin-bottom: 10px;
 }
-
 .main-result {
   font-size: 1.5rem;
   font-weight: bold;
@@ -311,19 +253,18 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
-/* MODIFICADO: Lista de Resultados (com Scroll) */
+/* Lista de Resultados (com Scroll) */
 .result-list {
   list-style: none;
-  padding: 0 10px; /* Adiciona padding para a barra de rolagem */
+  padding: 0 10px;
   margin-top: 20px;
   text-align: center;
-  /* --- Adições de Scroll --- */
-  max-height: 450px; /* Altura máxima antes de rolar */
-  overflow-y: auto;  /* Habilita o scroll vertical */
-  overflow-x: hidden;/* Previne scroll horizontal */
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* RE-ESTILIZADO: Item da Lista de Histórico */
+/* Item da Lista de Histórico (Re-estilizado) */
 .result-item {
   margin-bottom: 12px;
   background-color: var(--carvao-wall-e);
@@ -333,26 +274,21 @@ h1 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   font-size: 0.95rem;
   line-height: 1.6;
-  text-align: left; /* Alinha o texto à esquerda */
-  border-left: 5px solid var(--amarelo-wall-e); /* Destaque temático */
+  text-align: left;
+  border-left: 5px solid var(--amarelo-wall-e);
   transition: all 0.2s ease-in-out;
 }
-
 .result-item:hover {
   background-color: var(--cinza-escuro);
   border-left-color: var(--dourado-claro);
-  transform: translateX(5px); /* Efeito sutil de hover */
+  transform: translateX(5px);
 }
-
-/* NOVO: Adicionado para organizar os 'divs' dentro do .result-item */
 .result-item div {
    padding: 2px 0;
 }
-
-/* NOVO: Adicionado para destacar os rótulos (Data, Apelido, Foco) */
 .result-item div strong {
    color: var(--amarelo-wall-e);
-   min-width: 70px; /* Alinha os valores */
+   min-width: 70px;
    display: inline-block;
 }
 
@@ -361,12 +297,11 @@ h1 {
   list-style: none;
   padding: 0;
 }
-
 .suggestions li {
   margin: 5px 0;
 }
 
-/* Mensagens de erro e carregamento */
+/* Mensagens */
 .loading,
 .error,
 .error-message {
@@ -374,7 +309,6 @@ h1 {
   font-weight: bold;
   margin-top: 20px;
 }
-
 .error-message {
   background-color: #ff4c4c;
   padding: 10px;
@@ -382,9 +316,9 @@ h1 {
   margin: 10px 0;
 }
 
-/* --- ADIÇÕES NECESSÁRIAS PARA O App.jsx --- */
+/* --- ADIÇÕES App.jsx --- */
 
-/* Estilos para Inputs (Registro e Admin Login) */
+/* Inputs (Registro e Admin) */
 .register-container input[type="text"],
 .admin-login-container input[type="text"],
 .admin-login-container input[type="password"] {
@@ -400,7 +334,7 @@ h1 {
   box-sizing: border-box;
 }
 
-/* Estilo para o Enunciado da Pergunta */
+/* Enunciado da Pergunta */
 .question-enunciado {
   font-size: 1.25rem;
   color: var(--eve-branco);
@@ -408,33 +342,28 @@ h1 {
   line-height: 1.6;
 }
 
-/* Estilos para Login Admin (Wrapper de Senha e Ícone) */
+/* Wrapper de Senha Admin */
 .password-wrapper {
   position: relative;
-  /* Usa 80% para alinhar com os inputs acima */
   width: 80%;
-  margin: 0 auto 20px auto; /* Centraliza e adiciona margem inferior */
+  margin: 0 auto 20px auto;
 }
-
-/* Ajusta o input de senha dentro do wrapper */
 .admin-login-container .password-wrapper input[type="password"],
 .admin-login-container .password-wrapper input[type="text"] {
-  width: 100%; /* O input ocupa 100% do wrapper */
-  margin-bottom: 0; /* Wrapper controla a margem */
+  width: 100%;
+  margin-bottom: 0;
 }
-
 .password-toggle-icon {
   position: absolute;
   top: 50%;
   right: 15px;
-  /* Ajusta o 'top' para centralizar verticalmente no input */
   transform: translateY(-50%);
   cursor: pointer;
   user-select: none;
   font-size: 1.3rem;
 }
 
-/* Estilos de Histórico (Botão apelido e msg de 'sem resultados') */
+/* Botão Nickname Histórico */
 .history-nickname-button {
   background: none;
   border: none;
@@ -443,20 +372,19 @@ h1 {
   text-decoration: underline;
   font-weight: bold;
   padding: 0;
-  font-size: inherit; /* Herda o tamanho da fonte do .result-item */
-  font-family: inherit; /* Herda a fonte */
+  font-size: inherit;
+  font-family: inherit;
 }
 .history-nickname-button:hover {
   color: var(--dourado-claro);
 }
-
 .no-results-message {
   color: var(--cinza-claro);
   font-style: italic;
   margin-top: 20px;
 }
 
-/* Estilos da Tela de Detalhes (Admin) */
+/* Detalhes Admin (Ranking e Respostas) */
 .ranking-container,
 .responses-container {
   width: 100%;
@@ -467,7 +395,6 @@ h1 {
   box-sizing: border-box;
   border: 1px solid var(--bordo-marrom-escuro);
 }
-
 .ranking-title,
 .responses-title {
   color: var(--amarelo-wall-e);
@@ -476,25 +403,20 @@ h1 {
   padding-bottom: 10px;
   text-align: left;
 }
-
-/* MODIFICADO: Listas de Detalhes (com Scroll) */
 .ranking-list,
 .history-details-list {
   list-style: none;
   padding: 0;
   text-align: left;
-  /* --- Adições de Scroll --- */
-  max-height: 250px; /* Altura menor, pois podem haver duas caixas */
-  overflow-y: auto;  /* Habilita o scroll vertical */
-  padding-right: 10px; /* Espaço para a barra de rolagem */
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 10px;
 }
-
 .ranking-list-item {
   margin-bottom: 8px;
   color: var(--eve-branco);
   font-size: 0.95rem;
 }
-
 .history-detail-item {
   background-color: var(--cinza-escuro);
   padding: 10px 12px;
@@ -510,33 +432,63 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
-/* --- FIM DAS ADIÇÕES --- */
+/* NOVO: Estilos para Ranking e Cursos no Histórico Admin 
+  Usado na Parte 2 (JSX)
+*/
+.result-item-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bordo-marrom-escuro);
+}
+.result-item-details h4 {
+  margin: 0 0 5px 0;
+  color: var(--dourado-claro);
+  font-size: 0.9rem;
+}
+.admin-ranking-list,
+.admin-course-list {
+  list-style: none;
+  padding-left: 10px;
+  margin: 0;
+}
+.admin-ranking-list li,
+.admin-course-list li {
+  font-size: 0.85rem;
+  color: var(--cinza-claro);
+  padding: 2px 0;
+}
 
-/* * CORREÇÃO #3: Media Query para Dispositivos Móveis */
+
+/* * CORREÇÃO #3: Media Query (Mobile) */
 @media (max-width: 650px) {
-  /* Remove o GIF de fundo em telas pequenas */
+  /* Remove GIF */
   body.nickname-page.gif-active::after,
   body.final-page.gif-active::after,
   body.history-page.gif-active::after,
-  body.adminLogin.gif-active::after, /* Adicionado adminLogin */
-  body.detail-page.gif-active::after { /* ADICIONADO P/ JSX */
+  body.adminLogin.gif-active::after,
+  body.detail-page.gif-active::after {
     background-image: none;
     filter: none;
   }
 
-  /* Ajusta o contêiner principal para melhor visualização em telas pequenas */
+  /* Ajusta contêiner principal */
   .app-container {
     position: relative;
     top: auto;
     left: auto;
     transform: none;
     margin: 20px auto;
-    padding: 15px;
     width: 95%;
     min-width: unset;
+    /* CORREÇÃO DE PADDING (MOBILE):
+      O Wall-E mobile invade 90px (width 100px, left -10px).
+      Aumentamos o padding-left para 95px (80px + 15px) 
+      para compensar em todas as telas mobile.
+    */
+    padding: 15px 15px 15px 95px;
   }
 
-  /* Reduz o tamanho da imagem do Wall-E e a posiciona melhor para não cortar */
+  /* Ajusta gatilho Wall-E */
   .admin-trigger {
     width: 100px;
     height: 100px;
@@ -545,27 +497,22 @@ h1 {
     transform: rotate(-10deg);
   }
 
-  /* Reduz o tamanho da fonte para melhor leitura em telas pequenas */
+  /* Ajustes de Fonte */
   h1 {
     font-size: 1.5rem;
   }
-
-  /* Garante que os botões de resposta usem mais largura */
   .option-button {
     width: 95%;
     font-size: 0.95rem;
   }
-  
-  /* Garante que o resultado principal seja legível */
   .main-result {
     font-size: 1.3rem;
   }
   
-  /* Aumenta o espaçamento entre botões extras para facilitar o toque */
+  /* Ajustes de Botões */
   .extra-buttons {
     gap: 8px;
   }
-
   .back-button,
   .history-button,
   .clear-history-button,
@@ -574,25 +521,8 @@ h1 {
       flex-basis: 48%;
       min-width: unset;
   }
-
-  /* Ajuste dos botões de fonte para mobiles */
   .font-toggle-button {
     width: 70px;
     padding: 10px;
   }
-}
-
-/* CORREÇÃO: Sobreposição do Wall-E na Tela de Questões
-  
-  O .admin-trigger (Wall-E) está em 'left: -30px' e 'width: 150px'.
-  Ele "invade" 120px do espaço do contêiner.
-  O padding-left padrão do contêiner é 30px.
-  Precisamos de ~90-100px a mais de espaço à esquerda, APENAS na tela de quiz,
-  para "empurrar" o texto e os botões para a direita.
-*/
-body.question-page .app-container {
-  /* Define o espaçamento (top, right, bottom, left) */
-  /* Mantém 10px em cima, 30px na direita, 10px embaixo */
-  /* e AUMENTA para 130px na esquerda */
-  padding: 10px 30px 10px 130px;
 }
