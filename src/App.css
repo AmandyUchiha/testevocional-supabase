@@ -437,10 +437,7 @@ h1 {
 }
 
 /* NOVO: Estilo para a caixa de Sugestões (Top 7) */
-/* Instrução: No seu HTML/JSX, envolva o título "Sugestões (Top 7)" 
-  e o <div> ou <ul> de sugestões com um 
-  <div class="suggestions-container">
-*/
+/* Instrução: Veja a Correção 1. Você DEVE mudar seu JSX. */
 .suggestions-container {
   width: 100%;
   margin-top: 20px;
@@ -452,9 +449,6 @@ h1 {
   text-align: left; 
 }
 
-/* Instrução: Dê ao seu título "Sugestões (Top 7)" (seja h2, h3, etc.) 
-  a classe "suggestions-title"
-*/
 .suggestions-container .suggestions-title {
   color: var(--amarelo-wall-e);
   margin-top: 0;
@@ -563,7 +557,7 @@ h1 {
     line-height: 1.4; /* Ajusta a altura da linha para fontes menores */
   }
 
-  /* CORREÇÃO LAYOUT BANCO ANTIGO (MOBILE):
+  /* *** ESTA É A CORREÇÃO PARA O BANCO ANTIGO CORTADO ***
     Muda o layout do item do banco antigo para mobile.
     - 'display: block' faz o label (<strong>) ir para a linha de cima.
     - 'min-width: unset' remove a largura mínima do desktop.
