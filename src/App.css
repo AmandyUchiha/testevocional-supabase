@@ -1,0 +1,623 @@
+/* ==================================== */
+/* 0. Variáveis de Cor (Tema WALL-E/EVE) */
+/* ==================================== */
+:root {
+    --eve-branco: #E0E0E0;
+    --eve-fundo-escuro: #1A1A1A; /* REQUISITO: Este é o "marrom" sólido */
+    --eve-fundo-transp: rgba(30, 30, 30, 0.9);
+    --amarelo-wall-e: #F0C94F;
+    --vermelho-erro: #D64545;
+    --verde-sucesso: #4CAF50;
+    --cinza-claro: #555555;
+    --cinza-hover: #444444;
+}
+
+/* ==================================== */
+/* 1. Estilos Globais e Reset */
+/* ==================================== */
+html {
+    font-size: 16px;
+    transition: font-size 0.2s ease-in-out;
+    /* A página PRECISA rolar para a lista de cursos caber */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--eve-fundo-escuro); 
+    color: var(--eve-branco);
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+    padding-top: 20px;
+    
+    background-image: url('assets/fundo.gif'); 
+    background-repeat: no-repeat;
+    background-size: cover; 
+    background-attachment: fixed; /* Fixo no lugar */
+    background-position: center; 
+    transition: background-image 0.3s ease;
+}
+
+/* REQUISITO: Muda o fundo durante as perguntas (via JS) */
+body.question-page {
+    background-image: none;
+    background-color: var(--eve-fundo-escuro);
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1200px;
+    position: relative;
+    padding-bottom: 50px;
+}
+
+/* ==================================== */
+/* 2. Estilos do Container Principal e Wall-E */
+/* ==================================== */
+
+.container {
+    width: 90%; 
+    /* REQUISITO: Caixa aumentada horizontalmente */
+    max-width: 800px; 
+    margin: 100px auto 30px auto; 
+    padding: 30px; 
+    border-radius: 12px;
+    background-color: var(--eve-fundo-transp);
+    border: 1px solid var(--cinza-claro);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    position: relative; 
+    z-index: 10; 
+    min-height: 450px;
+    
+    /* REQUISITO: Centraliza todos os elementos */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+/* REQUISITO: Remove a transparência durante as perguntas (via JS) */
+body.question-page .container {
+    background-color: var(--eve-fundo-escuro); /* Fica sólido */
+}
+
+
+/* Regra para telas que precisam ser mais largas */
+body.question-page .container,
+body.history-page .container,
+body.detail-page .container,
+body.admin-panel-container .container {
+    max-width: 950px; 
+}
+
+
+h1 {
+    color: var(--amarelo-wall-e);
+    margin-bottom: 20px;
+    font-size: 2.2rem;
+}
+
+h2 {
+    color: var(--eve-branco);
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+/* ------------------------------------- */
+/* ADMIN TRIGGER (WALL-E) */
+/* ------------------------------------- */
+.admin-trigger {
+    position: absolute; 
+    /* REQUISITO: "Sentado" na borda */
+    top: 2px;
+    /* REQUISITO: Fixo no topo superior esquerdo */
+    left: 20px; 
+    width: 180px; 
+    height: 180px;
+    cursor: pointer;
+    z-index: 20;
+    
+    background-image: url('assets/walle.png'); 
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+
+/* ==================================== */
+/* 3. Estilos de Formulário/Registro/Login */
+/* ==================================== */
+.register-container form,
+.admin-login-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.register-container input,
+.admin-login-container input {
+    /* REQUISITO: Largura alinhada com o botão */
+    width: 90%;
+    max-width: 500px; 
+    
+    padding: 12px;
+    margin: 10px auto;
+    border-radius: 6px;
+    border: 2px solid var(--cinza-claro);
+    background: var(--eve-fundo-escuro);
+    color: var(--eve-branco);
+    font-size: 1rem;
+    display: block;
+    text-align: center;
+}
+
+/* Wrapper para o ícone de senha */
+.password-wrapper {
+    position: relative;
+    width: 90%;
+    max-width: 500px;
+    margin: 0;
+}
+.password-wrapper input {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+.password-toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 1.2rem;
+}
+
+
+.admin-login-container .extra-buttons {
+    margin-top: 30px;
+}
+
+/* ==================================== */
+/* 4. Estilos de Botões */
+/* ==================================== */
+
+button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+    margin: 8px;
+    font-size: 1rem;
+    min-width: 150px;
+}
+
+/* Botões de Ação Principal (Iniciar, Entrar) */
+.start-button,
+[type="submit"]:not(.option-button) {
+    background-color: var(--amarelo-wall-e);
+    color: var(--eve-fundo-escuro);
+    border: 2px solid var(--amarelo-wall-e);
+    /* REQUISITO: Largura alinhada com o input */
+    width: 90%;
+    max-width: 500px; 
+}
+.start-button:hover,
+[type="submit"]:not(.option-button):hover {
+    background-color: #f7e096;
+    transform: translateY(-2px);
+}
+.start-button:disabled,
+[type="submit"]:not(.option-button):disabled {
+    background-color: var(--cinza-claro);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Botões de Navegação (Voltar, Sair) */
+.back-button,
+.back-to-test-button {
+    background-color: var(--cinza-claro);
+    color: var(--eve-branco);
+}
+.back-button:hover,
+.back-to-test-button:hover {
+    background-color: var(--cinza-hover);
+    transform: translateY(-2px);
+}
+
+/* Botões de Resultado/Reiniciar */
+.restart-button {
+    background-color: var(--verde-sucesso);
+    color: var(--eve-fundo-escuro);
+}
+.restart-button:hover {
+    background-color: #79c97c;
+    transform: translateY(-2px);
+}
+
+.history-button {
+    background-color: var(--cinza-claro);
+    color: var(--eve-branco);
+}
+.history-button:hover {
+    background-color: var(--cinza-hover);
+    transform: translateY(-2px);
+}
+
+.clear-history-button {
+    background-color: var(--vermelho-erro);
+    color: var(--eve-branco);
+}
+.clear-history-button:hover:not(:disabled) {
+    background-color: #f36c6c;
+    transform: translateY(-2px);
+}
+
+/* ==================================== */
+/* 5. Estilos do Quiz (Question) */
+/* ==================================== */
+.question-container {
+    max-width: 900px;
+    width: 100%;
+}
+
+.question-enunciado {
+    font-size: 1.3rem !important; 
+    color: var(--eve-branco);
+    margin: 30px auto;
+    padding: 0 10px;
+    max-width: 800px;
+}
+
+.option-buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    margin-top: 20px;
+    width: 100%;
+}
+
+.option-button {
+    width: 90%;
+    max-width: 600px;
+    margin: 10px 0;
+    background-color: var(--cinza-claro);
+    color: var(--eve-branco);
+    text-align: left;
+    white-space: normal;
+    min-height: 50px;
+    transition: background-color 0.2s;
+    font-weight: normal;
+    padding: 10px 20px;
+}
+
+.option-button:hover {
+    background-color: var(--cinza-hover);
+    transform: none;
+}
+
+.option-button.selected {
+    background-color: var(--verde-sucesso);
+    border: 2px solid var(--amarelo-wall-e);
+    color: var(--eve-fundo-escuro);
+    font-weight: bold;
+}
+
+/* Botões (Voltar, Reiniciar) alinhados */
+.extra-buttons {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+
+/* ==================================== */
+/* 6. Estilos de Resultado (Result) */
+/* ==================================== */
+.result-container {
+    text-align: center;
+}
+
+.main-result {
+    color: var(--amarelo-wall-e);
+    font-size: 2.5rem;
+    margin: 20px 0;
+    text-shadow: 0 0 10px rgba(240, 201, 79, 0.5);
+}
+
+/* REQUISITO: Caixa de cursos sem scroll interno */
+.suggestions {
+    margin: 30px auto;
+    padding: 20px;
+    border: 1px dashed var(--cinza-claro);
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    /* REMOVIDO: 'max-height' e 'overflow-y' */
+}
+
+.suggestions h3 {
+    color: var(--amarelo-wall-e);
+    margin-bottom: 10px;
+}
+
+.suggestions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.suggestions li {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+/* ==================================== */
+/* 7. Estilos de Histórico (History) */
+/* ==================================== */
+.history-container, .local-history-container {
+    text-align: center;
+    flex-grow: 1; 
+    width: 100%;
+}
+
+.result-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    /* SCROLL INTERNO (Onde necessário) */
+    max-height: 350px; 
+    overflow-y: auto;
+    width: 100%;
+    padding-right: 10px;
+    flex-grow: 1;
+}
+
+.result-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    text-align: left;
+    border-left: 5px solid var(--amarelo-wall-e);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.history-nickname-button {
+    background: none;
+    border: none;
+    color: var(--amarelo-wall-e);
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 1rem;
+    min-width: 0;
+}
+
+/* ==================================== */
+/* 8. Estilos de Detalhes (DetailView) */
+/* ==================================== */
+
+.detail-view-container {
+    text-align: left;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.history-details-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    /* SCROLL INTERNO (Onde necessário) */
+    max-height: 250px; 
+    overflow-y: auto;
+    padding-right: 10px;
+    flex-grow: 1;
+}
+
+.history-detail-item {
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--verde-sucesso);
+}
+
+.history-detail-item strong {
+    color: var(--amarelo-wall-e);
+}
+
+/* Estilos para o Ranking em Detalhes */
+.ranking-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+.ranking-title {
+    color: var(--amarelo-wall-e);
+}
+.ranking-list {
+    list-style: none;
+    padding: 10px;
+    margin: 15px 0;
+    width: 100%;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background-color: rgba(0,0,0,0.2);
+    text-align: left;
+}
+.ranking-list-item {
+    background-color: rgba(0,0,0,0.6);
+    color: var(--eve-branco);
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 5px solid var(--amarelo-wall-e);
+}
+.responses-container {
+    width: 100%;
+}
+.responses-title {
+    color: var(--amarelo-wall-e);
+}
+
+
+/* ==================================== */
+/* 9. Estilos de Mensagens de Status */
+/* ==================================== */
+
+.loading {
+    padding: 20px;
+    font-size: 1.2rem;
+    color: var(--amarelo-wall-e);
+    text-align: center;
+}
+
+.error-message {
+    padding: 15px;
+    margin: 15px auto;
+    background-color: var(--vermelho-erro);
+    border-radius: 8px;
+    color: var(--eve-branco);
+    font-weight: bold;
+    max-width: 500px;
+}
+
+.error-message p {
+    margin: 0;
+}
+
+.no-results-message {
+    margin: 20px 0;
+    color: var(--amarelo-wall-e);
+}
+
+
+/* ==================================== */
+/* 10. Controles de Acessibilidade (Fonte) */
+/* ==================================== */
+.font-controls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    z-index: 15;
+}
+
+.font-toggle-button {
+    background-color: var(--cinza-claro);
+    color: var(--eve-branco);
+    padding: 8px 12px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    min-width: 40px;
+}
+
+.font-toggle-button:hover {
+    background-color: var(--cinza-hover);
+    transform: scale(1.05);
+}
+
+/* ==================================== */
+/* 11. Media Queries (Responsividade) */
+/* ==================================== */
+
+@media (max-width: 768px) {
+    
+    /* Em mobile, usa a cor de fundo sólida */
+    body {
+        background-image: none;
+        background-color: var(--eve-fundo-escuro);
+    }
+    
+    .container {
+        padding: 20px;
+        min-height: 300px;
+        margin-top: 80px; 
+        max-width: 90%; /* Ocupa mais tela */
+    }
+
+    body.question-page .container,
+    body.history-page .container,
+    body.detail-page .container,
+    body.admin-panel-container .container {
+        max-width: 90%; 
+    }
+    
+    .question-enunciado {
+        font-size: 1.1rem !important;
+    }
+    
+    .option-button {
+        width: 100%;
+        font-size: 0.95rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    /* Ajusta o WALL-E para mobile */
+    .admin-trigger {
+        width: 120px; 
+        height: 120px;
+        top: 2px;
+        left: 10px; 
+    }
+}
+
+/* ==================================== */
+/* 12. Estilos da Tela Admin */
+/* ==================================== */
+
+.admin-panel-container {
+    text-align: left;
+    flex-grow: 1; 
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    /* SCROLL INTERNO (Onde necessário) */
+    max-height: 400px; 
+    overflow-y: auto;
+    padding-right: 10px;
+    flex-grow: 1; 
+}
+
+.admin-list-item {
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--vermelho-erro);
+}
