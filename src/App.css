@@ -254,14 +254,13 @@ h1 {
 }
 
 /* Lista de Resultados (com Scroll) */
-/* ESTA É A REGRA QUE FAZ O SCROLL DENTRO DA CAIXA */
 .result-list {
   list-style: none;
   padding: 0 10px;
   margin-top: 20px;
   text-align: center;
-  max-height: 450px; /* Altura máxima da lista */
-  overflow-y: auto;  /* Adiciona o scroll */
+  max-height: 450px;
+  overflow-y: auto;
   overflow-x: hidden;
   width: 100%; /* Garante que ocupe o espaço */
 }
@@ -323,7 +322,7 @@ h1 {
 /* Inputs (Registro e Admin) */
 .register-container input[type="text"],
 .admin-login-container input[type="text"],
-/* *** A LINHA COM ERRO FOI CORRIGIDA *** */
+/* *** A LINHA COM ERRO FOI CORRIGIDA (adicionado '=') *** */
 .admin-login-container input[type="password"] {
   width: 80%;
   padding: 12px;
@@ -495,6 +494,21 @@ h1 {
   padding: 2px 0;
 }
 
+/* *** NOVA REGRA PARA CORRIGIR O SCROLL NO DESKTOP ***
+   Tira o .app-container do 'position: absolute' nas páginas
+   de histórico, que são muito longas.
+*/
+body.history-page .app-container,
+body.detail-page .app-container {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 20px auto;
+  /* Alinha o conteúdo ao topo, em vez de centralizar */
+  justify-content: flex-start;
+}
+
 
 /* * CORREÇÃO #3: Media Query (Mobile) */
 @media (max-width: 650px) {
@@ -525,13 +539,10 @@ h1 {
     padding: 15px 15px 15px 95px;
   }
   
-  /* Na tela de histórico, o container não deve ser 'absolute' */
-  body.history-page .app-container {
-      position: relative;
-      top: auto;
-      left: auto;
-      transform: none;
-      margin-top: 20px;
+  /* Garante que o alinhamento no mobile também seja no topo */
+  body.history-page .app-container,
+  body.detail-page .app-container {
+      justify-content: flex-start;
   }
 
 
