@@ -95,11 +95,44 @@ function App() {
   function increaseFontSize() { setFontSizeAdjustment(adj => Math.min(adj + 2, 8)); }
   function decreaseFontSize() { setFontSizeAdjustment(adj => Math.max(adj - 2, -4)); }
 
-  // REMOVIDA a função handleSecretAdminTrigger
-
-  // --- FUNÇÕES DE ADMIN --- (sem alterações)
+  // --- FUNÇÕES DE ADMIN ---
   async function handleAdminLogin(e) { /* ... */ e.preventDefault(); setAdminError(null); setLoading(true); try { const { data: uD, error: uE } = await supabase.from('user_mestre').select('apelido, senha_hash').eq('apelido', adminApelido).single(); if (uE && uE.code !== 'PGRST116') throw uE; if (!uD || uE) throw new Error('Inválido.'); const sP = uD.senha_hash; if (adminPassword === sP) { setIsMasterAdmin(true); setView('admin_db_select'); } else { throw new Error('Inválido.'); } } catch (err) { console.error('Erro login:', err); setAdminError(err.message || 'Erro.'); } finally { setLoading(false); } }
-  async function fetchAllResults(dbSource) { /* ... */ let d, e; let r = []; try { if (dbSource === 'old') { ({ d, e } = await supabase.from('resultado_antigo').select(`id_u,area_principal,usuarios_antigo(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Antigo:${e.message}`); if(!d) throw new Error("Antigo:vazio."); r = d.map(i=>{ const ud=i.usuarios_antigo||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.area_principal]||i.area_principal,}; }); } else { ({ d, e } = await supabase.from('resultado').select(`id_u,foco_principal,usuarios(apelido,data_criacao)`).order('id_r',{ascending:false}).limit(10000)); if(e) throw new Error(`Novo:${e.message}`); if(!d) throw new Error("Novo:vazio."); r = d.map(i=>{ const ud=i.usuarios||{}; const ts=ud.data_criacao?new Date(ud.data_criacao):new Date(); return{id_u:i.id_u,nickname:ud.apelido||'?',date:ts.toLocaleDateString('pt-BR',brasiliaDateOptions),time:ts.toLocaleTimeString('pt-BR',brasiliaTimeOptions),foco:prettyFocusNames[i.foco_principal]||i.foco_principal,}; }); } } catch (err) { console.error("Erro fetch:", err); setAdminError(`Falha:${err.message}. RLS?`); r=[]; } finally { setHistoryLoading(false); } return r; }
+  
+  // ✅ FUNÇÃO CORRIGIDA: Trata corretamente a resposta vazia do Supabase (`d.length === 0`)
+  async function fetchAllResults(dbSource) {
+    let d, e;
+    let r = [];
+    try {
+      if (dbSource === 'old') {
+        ({ data: d, error: e } = await supabase.from('resultado_antigo').select(`id_u,area_principal,usuarios_antigo(apelido,data_criacao)`).order('id_r', { ascending: false }).limit(10000));
+        if (e) throw new Error(`Antigo:${e.message}`);
+        if (!d || d.length === 0) throw new Error("Antigo:vazio."); // Corrigido
+        r = d.map(i => {
+          const ud = i.usuarios_antigo || {};
+          const ts = ud.data_criacao ? new Date(ud.data_criacao) : new Date();
+          return { id_u: i.id_u, nickname: ud.apelido || '?', date: ts.toLocaleDateString('pt-BR', brasiliaDateOptions), time: ts.toLocaleTimeString('pt-BR', brasiliaTimeOptions), foco: prettyFocusNames[i.area_principal] || i.area_principal, };
+        });
+      } else { // Banco 'Novo'
+        ({ data: d, error: e } = await supabase.from('resultado').select(`id_u,foco_principal,usuarios(apelido,data_criacao)`).order('id_r', { ascending: false }).limit(10000));
+        if (e) throw new Error(`Novo:${e.message}`);
+        if (!d || d.length === 0) throw new Error("Novo:vazio."); // ✅ Corrigido
+        r = d.map(i => {
+          const ud = i.usuarios || {};
+          const ts = ud.data_criacao ? new Date(ud.data_criacao) : new Date();
+          return { id_u: i.id_u, nickname: ud.apelido || '?', date: ts.toLocaleDateString('pt-BR', brasiliaDateOptions), time: ts.toLocaleTimeString('pt-BR', brasiliaTimeOptions), foco: prettyFocusNames[i.foco_principal] || i.foco_principal, };
+        });
+      }
+    } catch (err) {
+      console.error("Erro fetch:", err);
+      // Mantém a mensagem de erro RLS para orientar o admin
+      setAdminError(`Falha:${err.message}. RLS?`); 
+      r = [];
+    } finally {
+      setHistoryLoading(false);
+    }
+    return r;
+  }
+
   async function handleViewHistoryDetails(userId, userNickname) { /* ... */ if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD.length>0&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);} }
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
@@ -239,17 +272,17 @@ function App() {
     const selectedAnswer = userAnswers.find(a => a.id_q === currentQuestion.id_q);
     return (
         <div className="container question-container">
-            <h2>Questão {currentQuestionIndex + 1} / {questions.length}</h2>
-            <p className="question-enunciado" style={{ fontSize: '1.1rem', color: 'var(--eve-branco)', margin: '20px 0' }}>{currentQuestion.enunciado}</p> 
-            {error && view === 'quiz' && <div className="error-message"><p>{error}</p></div>} 
-            <div className="option-buttons-container"> 
-                {(currentQuestion.opcoes || []).map(option => (
-                    <button key={option.id_o} className={`option-button ${selectedAnswer?.id_o === option.id_o ? 'selected' : ''}`} onClick={() => handleAnswer(currentQuestion.id_q, option.id_o)}> {option.opcao} </button>
-                ))}
-            </div>
-            <div className="extra-buttons"> 
-                {currentQuestionIndex > 0 && ( <button onClick={handleBack} className="back-button"> Voltar </button> )}
-            </div>
+          <h2>Questão {currentQuestionIndex + 1} / {questions.length}</h2>
+          <p className="question-enunciado" style={{ fontSize: '1.1rem', color: 'var(--eve-branco)', margin: '20px 0' }}>{currentQuestion.enunciado}</p> 
+          {error && view === 'quiz' && <div className="error-message"><p>{error}</p></div>} 
+          <div className="option-buttons-container"> 
+              {(currentQuestion.opcoes || []).map(option => (
+                  <button key={option.id_o} className={`option-button ${selectedAnswer?.id_o === option.id_o ? 'selected' : ''}`} onClick={() => handleAnswer(currentQuestion.id_q, option.id_o)}> {option.opcao} </button>
+              ))}
+          </div>
+          <div className="extra-buttons"> 
+              {currentQuestionIndex > 0 && ( <button onClick={handleBack} className="back-button"> Voltar </button> )}
+          </div>
         </div>
     );
   };
@@ -335,7 +368,7 @@ function App() {
     }
   };
 
-  // Retorno final com onClick no admin-trigger REINSERIDO
+  // Retorno final com onClick no admin-trigger
   return (
     <div className="app-container">
       <div 
