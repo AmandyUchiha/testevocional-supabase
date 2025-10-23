@@ -3,7 +3,7 @@
 /* ==================================== */
 :root {
     --eve-branco: #E0E0E0;
-    --eve-fundo-escuro: #1A1A1A; /* Cor de fundo mobile */
+    --eve-fundo-escuro: #1A1A1A; /* REQUISITO: Este é o "marrom" sólido */
     --eve-fundo-transp: rgba(30, 30, 30, 0.9);
     --amarelo-wall-e: #F0C94F;
     --vermelho-erro: #D64545;
@@ -18,8 +18,9 @@
 html {
     font-size: 16px;
     transition: font-size 0.2s ease-in-out;
-    /* REQUISITO: Remove o scroll da página inteira */
-    overflow-y: hidden; 
+    /* REQUISITO: REMOVIDO 'overflow-y: hidden'. 
+       É necessário permitir o scroll da página 
+       para ver a lista de cursos inteira. */
 }
 
 * {
@@ -42,8 +43,16 @@ body {
     background-image: url('assets/fundo.gif'); 
     background-repeat: no-repeat;
     background-size: cover; 
+    /* O 'fixed' garante que o GIF não role com a página */
     background-attachment: fixed; 
     background-position: center; 
+    transition: background-image 0.3s ease;
+}
+
+/* REQUISITO: Muda o fundo durante as perguntas (precisa de JS) */
+body.question-page {
+    background-image: none;
+    background-color: var(--eve-fundo-escuro);
 }
 
 .app-container {
@@ -59,8 +68,8 @@ body {
 
 .container {
     width: 90%; 
-    /* REQUISITO: Caixa aumentada */
-    max-width: 700px; 
+    /* REQUISITO: Caixa aumentada horizontalmente */
+    max-width: 800px; 
     margin: 100px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
@@ -72,18 +81,25 @@ body {
     z-index: 10; 
     min-height: 450px;
     
-    /* REQUISITO: Centraliza todos os elementos filhos */
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: background-color 0.3s ease;
 }
 
-/* Regra para telas que precisam ser mais largas (quiz, histórico) */
+/* REQUISITO: Remove a transparência durante as perguntas (precisa de JS) */
+body.question-page .container {
+    background-color: var(--eve-fundo-escuro); /* Fica sólido */
+}
+
+
+/* Regra para telas que precisam ser mais largas */
 .question-page .container,
 .history-page .container,
 .detail-page .container,
 .admin-panel-container {
-    max-width: 850px;
+    /* REQUISITO: Aumentado */
+    max-width: 950px; 
 }
 
 
@@ -129,7 +145,6 @@ p {
 /* ==================================== */
 .register-container input,
 .admin-login-container input {
-    /* REQUISITO: Largura alinhada com o botão */
     width: 90%;
     max-width: 500px; 
     
@@ -141,7 +156,7 @@ p {
     color: var(--eve-branco);
     font-size: 1rem;
     display: block;
-    text-align: center; /* Centraliza o placeholder */
+    text-align: center;
 }
 
 .admin-login-container .extra-buttons {
@@ -170,8 +185,6 @@ button {
     background-color: var(--amarelo-wall-e);
     color: var(--eve-fundo-escuro);
     border: 2px solid var(--amarelo-wall-e);
-
-    /* REQUISITO: Largura alinhada com o input */
     width: 90%;
     max-width: 500px; 
 }
@@ -277,7 +290,11 @@ button {
     font-weight: bold;
 }
 
-/* Esta classe já alinha os botões "Voltar" e "Reiniciar" lado a lado */
+/* REQUISITO: Botão de Reiniciar
+   Lembre-se: Adicione o <button class="restart-button"> no seu HTML 
+   dentro desta div, ao lado do botão "Voltar". 
+   O CSS abaixo já vai alinhá-los.
+*/
 .extra-buttons {
     margin-top: 30px;
     display: flex;
@@ -301,15 +318,15 @@ button {
     text-shadow: 0 0 10px rgba(240, 201, 79, 0.5);
 }
 
+/* REQUISITO: Caixa de cursos sem scroll interno */
 .suggestions {
     margin: 30px auto;
     padding: 20px;
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
-    max-height: 200px;
-    overflow-y: auto;
+    /* REMOVIDO: 'max-height' e 'overflow-y' foram removidos 
+       para listar tudo sem scroll. */
 }
 
 .suggestions h3 {
@@ -342,7 +359,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO (Mantido para o histórico) */
     max-height: 350px; 
     overflow-y: auto;
     width: 100%;
@@ -388,7 +405,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO (Mantido) */
     max-height: 250px; 
     overflow-y: auto;
     padding-right: 10px;
@@ -503,7 +520,6 @@ button {
         width: 120px; 
         height: 120px;
         top: 2px;
-        /* REQUISITO: Fixo no topo esquerdo (mobile) */
         left: 10px; 
     }
 }
@@ -524,7 +540,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    /* SCROLL INTERNO (Mantido) */
     max-height: 400px; 
     overflow-y: auto;
     padding-right: 10px;
