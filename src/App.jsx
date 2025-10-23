@@ -59,6 +59,7 @@ function App() {
   const [historyDetails, setHistoryDetails] = useState(null); 
   const [historyDetailsLoading, setHistoryDetailsLoading] = useState(false);
   const [historyRanking, setHistoryRanking] = useState(null); 
+  const [historySuggestions, setHistorySuggestions] = useState(null); // NOVO: Estado para as sugestões
 
   // Efeitos (sem alterações)
   useEffect(() => { 
@@ -71,7 +72,7 @@ function App() {
           if (mError) throw mError; if (!mData) throw new Error("Nenhuma pont. máxima."); const mScoresMap = mData.reduce((acc, i) => { if (i.foco && typeof i.valor_maximo === 'number') acc[i.foco] = i.valor_maximo; return acc; }, {}); if (Object.keys(mScoresMap).length === 0) throw new Error("Nenhuma pont. máxima válida."); setMaxScores(mScoresMap);
           const { data: cData, error: cError } = await supabase.from('cursos_por_foco').select('foco, curso_nome');
           if (cError) throw cError; if (!cData) throw new Error("Nenhum curso."); const cMapObj = cData.reduce((acc, i) => { if (i.foco && i.curso_nome) { if (!acc[i.foco]) acc[i.foco] = []; acc[i.foco].push(i.curso_nome); } return acc; }, {}); setCourseMap(cMapObj);
-          const savedResults = localStorage.getItem('testHistory'); if(savedResults){try{setPastResults(JSON.parse(savedResults));}catch(e){console.error("Erro hist local:",e);localStorage.removeItem('testHistory');}}
+          const savedResults = localStorage.getItem('testHistory'); if(savedResults){try{setPastResults(JSON.parse(savedResults));}catch(e){console.error("Erro hist local:",e);localStorage.removeItem('testHistory');}}
         } catch (err){console.error('Erro dados:',err);setError(`Falha:${err.message}.`);} 
         finally {setLoading(false);}
       } getInitialData();
@@ -142,7 +143,86 @@ function App() {
     return r;
 }
 
-  async function handleViewHistoryDetails(userId, userNickname) { /* ... */ if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); setAdminError(null); const isOld = adminSelectedDb === 'old'; const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; const questT=isOld?'questoes_antigo':'questoes'; const opT=isOld?'opcoes_antigo':'opcoes'; try { if (!isOld) { const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); if(rE) throw new Error(`ranking:${rE.message}. RLS!`); if(rD&&rD.length>0&&rD[0].ranking_completo){const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); setHistoryRanking(sR);}else{setHistoryRanking(null);}}else{setHistoryRanking(null);} const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); if (!respD||respD.length===0){setHistoryDetails([]);} else { const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} else { const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); setHistoryDetails(cD.length>0?cD:[]);}}} catch(err){console.error("Erro details:",err); setAdminError(`Erro ${err.message}. RLS.`); setHistoryDetails([]); setHistoryRanking(null);} finally {setHistoryDetailsLoading(false);} }
+  // ALTERADO: Adicionado cálculo de sugestões
+  async function handleViewHistoryDetails(userId, userNickname) { 
+    if (!userId || !userNickname) { setAdminError('ID/Apelido?'); return; } 
+    setDetailedUser({id:userId,nickname:userNickname}); setView('detailView'); 
+    setHistoryDetailsLoading(true); setHistoryDetails(null); setHistoryRanking(null); 
+    setHistorySuggestions(null); // NOVO: Reseta o estado
+    setAdminError(null); 
+    const isOld = adminSelectedDb === 'old'; 
+    const respT=isOld?'respostas_usuario_antigo':'respostas_usuario'; 
+    const questT=isOld?'questoes_antigo':'questoes'; 
+    const opT=isOld?'opcoes_antigo':'opcoes'; 
+    
+    try { 
+      if (!isOld) { 
+        const{data:rD,error:rE}=await supabase.from('resultado').select('ranking_completo').eq('id_u',userId).order('id_r',{ascending:false}).limit(1); 
+        if(rE) throw new Error(`ranking:${rE.message}. RLS!`); 
+        
+        if(rD&&rD.length>0&&rD[0].ranking_completo){
+          const sR=[...rD[0].ranking_completo].sort((a,b)=>b.percentual-a.percentual); 
+          setHistoryRanking(sR);
+          
+          // --- NOVO: Lógica para calcular as 7 sugestões ---
+          try {
+            const top3 = sR.slice(0, 3);
+            if (top3.length > 0) {
+              const pool = [];
+              const search = top3.map(f => f.foco);
+              // Usa o 'courseMap' do estado
+              if (search[0]) pool.push(...(courseMap[search[0]] || [])); 
+              if (search[1]) pool.push(...(courseMap[search[1]] || [])); 
+              if (search[2]) pool.push(...(courseMap[search[2]] || []));
+              
+              const suggestions = [...new Set(pool)].slice(0, 7);
+              setHistorySuggestions(suggestions);
+            } else {
+              setHistorySuggestions([]); 
+            }
+          } catch (calcErr) {
+            console.error("Erro ao calcular sugestões do histórico:", calcErr);
+            setHistorySuggestions(null); // Falha no cálculo
+          }
+          // --- FIM DA NOVA LÓGICA ---
+
+        }else{
+          setHistoryRanking(null);
+          setHistorySuggestions(null); // NOVO: Reseta se não houver ranking
+        }
+      }else{
+        setHistoryRanking(null);
+        setHistorySuggestions(null); // NOVO: Reseta se for banco antigo
+      } 
+      
+      const{data:respD,error:respE}=await supabase.from(respT).select('id_q,id_o').eq('id_u',userId); 
+      if(respE) throw new Error(`${respT}:${respE.message}. RLS!`); 
+      if (!respD||respD.length===0){setHistoryDetails([]);} 
+      else { 
+        const qIds=[...new Set(respD.map(r=>r.id_q))].filter(id=>id!=null); 
+        const oIds=[...new Set(respD.map(r=>r.id_o))].filter(id=>id!=null); 
+        if(qIds.length===0||oIds.length===0){const msg=`Dados ${qIds.length===0?'Q':'O'} ausentes.`; setAdminError(p=>p?`${p} ${msg}`:msg); setHistoryDetails([]);} 
+        else { 
+          const{data:qD,error:qE}=await supabase.from(questT).select('id_q,enunciado').in('id_q',qIds); 
+          if(qE) throw new Error(`${questT}:${qE.message}`); if(!qD||qD.length===0) throw new Error(`No Q ${questT}.`); 
+          const{data:oD,error:oE}=await supabase.from(opT).select('id_o,opcao').in('id_o',oIds); 
+          if(oE) throw new Error(`${opT}:${oE.message}`); if(!oD||oD.length===0) throw new Error(`No O ${opT}.`); 
+          const qMap=new Map((qD||[]).map(q=>[q.id_q,q.enunciado])); 
+          const oMap=new Map((oD||[]).map(o=>[o.id_o,o.opcao])); 
+          const cD=respD.filter(r=>qMap.has(r.id_q)&&oMap.has(r.id_o)).map(r=>({questoes:{enunciado:qMap.get(r.id_q)},opcoes:{opcao:oMap.get(r.id_o)}})); 
+          setHistoryDetails(cD.length>0?cD:[]);
+        }
+      }
+    } catch(err){
+      console.error("Erro details:",err); 
+      setAdminError(`Erro ${err.message}. RLS.`); 
+      setHistoryDetails([]); 
+      setHistoryRanking(null);
+      setHistorySuggestions(null); // NOVO: Reseta em caso de erro
+    } finally {
+      setHistoryDetailsLoading(false);
+    } 
+  }
 
   // --- FUNÇÕES DE NAVEGAÇÃO E TESTE ---
   function handleGoToRegister() { 
@@ -150,6 +230,7 @@ function App() {
       setCurrentQuestionIndex(0); setFinalResult(null); setIsMasterAdmin(false); 
       setAdminApelido(''); setAdminPassword(''); setAllDbResults([]); setAdminSelectedDb(null);
       setDetailedUser(null); setHistoryDetails(null); setHistoryRanking(null); 
+      setHistorySuggestions(null); // NOVO: Reseta o estado
       setAdminError(null); setError(null); 
       document.documentElement.removeAttribute('data-initial-font-size'); 
       document.documentElement.style.fontSize = ''; 
@@ -231,6 +312,8 @@ function App() {
       const suggestions = [...new Set(pool)].slice(0, 7); const mainFocus = top3[0];
       
       const resultData = { nickname: userNickname, date: new Date().toLocaleDateString('pt-BR'), foco: mainFocus.foco, sugestoes: suggestions };
+      
+      // ATENÇÃO: 'suggestions' não está sendo salvo aqui.
       const dbResultData = { id_u: userId, foco_principal: mainFocus.foco, percentual_principal: mainFocus.percentual, ranking_completo: focosOrdenados };
 
       console.log("Salvando...");
@@ -361,7 +444,7 @@ function App() {
   
   const renderHistory = () => ( <div className="container history-container"><h1>Histórico - Banco {adminSelectedDb==='old'?'Antigo':'Novo'}</h1>{historyLoading&&<div className="loading">Carregando...</div>}{adminError&&<div className="error-message"><p>{adminError}</p></div>}{!historyLoading&&allDbResults.length>0&&( <ul className="result-list">{allDbResults.map((r)=>( <li key={`${r.id_u}-${r.date}-${r.time}`} className="result-item"><div><strong>Apelido: </strong><button onClick={()=>handleViewHistoryDetails(r.id_u,r.nickname)} className="history-nickname-button">{r.nickname}</button> (ID: {r.id_u})</div><div><strong>Data:</strong> {r.date} às {r.time}</div><div><strong>Foco:</strong> {r.foco}</div></li> ))}</ul> )}{!historyLoading&&allDbResults.length===0&&!adminError&&( <p className="no-results-message">Nenhum resultado.</p> )}<div className="extra-buttons"><button onClick={()=>setView('admin_db_select')} className="back-button">Voltar</button><button onClick={handleGoToRegister} className="back-button">Sair</button></div></div> );
   
-  // ✅ CORRIGIDO: Removido estilos inline
+  // ALTERADO: Adicionada a renderização das sugestões
   const renderDetailView = () => { 
     if (!detailedUser) { setView('history'); return null; } 
     return ( 
@@ -370,6 +453,8 @@ function App() {
         <p>(ID: {detailedUser.id})</p>
         {historyDetailsLoading&&<div className="loading">Carregando...</div>}
         {adminError&&<div className="error-message"><p>{adminError}</p></div>}
+        
+        {/* Ranking (Porcentagens) */}
         {historyRanking&&historyRanking.length>0&&( 
           <div className="ranking-container"> {/* Use classes */}
             <h3 className="ranking-title">Ranking (DB)</h3>
@@ -380,6 +465,22 @@ function App() {
             ))}</ul>
           </div> 
         )}
+
+        {/* NOVO: Bloco para renderizar as 7 sugestões */}
+        {historySuggestions && historySuggestions.length > 0 && (
+          <div className="suggestions-container"> {/* Pode usar a classe 'ranking-container' ou criar 'suggestions-container' no CSS */}
+            <h3 className="suggestions-title">Sugestões (Top 7)</h3> {/* Pode usar 'ranking-title' ou 'suggestions-title' */}
+            <ul className="suggestions-list"> {/* Pode usar 'ranking-list' ou 'suggestions-list' */}
+              {historySuggestions.map((curso, i) => (
+                <li key={i} className="suggestion-list-item"> {/* Pode usar 'ranking-list-item' ou 'suggestion-list-item' */}
+                  {curso}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {/* Respostas */}
         {historyDetails&&historyDetails.length>0&&( 
           <div className="responses-container"> {/* Use classes */}
             <h3 className="responses-title">Respostas</h3>
@@ -391,11 +492,14 @@ function App() {
             ))}</ul>
           </div> 
         )}
+        
         {!historyDetailsLoading&&(!historyDetails||historyDetails.length===0)&&(!historyRanking||historyRanking.length===0)&&!adminError&&
           (<p className="no-results-message">Nenhum detalhe.</p>)
         }
+        
         <div className="extra-buttons">
-          <button onClick={()=>{setView('history');setHistoryDetails(null);setDetailedUser(null);setHistoryRanking(null);setAdminError(null);}} className="back-button">
+          {/* ALTERADO: Limpa o novo estado ao voltar */}
+          <button onClick={()=>{setView('history');setHistoryDetails(null);setDetailedUser(null);setHistoryRanking(null);setHistorySuggestions(null);setAdminError(null);}} className="back-button">
             Voltar
           </button>
         </div>
