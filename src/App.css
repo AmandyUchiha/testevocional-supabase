@@ -1,623 +1,408 @@
-/* ==================================== */
-/* 0. Variáveis de Cor (Tema WALL-E/EVE) */
-/* ==================================== */
+/* App.css - Tema Wall-E (Completo e com Adições) */
+
+/* Cores temáticas */
 :root {
-    --eve-branco: #E0E0E0;
-    --eve-fundo-escuro: #1A1A1A; /* REQUISITO: Este é o "marrom" sólido */
-    --eve-fundo-transp: rgba(30, 30, 30, 0.9);
-    --amarelo-wall-e: #F0C94F;
-    --vermelho-erro: #D64545;
-    --verde-sucesso: #4CAF50;
-    --cinza-claro: #555555;
-    --cinza-hover: #444444;
+  --cinza-claro: #c0c0c0;
+  --cinza-escuro: #2e2e2e;
+  --azul-wall-e: #0077be;
+  --amarelo-wall-e: #f4c542;
+  --reiniciar-wall-e: #8b5e3c;
+  --carvao-wall-e: #1a1a1a;
+  --eve-branco: #f0f0f0;
+  --verde-planta: #3fae6e;
+  --dourado-claro: #f0e68c;
+  --bordo-marrom: #8b4513;
+  --marrom-claro: #d2b48c;
+  --bordo-marrom-escuro: #4e2c1f;
+  --cor-fundo-perguntas: #3e2723;
+  --cor-fundo-gif: #4e342e;
 }
 
-/* ==================================== */
-/* 1. Estilos Globais e Reset */
-/* ==================================== */
-html {
-    font-size: 16px;
-    transition: font-size 0.2s ease-in-out;
-    /* A página PRECISA rolar para a lista de cursos caber */
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/* * CORREÇÃO #1: Fundo e Rolagem */
 body {
-    background-color: var(--eve-fundo-escuro); 
-    color: var(--eve-branco);
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; 
-    padding-top: 20px;
-    
-    background-image: url('assets/fundo.gif'); 
-    background-repeat: no-repeat;
-    background-size: cover; 
-    background-attachment: fixed; /* Fixo no lugar */
-    background-position: center; 
-    transition: background-image 0.3s ease;
+  margin: 0;
+  /* Garante que o corpo sempre cubra a tela, mas permite rolagem se o conteúdo for maior */
+  min-height: 100vh; 
+  /* Permite rolagem vertical para conteúdo grande (mobile) */
+  overflow-y: auto; 
+  /* Bloqueia rolagem horizontal */
+  overflow-x: hidden; 
+  font-family: 'Orbitron', sans-serif;
+  /* Define a cor de fundo padrão */
+  background-color: var(--cor-fundo-perguntas); 
 }
 
-/* REQUISITO: Muda o fundo durante as perguntas (via JS) */
+/* Fundo com GIF borrado - Apenas para telas de apelido, final e histórico */
+body.nickname-page.gif-active::after,
+body.final-page.gif-active::after,
+body.history-page.gif-active::after,
+body.adminLogin.gif-active::after { /* Adicionado adminLogin */
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: url('./assets/fundo.gif');
+  background-repeat: no-repeat;
+  /* Garante que o GIF preencha sempre, mesmo em mobile */
+  background-size: cover;
+  background-attachment: fixed; 
+  filter: blur(5px);
+}
+
+/* Fundo fixo para tela de perguntas */
 body.question-page {
-    background-image: none;
-    background-color: var(--eve-fundo-escuro);
+  background-color: var(--cor-fundo-perguntas);
+  overflow-y: auto; 
+  min-height: 100vh;
 }
 
+
+/* * CORREÇÃO #2: Contêiner Principal */
 .app-container {
-    width: 100%;
-    max-width: 1200px;
-    position: relative;
-    padding-bottom: 50px;
+  /* Altera de 'fixed' para 'absolute' para melhor fluxo em telas menores */
+  position: absolute; 
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 650px;
+  width: 90%; /* Ajusta para porcentagem para melhor responsividade */
+  /* Adiciona margem superior/inferior para garantir que o conteúdo não seja cortado */
+  margin: 20px auto; 
+  padding: 10px 30px;
+  background-color: var(--cinza-escuro);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
+  color: var(--cinza-claro);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  box-sizing: border-box;
 }
 
-/* ==================================== */
-/* 2. Estilos do Container Principal e Wall-E */
-/* ==================================== */
+/* ** MODIFICAÇÃO PARA O CLIQUE ** */
 
-.container {
-    width: 90%; 
-    /* REQUISITO: Caixa aumentada horizontalmente */
-    max-width: 800px; 
-    margin: 100px auto 30px auto; 
-    padding: 30px; 
-    border-radius: 12px;
-    background-color: var(--eve-fundo-transp);
-    border: 1px solid var(--cinza-claro);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    text-align: center;
-    position: relative; 
-    z-index: 10; 
-    min-height: 450px;
-    
-    /* REQUISITO: Centraliza todos os elementos */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: background-color 0.3s ease;
+/* 1. Remove a imagem Wall-E do pseudo-elemento (agora será um elemento real) */
+.app-container::before {
+  content: none;
 }
 
-/* REQUISITO: Remove a transparência durante as perguntas (via JS) */
-body.question-page .container {
-    background-color: var(--eve-fundo-escuro); /* Fica sólido */
-}
-
-
-/* Regra para telas que precisam ser mais largas */
-body.question-page .container,
-body.history-page .container,
-body.detail-page .container,
-body.admin-panel-container .container {
-    max-width: 950px; 
-}
-
-
-h1 {
-    color: var(--amarelo-wall-e);
-    margin-bottom: 20px;
-    font-size: 2.2rem;
-}
-
-h2 {
-    color: var(--eve-branco);
-    margin-bottom: 15px;
-    font-size: 1.8rem;
-}
-
-p {
-    margin-bottom: 15px;
-}
-
-/* ------------------------------------- */
-/* ADMIN TRIGGER (WALL-E) */
-/* ------------------------------------- */
+/* 2. NOVO: Estilo para a Imagem/Gatilho de Admin Clicável */
 .admin-trigger {
-    position: absolute; 
-    /* REQUISITO: "Sentado" na borda */
-    top: 2px;
-    /* REQUISITO: Fixo no topo superior esquerdo */
-    left: 20px; 
-    width: 180px; 
-    height: 180px;
-    cursor: pointer;
-    z-index: 20;
-    
-    background-image: url('assets/walle.png'); 
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+  position: absolute;
+  top: -6px; 
+  left: -30px; 
+  width: 150px;
+  height: 150px;
+  background-image: url('./assets/walle.png'); 
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transform: rotate(-15deg);
+  z-index: 2;
+  /* REMOVIDO: cursor: pointer; */ 
+  /* REMOVIDO: transition: transform 0.3s ease-in-out; */
+}
+
+/* REMOVIDO: Efeito de hover */
+.admin-trigger:hover {
+  /* REMOVIDO: transform: rotate(-15deg) scale(1.05); */
+  transform: rotate(-15deg); /* Mantém a rotação original */
+}
+
+/* REMOVIDO: Estilo para o subtítulo/mensagem na área de histórico */
+/* Remova esta regra ou certifique-se de que ela não existe mais. */
+.sub-title {
+  /* ... remover esta regra ... */
+  display: none; /* Adicione display: none se o código ainda estiver lá */
+}
+/* ** FIM DA MODIFICAÇÃO CSS ** */
+
+/* ... (Mantenha todas as outras regras do App.css) ... */
+
+/* Ajuste no Media Query para manter a discrição no mobile */
+@media (max-width: 650px) {
+    /* ... (outras regras mobile) ... */
+
+    /* Ajusta o gatilho de login em mobile */
+    .admin-trigger {
+      width: 100px;
+      height: 100px;
+      top: -3px;
+      left: -10px;
+      transform: rotate(-10deg);
+      /* REMOVIDO: o hover e o cursor pointer */
+    }
+}
+
+/* Estilo para o subtítulo/mensagem na área de histórico */
+.sub-title {
+  font-size: 0.8rem;
+  color: var(--cinza-claro);
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+/* ** FIM DA MODIFICAÇÃO ** */
+
+
+/* Títulos */
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: var(--amarelo-wall-e);
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Botão "Começar o Teste" */
+.start-button {
+  padding: 10px 20px;
+  background-color: var(--dourado-claro);
+  border: 2px solid var(--bordo-marrom);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--cinza-escuro);
+  font-weight: bold;
+  margin: 20px auto 0;
+  display: block;
+  transition: all 0.3s;
+}
+
+.start-button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 10px var(--amarelo-wall-e);
 }
 
 
-/* ==================================== */
-/* 3. Estilos de Formulário/Registro/Login */
-/* ==================================== */
-.register-container form,
-.admin-login-container form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.register-container input,
-.admin-login-container input {
-    /* REQUISITO: Largura alinhada com o botão */
-    width: 90%;
-    max-width: 500px; 
-    
-    padding: 12px;
-    margin: 10px auto;
-    border-radius: 6px;
-    border: 2px solid var(--cinza-claro);
-    background: var(--eve-fundo-escuro);
-    color: var(--eve-branco);
-    font-size: 1rem;
-    display: block;
-    text-align: center;
-}
-
-/* Wrapper para o ícone de senha */
-.password-wrapper {
-    position: relative;
-    width: 90%;
-    max-width: 500px;
-    margin: 0;
-}
-.password-wrapper input {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-}
-.password-toggle-icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    user-select: none;
-    font-size: 1.2rem;
-}
-
-
-.admin-login-container .extra-buttons {
-    margin-top: 30px;
-}
-
-/* ==================================== */
-/* 4. Estilos de Botões */
-/* ==================================== */
-
-button {
-    padding: 12px 25px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s, transform 0.1s;
-    margin: 8px;
-    font-size: 1rem;
-    min-width: 150px;
-}
-
-/* Botões de Ação Principal (Iniciar, Entrar) */
-.start-button,
-[type="submit"]:not(.option-button) {
-    background-color: var(--amarelo-wall-e);
-    color: var(--eve-fundo-escuro);
-    border: 2px solid var(--amarelo-wall-e);
-    /* REQUISITO: Largura alinhada com o input */
-    width: 90%;
-    max-width: 500px; 
-}
-.start-button:hover,
-[type="submit"]:not(.option-button):hover {
-    background-color: #f7e096;
-    transform: translateY(-2px);
-}
-.start-button:disabled,
-[type="submit"]:not(.option-button):disabled {
-    background-color: var(--cinza-claro);
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Botões de Navegação (Voltar, Sair) */
-.back-button,
-.back-to-test-button {
-    background-color: var(--cinza-claro);
-    color: var(--eve-branco);
-}
-.back-button:hover,
-.back-to-test-button:hover {
-    background-color: var(--cinza-hover);
-    transform: translateY(-2px);
-}
-
-/* Botões de Resultado/Reiniciar */
-.restart-button {
-    background-color: var(--verde-sucesso);
-    color: var(--eve-fundo-escuro);
-}
-.restart-button:hover {
-    background-color: #79c97c;
-    transform: translateY(-2px);
-}
-
-.history-button {
-    background-color: var(--cinza-claro);
-    color: var(--eve-branco);
-}
-.history-button:hover {
-    background-color: var(--cinza-hover);
-    transform: translateY(-2px);
-}
-
-.clear-history-button {
-    background-color: var(--vermelho-erro);
-    color: var(--eve-branco);
-}
-.clear-history-button:hover:not(:disabled) {
-    background-color: #f36c6c;
-    transform: translateY(-2px);
-}
-
-/* ==================================== */
-/* 5. Estilos do Quiz (Question) */
-/* ==================================== */
-.question-container {
-    max-width: 900px;
-    width: 100%;
-}
-
-.question-enunciado {
-    font-size: 1.3rem !important; 
-    color: var(--eve-branco);
-    margin: 30px auto;
-    padding: 0 10px;
-    max-width: 800px;
-}
-
+/* Container para os botões de resposta */
 .option-buttons-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
-    margin-top: 20px;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
+/* Botões de resposta */
 .option-button {
-    width: 90%;
-    max-width: 600px;
-    margin: 10px 0;
-    background-color: var(--cinza-claro);
-    color: var(--eve-branco);
-    text-align: left;
-    white-space: normal;
-    min-height: 50px;
-    transition: background-color 0.2s;
-    font-weight: normal;
-    padding: 10px 20px;
+  padding: 12px;
+  background-color: var(--marrom-claro);
+  border: 2px solid var(--bordo-marrom-escuro);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--cinza-escuro);
+  font-weight: bold;
+  margin: 8px 0;
+  width: 80%;
+  text-align: center;
+  transition: all 0.3s;
 }
 
 .option-button:hover {
-    background-color: var(--cinza-hover);
-    transform: none;
+  background-color: var(--dourado-claro);
 }
 
+/* Estado de botão selecionado */
 .option-button.selected {
-    background-color: var(--verde-sucesso);
-    border: 2px solid var(--amarelo-wall-e);
-    color: var(--eve-fundo-escuro);
-    font-weight: bold;
+  background-color: var(--azul-wall-e);
+  color: var(--eve-branco);
+  border-color: var(--eve-branco);
+  box-shadow: 0 0 10px rgba(0, 119, 190, 0.8);
 }
 
-/* Botões (Voltar, Reiniciar) alinhados */
+
+/* Container para botões extras */
 .extra-buttons {
-    margin-top: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap; 
-    gap: 10px; 
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 25px;
 }
 
-/* ==================================== */
-/* 6. Estilos de Resultado (Result) */
-/* ==================================== */
-.result-container {
-    text-align: center;
+/* Botões extras */
+.back-button,
+.history-button,
+.clear-history-button,
+.back-to-test-button,
+.restart-button {
+  padding: 10px 20px;
+  background-color: var(--dourado-claro);
+  color: var(--cinza-escuro);
+  border: 2px solid var(--bordo-marrom);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  flex: 1;
+  min-width: 120px;
+  max-width: 200px;
+  transition: all 0.3s;
 }
 
-.main-result {
-    color: var(--amarelo-wall-e);
-    font-size: 2.5rem;
-    margin: 20px 0;
-    text-shadow: 0 0 10px rgba(240, 201, 79, 0.5);
+.back-button:hover,
+.history-button:hover,
+.clear-history-button:hover,
+.back-to-test-button:hover,
+.restart-button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 8px var(--dourado-claro);
 }
 
-/* REQUISITO: Caixa de cursos sem scroll interno */
-.suggestions {
-    margin: 30px auto;
-    padding: 20px;
-    border: 1px dashed var(--cinza-claro);
-    border-radius: 8px;
-    max-width: 500px;
-    width: 90%;
-    /* REMOVIDO: 'max-height' e 'overflow-y' */
-}
+/* --- ESTILOS PARA OS BOTÕES DE FONTE --- */
 
-.suggestions h3 {
-    color: var(--amarelo-wall-e);
-    margin-bottom: 10px;
-}
-
-.suggestions ul {
-    list-style: none;
-    padding: 0;
-}
-
-.suggestions li {
-    background-color: rgba(255, 255, 255, 0.05);
-    padding: 5px 10px;
-    margin-bottom: 5px;
-    border-radius: 4px;
-}
-
-/* ==================================== */
-/* 7. Estilos de Histórico (History) */
-/* ==================================== */
-.history-container, .local-history-container {
-    text-align: center;
-    flex-grow: 1; 
-    width: 100%;
-}
-
-.result-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-    /* SCROLL INTERNO (Onde necessário) */
-    max-height: 350px; 
-    overflow-y: auto;
-    width: 100%;
-    padding-right: 10px;
-    flex-grow: 1;
-}
-
-.result-item {
-    background-color: rgba(255, 255, 255, 0.05);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    text-align: left;
-    border-left: 5px solid var(--amarelo-wall-e);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.history-nickname-button {
-    background: none;
-    border: none;
-    color: var(--amarelo-wall-e);
-    text-decoration: underline;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-    font-size: 1rem;
-    min-width: 0;
-}
-
-/* ==================================== */
-/* 8. Estilos de Detalhes (DetailView) */
-/* ==================================== */
-
-.detail-view-container {
-    text-align: left;
-    flex-grow: 1;
-    width: 100%;
-}
-
-.history-details-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-    /* SCROLL INTERNO (Onde necessário) */
-    max-height: 250px; 
-    overflow-y: auto;
-    padding-right: 10px;
-    flex-grow: 1;
-}
-
-.history-detail-item {
-    background-color: rgba(255, 255, 255, 0.03);
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    border-left: 3px solid var(--verde-sucesso);
-}
-
-.history-detail-item strong {
-    color: var(--amarelo-wall-e);
-}
-
-/* Estilos para o Ranking em Detalhes */
-.ranking-container {
-    width: 100%;
-    margin-bottom: 20px;
-}
-.ranking-title {
-    color: var(--amarelo-wall-e);
-}
-.ranking-list {
-    list-style: none;
-    padding: 10px;
-    margin: 15px 0;
-    width: 100%;
-    border: 1px solid #444;
-    border-radius: 5px;
-    background-color: rgba(0,0,0,0.2);
-    text-align: left;
-}
-.ranking-list-item {
-    background-color: rgba(0,0,0,0.6);
-    color: var(--eve-branco);
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    border-left: 5px solid var(--amarelo-wall-e);
-}
-.responses-container {
-    width: 100%;
-}
-.responses-title {
-    color: var(--amarelo-wall-e);
-}
-
-
-/* ==================================== */
-/* 9. Estilos de Mensagens de Status */
-/* ==================================== */
-
-.loading {
-    padding: 20px;
-    font-size: 1.2rem;
-    color: var(--amarelo-wall-e);
-    text-align: center;
-}
-
-.error-message {
-    padding: 15px;
-    margin: 15px auto;
-    background-color: var(--vermelho-erro);
-    border-radius: 8px;
-    color: var(--eve-branco);
-    font-weight: bold;
-    max-width: 500px;
-}
-
-.error-message p {
-    margin: 0;
-}
-
-.no-results-message {
-    margin: 20px 0;
-    color: var(--amarelo-wall-e);
-}
-
-
-/* ==================================== */
-/* 10. Controles de Acessibilidade (Fonte) */
-/* ==================================== */
+/* Container para alinhar os botões de controle de fonte */
 .font-controls {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-    z-index: 15;
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Espaço entre os botões */
+  margin-top: 25px;
+  width: 100%;
 }
 
+/* Estilo dos botões A- e A+ */
 .font-toggle-button {
-    background-color: var(--cinza-claro);
-    color: var(--eve-branco);
-    padding: 8px 12px;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-    min-width: 40px;
+  width: 60px;
+  padding: 8px 10px;
+  font-size: 1.2rem;
+  background-color: var(--dourado-claro); 
+  color: var(--cinza-escuro); 
+  border: 2px solid var(--bordo-marrom); 
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.3s ease;
 }
 
 .font-toggle-button:hover {
-    background-color: var(--cinza-hover);
-    transform: scale(1.05);
+  filter: brightness(1.1); 
+  box-shadow: 0 0 8px var(--dourado-claro); 
 }
 
-/* ==================================== */
-/* 11. Media Queries (Responsividade) */
-/* ==================================== */
-
-@media (max-width: 768px) {
-    
-    /* Em mobile, usa a cor de fundo sólida */
-    body {
-        background-image: none;
-        background-color: var(--eve-fundo-escuro);
-    }
-    
-    .container {
-        padding: 20px;
-        min-height: 300px;
-        margin-top: 80px; 
-        max-width: 90%; /* Ocupa mais tela */
-    }
-
-    body.question-page .container,
-    body.history-page .container,
-    body.detail-page .container,
-    body.admin-panel-container .container {
-        max-width: 90%; 
-    }
-    
-    .question-enunciado {
-        font-size: 1.1rem !important;
-    }
-    
-    .option-button {
-        width: 100%;
-        font-size: 0.95rem;
-    }
-    
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    /* Ajusta o WALL-E para mobile */
-    .admin-trigger {
-        width: 120px; 
-        height: 120px;
-        top: 2px;
-        left: 10px; 
-    }
+/* Resultado */
+.result-text {
+  margin-bottom: 10px;
 }
 
-/* ==================================== */
-/* 12. Estilos da Tela Admin */
-/* ==================================== */
-
-.admin-panel-container {
-    text-align: left;
-    flex-grow: 1; 
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+.main-result {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 20px 0;
+  color: var(--amarelo-wall-e);
 }
 
-.admin-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-    /* SCROLL INTERNO (Onde necessário) */
-    max-height: 400px; 
-    overflow-y: auto;
-    padding-right: 10px;
-    flex-grow: 1; 
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  text-align: center;
 }
 
-.admin-list-item {
-    background-color: rgba(255, 255, 255, 0.03);
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    border-left: 3px solid var(--vermelho-erro);
+.result-item {
+  margin-bottom: 15px;
+  background-color: var(--carvao-wall-e);
+  padding: 12px;
+  border-radius: 8px;
+  color: var(--eve-branco);
+  box-shadow: 0 0 10px rgba(0, 119, 190, 0.3);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Sugestões */
+.suggestions ul {
+  list-style: none;
+  padding: 0;
+}
+
+.suggestions li {
+  margin: 5px 0;
+}
+
+/* Mensagens de erro e carregamento */
+.loading,
+.error,
+.error-message {
+  color: #ffcccb;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.error-message {
+  background-color: #ff4c4c;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+/* * CORREÇÃO #3: Media Query para Dispositivos Móveis */
+@media (max-width: 650px) {
+  /* Remove o GIF de fundo em telas pequenas */
+  body.nickname-page.gif-active::after,
+  body.final-page.gif-active::after,
+  body.history-page.gif-active::after,
+  body.adminLogin.gif-active::after { /* Adicionado adminLogin */
+    background-image: none; 
+    filter: none;
+  }
+
+  /* Ajusta o contêiner principal para melhor visualização em telas pequenas */
+  .app-container {
+    position: relative; 
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 20px auto;
+    padding: 15px;
+    width: 95%;
+    min-width: unset;
+  }
+
+  /* Reduz o tamanho da imagem do Wall-E e a posiciona melhor para não cortar */
+  .admin-trigger {
+    width: 100px;
+    height: 100px;
+    top: -3px;
+    left: -10px;
+    transform: rotate(-10deg);
+  }
+
+  /* Reduz o tamanho da fonte para melhor leitura em telas pequenas */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Garante que os botões de resposta usem mais largura */
+  .option-button {
+    width: 95%;
+    font-size: 0.95rem;
+  }
+  
+  /* Garante que o resultado principal seja legível */
+  .main-result {
+    font-size: 1.3rem;
+  }
+  
+  /* Aumenta o espaçamento entre botões extras para facilitar o toque */
+  .extra-buttons {
+    gap: 8px;
+  }
+
+  .back-button,
+  .history-button,
+  .clear-history-button,
+  .back-to-test-button,
+  .restart-button {
+      flex-basis: 48%;
+      min-width: unset;
+  }
+
+  /* Ajuste dos botões de fonte para mobile */
+  .font-toggle-button {
+    width: 70px; 
+    padding: 10px;
+  }
 }
