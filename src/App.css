@@ -3,7 +3,7 @@
 /* ==================================== */
 :root {
     --eve-branco: #E0E0E0;
-    --eve-fundo-escuro: #1A1A1A; /* Esta é a cor "marrom" escura referida */
+    --eve-fundo-escuro: #1A1A1A; /* Cor de fundo mobile */
     --eve-fundo-transp: rgba(30, 30, 30, 0.9);
     --amarelo-wall-e: #F0C94F;
     --vermelho-erro: #D64545;
@@ -34,7 +34,7 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: flex-start; /* Alinha o app-container ao topo */
     padding-top: 20px;
     
     /* REQUISITO: GIF de fundo não repete e cobre a tela */
@@ -56,11 +56,13 @@ body {
 /* 2. Estilos do Container Principal e Wall-E */
 /* ==================================== */
 
+/* REQUISITO: Caixa centralizada */
 .container {
     width: 90%; 
-    max-width: 850px;
-    /* REQUISITO: Margem superior aumentada para dar espaço ao WALL-E maior */
-    margin: 120px auto 30px auto; 
+    /* REQUISITO: Largura padrão menor (para login, como na imagem) */
+    max-width: 550px; 
+    /* REQUISITO: Margem ajustada para o WALL-E "sentado" */
+    margin: 100px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
     background-color: var(--eve-fundo-transp);
@@ -71,11 +73,20 @@ body {
     z-index: 10; 
     min-height: 450px;
     
-    /* REQUISITO: Centraliza todo o conteúdo interno (textos, botões, listas) */
+    /* REQUISITO: Centraliza todo o conteúdo interno */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
+/* REQUISITO: Regra para telas que precisam ser mais largas (quiz, histórico) */
+.question-page .container,
+.history-page .container,
+.detail-page .container,
+.admin-panel-container {
+    max-width: 850px;
+}
+
 
 h1 {
     color: var(--amarelo-wall-e);
@@ -95,14 +106,14 @@ p {
 
 /* ------------------------------------- */
 /* ADMIN TRIGGER (WALL-E) */
-/* REQUISITO: WALL-E "agarrado" na borda da caixa e maior */
+/* REQUISITO: WALL-E "agarrado" na borda e maior */
 /* ------------------------------------- */
 .admin-trigger {
     position: absolute; /* Preso ao .container */
-    /* REQUISITO: Ajustado para -90px (metade da nova altura de 180px) */
-    top: -90px;         
+    /* REQUISITO: WALL-E "sentado" na borda (2px) */
+    top: 2px;
     left: 20px;
-    /* REQUISITO: Tamanho aumentado para 180px */
+    /* REQUISITO: Tamanho aumentado (180px) */
     width: 180px; 
     height: 180px;
     cursor: pointer;
@@ -130,6 +141,8 @@ p {
     font-size: 1rem;
     display: block;
     max-width: 400px;
+    /* REQUISITO: Centraliza o placeholder e o texto digitado */
+    text-align: center;
 }
 
 .admin-login-container .extra-buttons {
@@ -268,8 +281,8 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap; 
-    gap: 10px;
+    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
+    gap: 10px; /* Espaçamento entre os botões */
 }
 
 /* ==================================== */
@@ -451,7 +464,7 @@ button {
 
 @media (max-width: 768px) {
     
-    /* REQUISITO: Em mobile, remove o GIF e usa a cor de fundo sólida "marrom" */
+    /* REQUISITO: Em mobile, remove o GIF e usa a cor de fundo sólida */
     body {
         background-image: none;
         background-color: var(--eve-fundo-escuro);
@@ -460,8 +473,16 @@ button {
     .container {
         padding: 20px;
         min-height: 300px;
-        /* REQUISITO: Margem ajustada para o WALL-E menor (120px) */
+        /* REQUISITO: Margem ajustada para o WALL-E menor */
         margin-top: 80px; 
+    }
+
+    /* REQUISITO: Em mobile, telas maiores continuam com largura total */
+    .question-page .container,
+    .history-page .container,
+    .detail-page .container,
+    .admin-panel-container {
+        max-width: 90%; /* Ocupa a largura toda */
     }
     
     .question-enunciado {
@@ -479,11 +500,10 @@ button {
     
     /* Ajusta o WALL-E para mobile */
     .admin-trigger {
-        /* REQUISITO: Tamanho aumentado para 120px */
         width: 120px; 
         height: 120px;
-        /* REQUISITO: Ajustado para -60px (metade da nova altura) */
-        top: -60px;
+        /* REQUISITO: WALL-E "sentado" na borda (mobile) */
+        top: 2px;
         left: 10px;
     }
 }
@@ -491,10 +511,8 @@ button {
 /* ==================================== */
 /* 12. Estilos da Tela Admin (NOVO) */
 /* REQUISITO: Scroll interno para tela admin */
-/* (Use estas classes no seu HTML para a tela de admin) */
 /* ==================================== */
 
-/* O container principal da tela de admin */
 .admin-panel-container {
     text-align: left;
     flex-grow: 1; /* Faz o container crescer para preencher o espaço */
@@ -503,7 +521,6 @@ button {
     flex-direction: column;
 }
 
-/* A lista de itens dentro da tela admin */
 .admin-list {
     list-style: none;
     padding: 0;
@@ -515,7 +532,6 @@ button {
     flex-grow: 1; /* Faz a lista crescer */
 }
 
-/* Estilo de exemplo para um item na lista de admin */
 .admin-list-item {
     background-color: rgba(255, 255, 255, 0.03);
     padding: 10px 15px;
