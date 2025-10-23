@@ -18,6 +18,8 @@
 html {
     font-size: 16px;
     transition: font-size 0.2s ease-in-out;
+    /* REQUISITO: Remove o scroll da página inteira */
+    overflow-y: hidden; 
 }
 
 * {
@@ -27,7 +29,7 @@ html {
 }
 
 body {
-    background-color: var(--eve-fundo-escuro); /* Cor de fallback */
+    background-color: var(--eve-fundo-escuro); 
     color: var(--eve-branco);
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
@@ -57,7 +59,8 @@ body {
 
 .container {
     width: 90%; 
-    max-width: 550px; 
+    /* REQUISITO: Caixa aumentada */
+    max-width: 700px; 
     margin: 100px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
@@ -69,6 +72,7 @@ body {
     z-index: 10; 
     min-height: 450px;
     
+    /* REQUISITO: Centraliza todos os elementos filhos */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -101,13 +105,13 @@ p {
 
 /* ------------------------------------- */
 /* ADMIN TRIGGER (WALL-E) */
-/* REQUISITO: WALL-E "sentado" e CENTRALIZADO */
 /* ------------------------------------- */
 .admin-trigger {
     position: absolute; 
-    top: 2px; /* "Sentado" na borda */
-    left: 50%; /* REQUISITO: Centralizado */
-    transform: translateX(-50%); /* REQUISITO: Ajuste de centralização */
+    /* REQUISITO: "Sentado" na borda */
+    top: 2px;
+    /* REQUISITO: Fixo no topo superior esquerdo */
+    left: 20px; 
     width: 180px; 
     height: 180px;
     cursor: pointer;
@@ -273,6 +277,7 @@ button {
     font-weight: bold;
 }
 
+/* Esta classe já alinha os botões "Voltar" e "Reiniciar" lado a lado */
 .extra-buttons {
     margin-top: 30px;
     display: flex;
@@ -302,7 +307,7 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -337,7 +342,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
     max-height: 350px; 
     overflow-y: auto;
     width: 100%;
@@ -383,7 +388,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
     max-height: 250px; 
     overflow-y: auto;
     padding-right: 10px;
@@ -493,13 +498,13 @@ button {
         font-size: 1.8rem;
     }
     
-    /* Ajusta o WALL-E para mobile (também centralizado) */
+    /* Ajusta o WALL-E para mobile */
     .admin-trigger {
         width: 120px; 
         height: 120px;
         top: 2px;
-        left: 50%; /* REQUISITO: Centralizado */
-        transform: translateX(-50%); /* REQUISITO: Ajuste de centralização */
+        /* REQUISITO: Fixo no topo esquerdo (mobile) */
+        left: 10px; 
     }
 }
 
@@ -519,7 +524,7 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
     max-height: 400px; 
     overflow-y: auto;
     padding-right: 10px;
