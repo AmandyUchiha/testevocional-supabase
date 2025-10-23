@@ -3,7 +3,7 @@
 /* ==================================== */
 :root {
     --eve-branco: #E0E0E0;
-    --eve-fundo-escuro: #1A1A1A;
+    --eve-fundo-escuro: #1A1A1A; /* Esta é a cor "marrom" escura referida */
     --eve-fundo-transp: rgba(30, 30, 30, 0.9);
     --amarelo-wall-e: #F0C94F;
     --vermelho-erro: #D64545;
@@ -27,14 +27,14 @@ html {
 }
 
 body {
-    background-color: var(--eve-fundo-escuro);
+    background-color: var(--eve-fundo-escuro); /* Cor de fallback */
     color: var(--eve-branco);
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Alinha o conteúdo ao topo */
+    align-items: flex-start;
     padding-top: 20px;
     
     /* REQUISITO: GIF de fundo não repete e cobre a tela */
@@ -47,21 +47,20 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 1200px; /* Limita a largura do App */
+    max-width: 1200px;
     position: relative;
-    padding-bottom: 50px; /* Espaço para o rodapé */
+    padding-bottom: 50px;
 }
 
 /* ==================================== */
 /* 2. Estilos do Container Principal e Wall-E */
 /* ==================================== */
 
-/* A CAIXA DE CONTEÚDO PRINCIPAL (COM CORREÇÃO DE POSICIONAMENTO E FLEXBOX) */
 .container {
     width: 90%; 
-    max-width: 850px; /* Aumentado para acomodar o quiz */
-    /* REQUISITO: Margem superior para dar espaço ao WALL-E absoluto */
-    margin: 100px auto 30px auto; 
+    max-width: 850px;
+    /* REQUISITO: Margem superior aumentada para dar espaço ao WALL-E maior */
+    margin: 120px auto 30px auto; 
     padding: 30px; 
     border-radius: 12px;
     background-color: var(--eve-fundo-transp);
@@ -72,7 +71,7 @@ body {
     z-index: 10; 
     min-height: 450px;
     
-    /* REQUISITO: Centraliza todo o conteúdo interno verticalmente */
+    /* REQUISITO: Centraliza todo o conteúdo interno (textos, botões, listas) */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -94,39 +93,26 @@ p {
     margin-bottom: 15px;
 }
 
-
-/* ------------------------------------- */
-/* CORREÇÃO DE POSICIONAMENTO PARA O WALL-E */
-/* REMOVIDO: As regras de margin-top: 180px foram removidas.
-   O WALL-E agora é 'position: absolute' e está preso ao '.container',
-   então não precisamos mais "empurrar" o container para baixo.
-   A margem superior padrão do .container (100px) já cria o espaço.
-*/
-/* ------------------------------------- */
-
-
 /* ------------------------------------- */
 /* ADMIN TRIGGER (WALL-E) */
-/* REQUISITO: WALL-E "agarrado" na borda da caixa */
+/* REQUISITO: WALL-E "agarrado" na borda da caixa e maior */
 /* ------------------------------------- */
 .admin-trigger {
-    position: absolute; /* Preso ao .container (que é position: relative) */
-    top: -75px;         /* Metade da altura (150px) para cima, "pendurado" */
-    left: 20px;         /* Distância da borda esquerda do container */
-    width: 150px; 
-    height: 150px;
+    position: absolute; /* Preso ao .container */
+    /* REQUISITO: Ajustado para -90px (metade da nova altura de 180px) */
+    top: -90px;         
+    left: 20px;
+    /* REQUISITO: Tamanho aumentado para 180px */
+    width: 180px; 
+    height: 180px;
     cursor: pointer;
-    z-index: 20;        /* Fica na frente do container (z-index: 10) */
+    z-index: 20;
     
-    /* A imagem PNG vai direto no trigger */
     background-image: url('assets/walle.png'); 
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
-
-/* REMOVIDO: .gif-active:before não é mais necessário, 
-   a imagem está direto no .admin-trigger */
 
 
 /* ==================================== */
@@ -230,7 +216,7 @@ button {
 /* ==================================== */
 .question-container {
     max-width: 900px;
-    width: 100%; /* Garante que ocupe o espaço no flex */
+    width: 100%;
 }
 
 .question-enunciado {
@@ -276,14 +262,14 @@ button {
     font-weight: bold;
 }
 
-/* REQUISITO: Botões extras de lado (lado a lado) */
+/* REQUISITO: Botões extras de lado (lado a lado) e centralizados */
 .extra-buttons {
     margin-top: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
-    gap: 10px; /* Espaçamento entre os botões */
+    flex-wrap: wrap; 
+    gap: 10px;
 }
 
 /* ==================================== */
@@ -306,7 +292,7 @@ button {
     border: 1px dashed var(--cinza-claro);
     border-radius: 8px;
     max-width: 500px;
-    /* REQUISITO: SCROLL INTERNO */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -341,8 +327,8 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO */
-    max-height: 350px; /* Altura máxima para ativar o scroll */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    max-height: 350px; 
     overflow-y: auto;
     width: 100%;
     padding-right: 10px;
@@ -387,8 +373,8 @@ button {
     list-style: none;
     padding: 0;
     margin-top: 20px;
-    /* REQUISITO: SCROLL INTERNO */
-    max-height: 250px; /* Altura máxima para ativar o scroll */
+    /* REQUISITO: SCROLL INTERNO (Onde necessário) */
+    max-height: 250px; 
     overflow-y: auto;
     padding-right: 10px;
     flex-grow: 1;
@@ -440,7 +426,7 @@ button {
     right: 10px;
     display: flex;
     gap: 5px;
-    z-index: 15; /* Acima de tudo */
+    z-index: 15;
 }
 
 .font-toggle-button {
@@ -464,14 +450,19 @@ button {
 /* ==================================== */
 
 @media (max-width: 768px) {
+    
+    /* REQUISITO: Em mobile, remove o GIF e usa a cor de fundo sólida "marrom" */
+    body {
+        background-image: none;
+        background-color: var(--eve-fundo-escuro);
+    }
+    
     .container {
         padding: 20px;
         min-height: 300px;
-        /* Ajusta a margem para o WALL-E menor */
-        margin-top: 70px; 
+        /* REQUISITO: Margem ajustada para o WALL-E menor (120px) */
+        margin-top: 80px; 
     }
-
-    /* REMOVIDO: Regras de margin-top: 130px não são mais necessárias */
     
     .question-enunciado {
         font-size: 1.1rem !important;
@@ -488,11 +479,47 @@ button {
     
     /* Ajusta o WALL-E para mobile */
     .admin-trigger {
-        width: 100px; 
-        height: 100px;
-        top: -50px; /* Metade da nova altura */
+        /* REQUISITO: Tamanho aumentado para 120px */
+        width: 120px; 
+        height: 120px;
+        /* REQUISITO: Ajustado para -60px (metade da nova altura) */
+        top: -60px;
         left: 10px;
     }
-    
-    /* REMOVIDO: Regra antiga do .gif-active:before */
+}
+
+/* ==================================== */
+/* 12. Estilos da Tela Admin (NOVO) */
+/* REQUISITO: Scroll interno para tela admin */
+/* (Use estas classes no seu HTML para a tela de admin) */
+/* ==================================== */
+
+/* O container principal da tela de admin */
+.admin-panel-container {
+    text-align: left;
+    flex-grow: 1; /* Faz o container crescer para preencher o espaço */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* A lista de itens dentro da tela admin */
+.admin-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    /* REQUISITO: SCROLL INTERNO para a lista de admin */
+    max-height: 400px; /* Defina a altura máxima desejada */
+    overflow-y: auto;
+    padding-right: 10px;
+    flex-grow: 1; /* Faz a lista crescer */
+}
+
+/* Estilo de exemplo para um item na lista de admin */
+.admin-list-item {
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 3px solid var(--vermelho-erro);
 }
