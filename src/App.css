@@ -66,10 +66,10 @@ body.question-page {
   width: 90%;
   margin: 20px auto;
   /* CORREÇÃO DE PADDING (DESKTOP): 
-      Aumenta o padding da esquerda de 30px para 130px 
-      para compensar o Wall-E (120px) em todas as telas.
+     Aumenta o padding da esquerda de 30px para 130px 
+     para compensar o Wall-E (120px) em todas as telas.
   */
-  padding: 10px 30px 10px 130px;
+  padding: 10px 130px 10px 130px;
   background-color: var(--cinza-escuro);
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
@@ -253,7 +253,9 @@ h1 {
   color: var(--amarelo-wall-e);
 }
 
-/* Lista de Resultados (com Scroll) */
+/*
+ ATUALIZADO: Lista de Resultados (com Scroll) 
+*/
 .result-list {
   list-style: none;
   padding: 0 10px;
@@ -264,6 +266,13 @@ h1 {
   overflow-x: hidden;
   width: 100%; /* Garante que ocupe o espaço */
   box-sizing: border-box;
+
+  /* *** CORREÇÃO ADICIONADA NA ETAPA ANTERIOR *** */
+  /* Força o 'max-height' a ser respeitado dentro do 
+    container flex (app-container) que está no modo 
+    'flex-direction: column' e 'justify-content: flex-start'.
+  */
+  min-height: 0;
 }
 
 /* Item da Lista de Histórico (Re-estilizado) */
@@ -471,6 +480,33 @@ h1 {
 }
 
 
+/* =================================================================
+  *** CORREÇÃO ADICIONADA ***
+  CORREÇÃO DE SCROLL (FLEX-IN-FLEX)
+  =================================================================
+  Isso transforma os contêineres de "view" (que são filhos
+  do .app-container) em contêineres flex também.
+  Isso é NECESSÁRIO para que os filhos DELES (como .result-list)
+  respeitem o 'max-height' e 'overflow-y: auto'.
+*/
+.history-container,
+.detail-view-container,
+.local-history-container {
+  display: flex;
+  flex-direction: column;
+  /* Faz o container da view tentar ocupar o espaço disponível 
+    dentro do .app-container
+  */
+  flex: 1;
+  /* Permite que o próprio container encolha, forçando
+    o conteúdo interno (a lista) a usar o scroll.
+  */
+  min-height: 0; 
+  /* Garante que ocupe toda a largura interna */
+  width: 100%;
+}
+
+
 /* Estilos para Ranking e Cursos no Histórico Admin */
 .result-item-details {
   margin-top: 10px;
@@ -495,10 +531,6 @@ h1 {
   padding: 2px 0;
 }
 
-/* *** NOVA REGRA PARA CORRIGIR O SCROLL NO DESKTOP ***
-    Tira o .app-container do 'position: absolute' nas páginas
-    de histórico, que são muito longas.
-*/
 body.history-page .app-container,
 body.detail-page .app-container {
   position: relative;
@@ -576,8 +608,8 @@ body.detail-page .app-container {
   }
 
   /* *** CORREÇÃO AGRESSIVA PARA BANCO ANTIGO CORTADO (MOBILE) ***
-    Agora que o erro de sintaxe foi corrigido, o navegador vai
-    finalmente ler esta regra.
+     Agora que o erro de sintaxe foi corrigido, o navegador vai
+     finalmente ler esta regra.
   */
   .result-item div strong {
     display: block !important;
