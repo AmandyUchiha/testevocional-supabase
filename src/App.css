@@ -569,7 +569,7 @@ body.detail-page .app-container {
         Aumentamos o padding-left para 95px (80px + 15px) 
         para compensar em todas as telas mobile.
     */
-    padding: 15px 15px 15px 95px;
+    padding: 15px 95px 15px 95px;
   }
   
   /* Garante que o alinhamento no mobile também seja no topo */
